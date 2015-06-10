@@ -1,7 +1,7 @@
 #ifndef CAMERA_INFORMATION_H
 #define CAMERA_INFORMATION_H
 
-namespace webcamCapture {
+namespace webcam_capture {
 
     class CameraInformation {
     public:
@@ -16,7 +16,7 @@ namespace webcamCapture {
       const std::string cameraName;
     };
 
-} // namespace webcamCapture
+} // namespace webcam_capture
 
 #endif // CAMERA_INFORMATION_H
 

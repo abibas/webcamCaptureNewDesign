@@ -14,13 +14,15 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    ../src/MediaFoundation/MediaFoundation_Callback.cpp \
-    ../src/MediaFoundation/MediaFoundation_Utils.cpp \
-    ../src/MediaFoundation/MediaFoundation_Backend.cpp \
-    ../src/MediaFoundation/MediaFoundation_Camera.cpp \
-    ../src/Utils.cpp
+    ../src/utils.cpp \
+    ../src/media_foundation/media_foundation_backend.cpp \
+    ../src/media_foundation/media_foundation_callback.cpp \
+    ../src/media_foundation/media_foundation_camera.cpp \
+    ../src/media_foundation/media_foundation_utils.cpp
 
 HEADERS  += mainwindow.h \
+    ../include/backend_interface.h \
+    ../include/camera_interface.h \
     ../include/backend_implementation.h \
     ../include/video_property.h \
     ../include/format.h \
@@ -28,18 +30,10 @@ HEADERS  += mainwindow.h \
     ../include/video_property_range.h \
     ../include/camera_information.h \
     ../include/capability.h \
-    ../include/backend_interface.h \
-    ../include/camera_interface.h \
-    ../include/utils.h \
-    ../include/MediaFoundation/media_foundation_backend.h \
-    ../include/MediaFoundation/media foundation_callback.h \
-    ../include/MediaFoundation/media_foundation_utils.h \
-    ../include/MediaFoundation/media_foundation_camera.h \
-    ../include/MediaFoundation/media foundation_callback.h \
-    ../include/media_foundation/media foundation_callback.h \
-    ../include/media_foundation/media_foundation_backend.h \
-    ../include/media_foundation/media_foundation_camera.h \
-    ../include/media_foundation/media_foundation_utils.h \
-    ../include/media_foundation/media_foundation_callback.h
+    ../src/utils.h \
+    ../src/media_foundation/media foundation_callback.h \
+    ../src/media_foundation/media_foundation_backend.h \
+    ../src/media_foundation/media_foundation_camera.h \
+    ../src/media_foundation/media_foundation_utils.h \
 
 FORMS    += mainwindow.ui

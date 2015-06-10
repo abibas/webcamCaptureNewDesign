@@ -1,7 +1,7 @@
 #ifndef FORMAT_H
 #define FORMAT_H
 
-namespace webcamCapture {
+namespace webcam_capture {
     enum class Format { UYVY422,    /* Cb Y0 Cr Y1 */
                         YUYV422,        /* Y0 Cb Y1 Cr */
                         YUV422P,        /* YUV422 Planar */
@@ -17,7 +17,7 @@ namespace webcamCapture {
                         H264,           /* H264 */
                         MJPEG           /* MJPEG 2*/
                       };
-} // namespace webcamCapture
+} // namespace webcam_capture
 
 #endif // FORMAT_H
 

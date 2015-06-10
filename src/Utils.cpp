@@ -1,6 +1,7 @@
 #include "../include/utils.h"
+#include "../include/format.h"
 
-namespace ca {
+namespace webcam_capture {
 
   int fps_from_rational(uint64_t num, uint64_t den) {
 
@@ -34,4 +35,4 @@ namespace ca {
     }
   }
 
-} // namespace ca
+} // namespace webcam_capture

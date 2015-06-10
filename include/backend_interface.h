@@ -9,7 +9,7 @@
 #include "camera_interface.h"
 #include "camera_information.h"
 
-namespace webcamCapture {
+namespace webcam_capture {
 
     typedef std::function<void(CameraInformation& information)> notifications_callback;
 
@@ -22,6 +22,6 @@ namespace webcamCapture {
         virtual void setAvaliableCamerasChangedCallback(notifications_callback n_callback) = 0; //TODO to realize
     };
 
-} // namespace webcamCapture
+} // namespace webcam_capture
 
 #endif

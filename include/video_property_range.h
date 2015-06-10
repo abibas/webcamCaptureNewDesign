@@ -1,7 +1,7 @@
 #ifndef VIDEO_PROPERTY_RANGE_H
 #define VIDEO_PROPERTY_RANGE_H
 
-namespace webcamCapture {
+namespace webcam_capture {
 
     class VideoPropertyRange {
         public:
@@ -22,7 +22,7 @@ namespace webcamCapture {
            const int defaultValue;      //default Value
     };
 
-} // namespace webcamCapture
+} // namespace webcam_capture
 
 #endif // VIDEO_PROPERTY_RANGE_H
 

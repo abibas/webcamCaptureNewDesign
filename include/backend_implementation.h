@@ -1,11 +1,11 @@
 #ifndef BACKEND_IMPLEMENTATION_H
 #define BACKEND_IMPLEMENTATION_H
 
-namespace webcamCapture  {
+namespace webcam_capture  {
 
     enum class BackendImplementation {MediaFoundation, V4L, AVFoundation};
 
-} // namespace webcamCapture
+} // namespace webcam_capture
 
 
 #endif // BACKEND_IMPLEMENTATION_H

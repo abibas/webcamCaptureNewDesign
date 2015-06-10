@@ -1,7 +1,7 @@
 #ifndef CAPABILITY_H
 #define CAPABILITY_H
 
-namespace webcamCapture  {
+namespace webcam_capture  {
 
     class Capability {
     public:
@@ -36,7 +36,7 @@ namespace webcamCapture  {
        friend class MediaFoundation_Camera;  //to move to ifdef. TODO
     };
 
-} // namespace webcamCapture
+} // namespace webcam_capture
 
 #endif // CAPABILITY_H
 

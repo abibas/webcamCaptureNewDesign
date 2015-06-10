@@ -1,6 +1,6 @@
 #ifndef PIXEL_BUFFER_H
 #define PIXEL_BUFFER_H
-namespace webcamCapture  {
+namespace webcam_capture  {
 
     struct PixelBuffer{
        PixelBuffer();
@@ -15,7 +15,7 @@ namespace webcamCapture  {
        int pixel_format;                    /* The pixel format of the buffer; e.g. CA_YUYV422, CA_UYVY422, CA_JPEG_OPENDML, etc.. */
     };
 
-} // namespace webcamCapture
+} // namespace webcam_capture
 
 #endif // PIXEL_BUFFER_H
 

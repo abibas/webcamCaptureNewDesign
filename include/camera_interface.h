@@ -9,7 +9,7 @@
 #include "video_property_range.h"
 #include "video_property.h"
 
-namespace webcamCapture {
+namespace webcam_capture {
 
     typedef std::function<void(PixelBuffer& buffer)> frame_callback;
 
@@ -29,6 +29,6 @@ namespace webcamCapture {
         virtual std::vector<Capability> getCapabilities() const = 0;
     };
 
-} // namespace webcamCapture
+} // namespace webcam_capture
 
 #endif
