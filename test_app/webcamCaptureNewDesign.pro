@@ -35,5 +35,8 @@ HEADERS  += mainwindow.h \
     ../src/media_foundation/media_foundation_backend.h \
     ../src/media_foundation/media_foundation_camera.h \
     ../src/media_foundation/media_foundation_utils.h \
+    ../include/image_format_converter.h \
+    ../include/backend_factory.h \
+    ../src/media_foundation/media_foundation_callback.h
 
 FORMS    += mainwindow.ui

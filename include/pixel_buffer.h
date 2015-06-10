@@ -3,7 +3,7 @@
 
 namespace webcam_capture  {
     /**
-     *  The PixelBuffer structure representing datatype for captured frames.
+     *  Structure representing datatype for captured frames
      */
     struct PixelBuffer{
        PixelBuffer();

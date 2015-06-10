@@ -3,18 +3,18 @@
 
 namespace webcam_capture {
     /**
-     *  The VideoPropertyRange class representing datatype with getters and setters for video property values range, step value and default value.
+     *  Representing datatype with getters and setters for video property values range, step value and default value.
      */
     class VideoPropertyRange {
         public:
             /**
-            * @param min - minimum video property value (for example minimum Brightness)
+            * @param min Minimum video property value
             *
-            * @param max - maximum video property value (for example maximum Brightness)
+            * @param max Maximum video property value
             *
-            * @param step - delta stepping value (step size between minimum and maximum values)
+            * @param step Delta stepping value (step size between minimum and maximum values)
             *
-            * @param defaultValue - default video property value (for example default Brightness)
+            * @param defaultValue Default video property value
             */
            VideoPropertyRange (int min, int max, int step, int defaultValue) :
                minValue(min),
@@ -23,19 +23,19 @@ namespace webcam_capture {
                defaultValue(defaultValue) {}
            ~VideoPropertyRange();
            /**
-            * @return minimum video property value (for example minimum Brightness)
+            * @return Minimum video property value
             */
            int getMinValue() const { return minValue; }
            /**
-            * @return maximum video property value (for example minimum Brightness)
+            * @return Maximum video property value
             */
            int getMaxValue() const { return maxValue; }
            /**
-            * @return delta stepping value (step size between minimum and maximum values)
+            * @return Delta stepping value (step size between minimum and maximum values)
             */
            int getStepValue() const { return stepValue; }
            /**
-            * @return default video property value (for example default Brightness)
+            * @return Default video property value
             */
            int getDefaultValue() const { return defaultValue; }
         private:

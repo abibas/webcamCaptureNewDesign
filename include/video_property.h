@@ -3,7 +3,7 @@
 
 namespace webcam_capture  {
     /**
-     *  The VideoProperty class representing enum of supported capabilities.
+     *  Enum of supported capabilities
      */
     enum class VideoProperty { Brightness, Contrast, Saturation};
 
