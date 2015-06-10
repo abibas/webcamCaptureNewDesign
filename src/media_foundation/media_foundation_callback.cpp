@@ -1,5 +1,5 @@
 //#include "../../../include/videocapture/win/MediaFoundation_Capture.h" ////TODO ????
-#include "../include/media_foundation/media_foundation_callback.h"
+#include "../src/media_foundation/media_foundation_callback.h"
 
 #include <assert.h>
 #include <mfidl.h>

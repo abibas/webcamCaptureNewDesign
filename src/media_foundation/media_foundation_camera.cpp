@@ -1,4 +1,4 @@
-#include "../include/MediaFoundation/media_foundation_camera.h"
+#include "../src/media_foundation/media_foundation_camera.h"
 #include <iostream>
 
 namespace webcam_capture {

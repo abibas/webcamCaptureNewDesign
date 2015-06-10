@@ -10,19 +10,19 @@ namespace webcam_capture {
     class ImageFormatConverter{
     public:
         /**
-         * @param convertToRGB recieves frame
-         * @return converted frame
+         * @param ConvertToRGB input frame
+         * @return Converted frame
          */
         static PixelBuffer convertToRGB(const PixelBuffer&);
 
         /**
-         * @param convertToRGB recieves frame
-         * @return converted frame
+         * @param ConvertToRGB input frame
+         * @return Converted frame
          */
         static PixelBuffer convertToYUV(const PixelBuffer&);
     private:
         /**
-         * static class (Java-ism)
+         * Static class (Java-ism)
          */
         ImageFormatConverter();
     };

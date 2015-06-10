@@ -4,18 +4,18 @@
 #include <windows.h>
 #include <mfapi.h>
 #include <mfplay.h>
-#include <mfidl.h>                                                                   /* e.g. MFEnumDeviceSources */
+#include <mfidl.h>              /* e.g. MFEnumDeviceSources */
 #include <mfreadwrite.h>
-#include <mferror.h>                                                                 /* MediaFoundation error codes, MF_E_*  */
+#include <mferror.h>            /* MediaFoundation error codes, MF_E_* */
 #include <shlwapi.h>
 #include <string>
 #include <vector>
-#include <memory>  //std::shared_ptr include
+#include <memory>               /* std::shared_ptr include */
 
 #include "../utils.h"
-#include "../backend_interface.h"
-#include "../camera_interface.h"
-#include "../camera_information.h"
+#include "../include/backend_interface.h"
+#include "../include/camera_interface.h"
+#include "../include/camera_information.h"
 
 #include "media_foundation_utils.h"
 #include "media_foundation_callback.h"

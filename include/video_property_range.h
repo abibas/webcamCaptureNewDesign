@@ -3,7 +3,7 @@
 
 namespace webcam_capture {
     /**
-     *  Representing datatype with getters and setters for video property values range, step value and default value.
+     *  Contains valid values of a VideoProperty
      */
     class VideoPropertyRange {
         public:
@@ -12,7 +12,7 @@ namespace webcam_capture {
             *
             * @param max Maximum video property value
             *
-            * @param step Delta stepping value (step size between minimum and maximum values)
+            * @param step Delta stepping value
             *
             * @param defaultValue Default video property value
             */
@@ -31,7 +31,7 @@ namespace webcam_capture {
             */
            int getMaxValue() const { return maxValue; }
            /**
-            * @return Delta stepping value (step size between minimum and maximum values)
+            * @return Delta stepping value
             */
            int getStepValue() const { return stepValue; }
            /**
@@ -39,10 +39,10 @@ namespace webcam_capture {
             */
            int getDefaultValue() const { return defaultValue; }
         private:
-           const int minValue; 			//min Value
-           const int maxValue;			//max Value
-           const int stepValue;         //step Value
-           const int defaultValue;      //default Value
+           const int minValue;
+           const int maxValue;
+           const int stepValue;
+           const int defaultValue;
     };
 
 } // namespace webcam_capture

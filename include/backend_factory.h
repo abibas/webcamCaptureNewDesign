@@ -11,12 +11,12 @@ namespace webcam_capture {
     class BackendFactory {
     public:
         /**
-         * @param implementation - recieves BackendImplementatuion value from enum
-         * @return BackendInterface entity, created from <framework>_backend.
-         */
-        static BackendInterface* getBackend(BackendImplementation implementation); // создает определенный Backend (mfBackend например) и возвращает как BackendInterface*. возвращает nullptr на ошибку (если такой BackendImplementation неподдерживается например)
+         * @param Specifies a backend you want to use
+         * @return creates specific <framework>_backend and if returns BackendInterface*. Returns nullptr if error (if such BackendImplementations doesn't support)
+         */      
+        static BackendInterface* getBackend(BackendImplementation implementation);
         /**
-         * @return vector of avaliable BackendInterfaces
+         * @return Vector of avaliable backend implementations
          */
         static std::vector<BackendImplementation> getAvailableBackends();
     private:
