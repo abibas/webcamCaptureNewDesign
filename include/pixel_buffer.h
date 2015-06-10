@@ -1,7 +1,10 @@
 #ifndef PIXEL_BUFFER_H
 #define PIXEL_BUFFER_H
-namespace webcam_capture  {
 
+namespace webcam_capture  {
+    /**
+     *  The PixelBuffer structure representing datatype for captured frames.
+     */
     struct PixelBuffer{
        PixelBuffer();
        int setup(int w, int h, int fmt);    /* Set the strides, widths, heights, nbyte values for the given pixel format (CA_UYVY422, CA_YUV420P    etc..) and video frame size.. Returns 0 on success otherwise < 0. */

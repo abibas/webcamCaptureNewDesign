@@ -3,6 +3,9 @@
 
 namespace webcam_capture  {
 
+    /**
+     * The class BackendImplementation representing enum of supported video capture frameworks.
+     */
     enum class BackendImplementation {MediaFoundation, V4L, AVFoundation};
 
 } // namespace webcam_capture
