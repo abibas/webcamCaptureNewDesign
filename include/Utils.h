@@ -1,15 +1,14 @@
-#ifndef VIDEO_CAPTURE_UTILS_H
-#define VIDEO_CAPTURE_UTILS_H
+#ifndef UTILS_H
+#define UTILS_H
 
 #include <stdint.h>
 #include <string>
-#include "Types.h"
 
-namespace ca {
+namespace webcamCapture {
   
-  int fps_from_rational(uint64_t num, uint64_t den); // TODO to replace this and carefully debug this method... maybe this is don't need
-  std::string format_to_string(int fmt);
+  int fps_from_rational(uint64_t num, uint64_t den); // TODO to research what this method is doing
+  std::string format_to_string(int fmt);             // TODO to remove this method.
   
-} // namespace ca
+} // namespace webcamCapture
 
 #endif

@@ -1,4 +1,4 @@
-#include "../include/MediaFoundation/MediaFoundation_Camera.h"
+#include "../include/MediaFoundation/media_foundation_camera.h"
 #include <iostream>
 
 namespace ca {

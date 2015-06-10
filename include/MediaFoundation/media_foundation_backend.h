@@ -17,8 +17,8 @@
 #include "../camera_interface.h"
 #include "../camera_information.h"
 
-#include "MediaFoundation_Utils.h"
-#include "MediaFoundation_Callback.h"
+#include "media_foundation_utils.h"
+#include "media foundation_callback.h"
 
 namespace webcamCapture {
     typedef std::function<void(CameraInformation& information)> notifications_callback;

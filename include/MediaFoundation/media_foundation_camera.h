@@ -14,8 +14,8 @@
 
 #include "../camera_interface.h"
 #include "../utils.h"
-#include "MediaFoundation_Utils.h"
-#include "MediaFoundation_Callback.h"
+#include "media_foundation_utils.h"
+#include "media foundation_callback.h"
 #include "../camera_information.h"
 #include "../capability.h"
 #include "../pixel_buffer.h"
