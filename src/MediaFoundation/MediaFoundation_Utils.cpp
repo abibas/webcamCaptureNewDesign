@@ -1,4 +1,4 @@
-#include "../include/MediaFoundation/media_foundation_utils.h"
+#include "../include/media_foundation/media_foundation_utils.h"
 
 namespace ca {
 

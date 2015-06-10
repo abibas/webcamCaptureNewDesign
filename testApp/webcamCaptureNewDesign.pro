@@ -35,6 +35,11 @@ HEADERS  += mainwindow.h \
     ../include/MediaFoundation/media foundation_callback.h \
     ../include/MediaFoundation/media_foundation_utils.h \
     ../include/MediaFoundation/media_foundation_camera.h \
-    ../include/MediaFoundation/media foundation_callback.h
+    ../include/MediaFoundation/media foundation_callback.h \
+    ../include/media_foundation/media foundation_callback.h \
+    ../include/media_foundation/media_foundation_backend.h \
+    ../include/media_foundation/media_foundation_camera.h \
+    ../include/media_foundation/media_foundation_utils.h \
+    ../include/media_foundation/media_foundation_callback.h
 
 FORMS    += mainwindow.ui
