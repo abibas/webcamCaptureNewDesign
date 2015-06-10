@@ -1,18 +1,12 @@
-#include "../include/media_foundation/media_foundation_utils.h"
+#include "../src/media_foundation/media_foundation_utils.h"
 
 namespace webcam_capture {
 
-  // Convert the MF format to one we can use.
+// Convert the MF format to one we can use.
   int media_foundation_video_format_to_capture_format(GUID guid) {
-
-    if(IsEqualGUID(guid, MFVideoFormat_RGB24))     { return CA_RGB24;   }
-    else if(IsEqualGUID(guid, MFVideoFormat_I420)) { return CA_YUV420P; } 
-    else if(IsEqualGUID(guid, MFVideoFormat_MJPG)) { return CA_MJPEG; } 
-    else {
-      return CA_NONE;
-    }
+      return 0; //TODO
   }
-  
+
   // Convert a MF format to a string.
   #define MEDIAFOUNDATION_CHECK_VIDEOFORMAT(param, val) if (param == val) return #val
 
@@ -81,12 +75,12 @@ namespace webcam_capture {
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MF_MT_DV_VAUX_CTRL_PACK);
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MF_MT_ARBITRARY_HEADER);
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MF_MT_ARBITRARY_FORMAT);
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MF_MT_IMAGE_LOSS_TOLERANT); 
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MF_MT_IMAGE_LOSS_TOLERANT);
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MF_MT_MPEG4_SAMPLE_DESCRIPTION);
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MF_MT_MPEG4_CURRENT_SAMPLE_ENTRY);
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MF_MT_ORIGINAL_4CC); 
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MF_MT_ORIGINAL_4CC);
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MF_MT_ORIGINAL_WAVE_FORMAT_TAG);
-    
+
     // Media types
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFMediaType_Audio);
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFMediaType_Video);
@@ -99,7 +93,7 @@ namespace webcam_capture {
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFMediaType_FileTransfer);
 
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_AI44);            //     FCC('AI44')
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_ARGB32);          //     D3DFMT_A8R8G8B8 
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_ARGB32);          //     D3DFMT_A8R8G8B8
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_AYUV);            //     FCC('AYUV')
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_DV25);            //     FCC('dv25')
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_DV50);            //     FCC('dv50')
@@ -123,10 +117,10 @@ namespace webcam_capture {
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_P016);            //     FCC('P016')
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_P210);            //     FCC('P210')
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_P216);            //     FCC('P216')
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_RGB24);           //     D3DFMT_R8G8B8 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_RGB32);           //     D3DFMT_X8R8G8B8 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_RGB555);          //     D3DFMT_X1R5G5B5 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_RGB565);          //     D3DFMT_R5G6B5 
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_RGB24);           //     D3DFMT_R8G8B8
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_RGB32);           //     D3DFMT_X8R8G8B8
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_RGB555);          //     D3DFMT_X1R5G5B5
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_RGB565);          //     D3DFMT_R5G6B5
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_RGB8);
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_UYVY);            //     FCC('UYVY')
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_v210);            //     FCC('v210')
@@ -139,26 +133,27 @@ namespace webcam_capture {
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_Y216);            //     FCC('Y216')
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_Y410);            //     FCC('Y410')
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_Y416);            //     FCC('Y416')
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_Y41P);            
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_Y41T);            
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_Y41P);
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_Y41T);
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_YUY2);            //     FCC('YUY2')
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_YV12);            //     FCC('YV12')
     MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFVideoFormat_YVYU);
 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_PCM);              //     WAVE_FORMAT_PCM 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_Float);            //     WAVE_FORMAT_IEEE_FLOAT 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_DTS);              //     WAVE_FORMAT_DTS 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_Dolby_AC3_SPDIF);  //     WAVE_FORMAT_DOLBY_AC3_SPDIF 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_DRM);              //     WAVE_FORMAT_DRM 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_WMAudioV8);        //     WAVE_FORMAT_WMAUDIO2 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_WMAudioV9);        //     WAVE_FORMAT_WMAUDIO3 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_WMAudio_Lossless); //     WAVE_FORMAT_WMAUDIO_LOSSLESS 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_WMASPDIF);         //     WAVE_FORMAT_WMASPDIF 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_MSP1);             //     WAVE_FORMAT_WMAVOICE9 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_MP3);              //     WAVE_FORMAT_MPEGLAYER3 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_MPEG);             //     WAVE_FORMAT_MPEG 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_AAC);              //     WAVE_FORMAT_MPEG_HEAAC 
-    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_ADTS);             //     WAVE_FORMAT_MPEG_ADTS_AAC 
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_PCM);              //     WAVE_FORMAT_PCM
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_Float);            //     WAVE_FORMAT_IEEE_FLOAT
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_DTS);              //     WAVE_FORMAT_DTS
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_Dolby_AC3_SPDIF);  //     WAVE_FORMAT_DOLBY_AC3_SPDIF
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_DRM);              //     WAVE_FORMAT_DRM
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_WMAudioV8);        //     WAVE_FORMAT_WMAUDIO2
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_WMAudioV9);        //     WAVE_FORMAT_WMAUDIO3
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_WMAudio_Lossless); //     WAVE_FORMAT_WMAUDIO_LOSSLESS
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_WMASPDIF);         //     WAVE_FORMAT_WMASPDIF
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_MSP1);             //     WAVE_FORMAT_WMAVOICE9
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_MP3);              //     WAVE_FORMAT_MPEGLAYER3
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_MPEG);             //     WAVE_FORMAT_MPEG
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_AAC);              //     WAVE_FORMAT_MPEG_HEAAC
+    MEDIAFOUNDATION_CHECK_VIDEOFORMAT(guid, MFAudioFormat_ADTS);             //     WAVE_FORMAT_MPEG_ADTS_AAC
     return "UNKNOWN";
   }
+
 } // namespace webcam_capture

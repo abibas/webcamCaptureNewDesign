@@ -1,3 +1,9 @@
+/**
+    This header is using code from the https://github.com/roxlu/video_capture
+    distributed under the Apache 2.0 license
+    http://www.apache.org/licenses/LICENSE-2.0
+  */
+
 #ifndef MEDIA_FOUNDATION_CALLBACK_H
 #define MEDIA_FOUNDATION_CALLBACK_H
 
@@ -5,14 +11,14 @@
 #include <mfidl.h>
 #include <mfreadwrite.h>
 #include <shlwapi.h>
+#include "media_foundation_camera.h"
+
 
 namespace webcam_capture {
-
-  class MediaFoundation_Capture;
                                          
   class MediaFoundation_Callback : public IMFSourceReaderCallback {
   public:
-    static bool createInstance(MediaFoundation_Capture* cap, MediaFoundation_Callback** cb);
+    static bool createInstance(MediaFoundation_Camera* cam, MediaFoundation_Callback** cb);
 
     STDMETHODIMP QueryInterface(REFIID iid, void** v);
     STDMETHODIMP_(ULONG) AddRef();
@@ -26,11 +32,11 @@ namespace webcam_capture {
     HRESULT Cancel() { return S_OK; } 
 
   private:
-    MediaFoundation_Callback(MediaFoundation_Capture* cap);
+    MediaFoundation_Callback(MediaFoundation_Camera* cam);
     virtual ~MediaFoundation_Callback();
 
   private:
-    MediaFoundation_Capture* cap;
+    MediaFoundation_Camera* cam;
     long ref_count;
     CRITICAL_SECTION crit_sec;
   };

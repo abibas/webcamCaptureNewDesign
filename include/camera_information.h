@@ -1,3 +1,9 @@
+/**
+    This header is using code from the https://github.com/roxlu/video_capture
+    distributed under the Apache 2.0 license
+    http://www.apache.org/licenses/LICENSE-2.0
+  */
+
 #ifndef CAMERA_INFORMATION_H
 #define CAMERA_INFORMATION_H
 #include <string.h>

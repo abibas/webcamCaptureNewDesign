@@ -1,3 +1,9 @@
+/**
+    This header is using code from the https://github.com/roxlu/video_capture
+    distributed under the Apache 2.0 license
+    http://www.apache.org/licenses/LICENSE-2.0
+  */
+
 #ifndef MEDIA_FOUNDATION_BACKEND_H
 #define MEDIA_FOUNDATION_BACKEND_H
 
@@ -16,7 +22,6 @@
 #include "../include/backend_interface.h"
 #include "../include/camera_interface.h"
 #include "../include/camera_information.h"
-
 #include "media_foundation_utils.h"
 #include "media_foundation_callback.h"
 

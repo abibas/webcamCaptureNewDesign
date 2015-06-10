@@ -30,13 +30,23 @@ HEADERS  += mainwindow.h \
     ../include/video_property_range.h \
     ../include/camera_information.h \
     ../include/capability.h \
+    ../include/image_format_converter.h \
+    ../include/backend_factory.h \
     ../src/utils.h \
     ../src/media_foundation/media foundation_callback.h \
     ../src/media_foundation/media_foundation_backend.h \
     ../src/media_foundation/media_foundation_camera.h \
     ../src/media_foundation/media_foundation_utils.h \
-    ../include/image_format_converter.h \
-    ../include/backend_factory.h \
     ../src/media_foundation/media_foundation_callback.h
 
 FORMS    += mainwindow.ui
+
+win32: LIBS +=  -lMfplat\
+                -lOle32\
+                -lShlwapi
+
+win32: LIBS += -lMf
+
+win32: LIBS += -lmfuuid
+
+win32: LIBS += -lmfreadwrite

@@ -1,3 +1,9 @@
+/**
+    This header is using code from the https://github.com/roxlu/video_capture
+    distributed under the Apache 2.0 license
+    http://www.apache.org/licenses/LICENSE-2.0
+  */
+
 #ifndef MEDIA_FOUNDATION_CAMERA_H
 #define MEDIA_FOUNDATION_CAMERA_H
 
@@ -12,14 +18,15 @@
 #include <vector>
 #include <memory>  //std::shared_ptr include
 
-#include "../camera_interface.h"
 #include "../utils.h"
-#include "../camera_information.h"
-#include "../capability.h"
-#include "../pixel_buffer.h"
-#include "../video_property.h"
-#include "../video_property_range.h"
+#include "../include/camera_interface.h"
+#include "../include/camera_information.h"
+#include "../include/capability.h"
+#include "../include/pixel_buffer.h"
+#include "../include/video_property.h"
+#include "../include/video_property_range.h"
 #include "media_foundation_utils.h"
+#include "media_foundation_callback.h"
 
 
 namespace webcam_capture {
@@ -48,7 +55,7 @@ namespace webcam_capture {
         int setDeviceFormat(IMFMediaSource* source, DWORD formatIndex);
         int setReaderFormat(IMFSourceReader* reader, Capability& cap);
 
-    private:
+    public:
         std::shared_ptr<void*> mfDeinitializer;
         PixelBuffer pixel_buffer;
         MediaFoundation_Callback* mf_callback;

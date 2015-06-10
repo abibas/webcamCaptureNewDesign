@@ -1,3 +1,9 @@
+/**
+    This header is using code from the https://github.com/roxlu/video_capture
+    distributed under the Apache 2.0 license
+    http://www.apache.org/licenses/LICENSE-2.0
+  */
+
 #ifndef BACKEND_INTERFACE_H
 #define BACKEND_INTERFACE_H
 
@@ -25,7 +31,7 @@ namespace webcam_capture {
         /**
          * @return Vectod of avaliable cameras
          */
-        virtual std::vector<CameraInformation> getAvaliableCameras() const = 0;
+        virtual std::vector<CameraInformation> getAvailableCameras() const = 0;
         /**
          * @param information Camera information with Id and Name
          * @return New camera instance

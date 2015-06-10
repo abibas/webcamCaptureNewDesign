@@ -1,118 +1,123 @@
-//#include "../../../include/videocapture/win/MediaFoundation_Capture.h" ////TODO ????
+/**
+    This source is using code from the https://github.com/roxlu/video_capture
+    distributed under the Apache 2.0 license
+    http://www.apache.org/licenses/LICENSE-2.0
+  */
+
 #include "../src/media_foundation/media_foundation_callback.h"
 
 #include <assert.h>
 #include <mfidl.h>
 #include <shlwapi.h>
+#include <stdio.h>
 
 namespace webcam_capture {
 
-  bool MediaFoundation_Callback::createInstance(MediaFoundation_Capture* cap, MediaFoundation_Callback** cb) {
+    bool MediaFoundation_Callback::createInstance(MediaFoundation_Camera* cam, MediaFoundation_Callback** cb) {
 
-    if(cb == NULL) {
-      printf("Error: the given MediaFoundation_Capture is invalid; cant create an instance.\n");
-      return false;
+      if(cb == NULL) {
+        printf("Error: the given MediaFoundation_Capture is invalid; cant create an instance.\n");
+        return false;
+      }
+
+      MediaFoundation_Callback* media_cb = new MediaFoundation_Callback(cam);
+      if(!media_cb) {
+        printf("Error: cannot allocate a MediaFoundation_Callback object - out of memory\n");
+        return false;
+      }
+
+      *cb = media_cb;
+      (*cb)->AddRef();
+
+      safeReleaseMediaFoundation(&media_cb);
+      return true;
     }
 
-    MediaFoundation_Callback* media_cb = new MediaFoundation_Callback(cap);
-    if(!media_cb) {
-      printf("Error: cannot allocate a MediaFoundation_Callback object - out of memory\n");
-      return false;
+    MediaFoundation_Callback::MediaFoundation_Callback(MediaFoundation_Camera* cam)
+      :ref_count(1)
+      ,cam(cam)
+    {
+      InitializeCriticalSection(&crit_sec);
     }
-  
-    *cb = media_cb;
-    (*cb)->AddRef();
 
-    safeReleaseMediaFoundation(&media_cb); 
-    return true;
-  }
-
-  MediaFoundation_Callback::MediaFoundation_Callback(MediaFoundation_Capture* cap) 
-    :ref_count(1)
-    ,cap(cap)
-  {
-    InitializeCriticalSection(&crit_sec);
-  }
-
-  MediaFoundation_Callback::~MediaFoundation_Callback() {
-  }
-  
-  HRESULT MediaFoundation_Callback::QueryInterface(REFIID iid, void** v) {
-    static const QITAB qit[] = {
-      QITABENT(MediaFoundation_Callback, IMFSourceReaderCallback), 0
-    };
-    return QISearch(this, qit, iid, v);
-  }
-
-  ULONG MediaFoundation_Callback::AddRef() {
-    return InterlockedIncrement(&ref_count);
-  }
-
-  ULONG MediaFoundation_Callback::Release() {
-    ULONG ucount = InterlockedDecrement(&ref_count);
-    if(ucount == 0) {
-      delete this;
+    MediaFoundation_Callback::~MediaFoundation_Callback() {
     }
-    return ucount;
-  }
 
-  HRESULT MediaFoundation_Callback::OnReadSample(HRESULT hr, DWORD streamIndex, DWORD streamFlags, LONGLONG timestamp, IMFSample* sample) {
-    assert(cap);
-    assert(cap->imf_source_reader);
-    assert(cap->cb_frame);
+    HRESULT MediaFoundation_Callback::QueryInterface(REFIID iid, void** v) {
+      static const QITAB qit[] = {
+        QITABENT(MediaFoundation_Callback, IMFSourceReaderCallback), 0
+      };
+      return QISearch(this, qit, iid, v);
+    }
 
-    EnterCriticalSection(&crit_sec);
+    ULONG MediaFoundation_Callback::AddRef() {
+      return InterlockedIncrement(&ref_count);
+    }
 
-    if(SUCCEEDED(hr) && sample) {
+    ULONG MediaFoundation_Callback::Release() {
+      ULONG ucount = InterlockedDecrement(&ref_count);
+      if(ucount == 0) {
+        delete this;
+      }
+      return ucount;
+    }
 
-      IMFMediaBuffer* buffer;
-      HRESULT hr = S_OK;
-      DWORD count = 0;
-      sample->GetBufferCount(&count);
+    HRESULT MediaFoundation_Callback::OnReadSample(HRESULT hr, DWORD streamIndex, DWORD streamFlags, LONGLONG timestamp, IMFSample* sample) {
+      assert(cam);
+      assert(cam->imf_source_reader);
+      assert(cam->cb_frame);
 
-      for(DWORD i = 0; i < count; ++i) {
+      EnterCriticalSection(&crit_sec);
 
-        hr = sample->GetBufferByIndex(i, &buffer);
+      if(SUCCEEDED(hr) && sample) {
 
-        if(SUCCEEDED(hr)) {
-       
-          DWORD length = 0;
-          DWORD max_length = 0;
-          BYTE* data = NULL;
-          buffer->Lock(&data, &max_length, &length);
-          
-          cap->pixel_buffer.nbytes = (size_t)length;
-          cap->pixel_buffer.plane[0] = data;
-          cap->pixel_buffer.plane[1] = data + cap->pixel_buffer.offset[1];
-          cap->pixel_buffer.plane[2] = data + cap->pixel_buffer.offset[2];
-          cap->pixel_buffer.user = cap->cb_user;
-          cap->cb_frame(cap->pixel_buffer);
+        IMFMediaBuffer* buffer;
+        HRESULT hr = S_OK;
+        DWORD count = 0;
+        sample->GetBufferCount(&count);
 
-          buffer->Unlock();
-          buffer->Release();
+        for(DWORD i = 0; i < count; ++i) {
+
+          hr = sample->GetBufferByIndex(i, &buffer);
+
+          if(SUCCEEDED(hr)) {
+
+            DWORD length = 0;
+            DWORD max_length = 0;
+            BYTE* data = NULL;
+            buffer->Lock(&data, &max_length, &length);
+
+            cam->pixel_buffer.nbytes = (size_t)length;
+            cam->pixel_buffer.plane[0] = data;
+            cam->pixel_buffer.plane[1] = data + cam->pixel_buffer.offset[1];
+            cam->pixel_buffer.plane[2] = data + cam->pixel_buffer.offset[2];
+            cam->cb_frame(cam->pixel_buffer);
+
+            buffer->Unlock();
+            buffer->Release();
+          }
         }
       }
-    }
 
-    if(SUCCEEDED(hr)) {
-      if(cap->imf_source_reader && cap->state & CA_STATE_CAPTUREING) {
-        hr = cap->imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
-        if(FAILED(hr)) {
-          printf("Error: while trying to read the next sample.\n");
+      if(SUCCEEDED(hr)) {
+        if(cam->imf_source_reader && cam->state /*& CA_STATE_CAPTUREING*/) { //TODO to add STATE_CAPTURING defines
+          hr = cam->imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
+          if(FAILED(hr)) {
+            printf("Error: while trying to read the next sample.\n");
+          }
         }
       }
+
+      LeaveCriticalSection(&crit_sec);
+      return S_OK;
     }
 
-    LeaveCriticalSection(&crit_sec);
-    return S_OK;
-  }
+    HRESULT MediaFoundation_Callback::OnEvent(DWORD, IMFMediaEvent* event) {
+      return S_OK;
+    }
 
-  HRESULT MediaFoundation_Callback::OnEvent(DWORD, IMFMediaEvent* event) {
-    return S_OK;
-  }
-
-  HRESULT MediaFoundation_Callback::OnFlush(DWORD) {
-    return S_OK;
-  }
+    HRESULT MediaFoundation_Callback::OnFlush(DWORD) {
+      return S_OK;
+    }
 
 } // namespace webcam_capture
