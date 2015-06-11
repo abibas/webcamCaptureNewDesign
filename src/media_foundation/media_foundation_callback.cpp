@@ -5,6 +5,7 @@
   */
 
 #include "media_foundation_callback.h"
+#include "media_foundation_camera.h"
 
 #include <assert.h>
 #include <mfidl.h>

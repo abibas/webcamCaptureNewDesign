@@ -66,13 +66,5 @@ namespace webcam_capture {
         frame_callback cb_frame;
     };
   
-  /* Safely release the given obj. */
-  template <class T> void safeReleaseMediaFoundation(T **t) {
-    if(*t) {
-      (*t)->Release();
-      *t = NULL;
-    }
-  }
-
 } // namespace webcam_capture
 #endif
