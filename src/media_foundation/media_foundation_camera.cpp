@@ -3,7 +3,11 @@
 
 namespace webcam_capture {
 
-    MediaFoundation_Camera::MediaFoundation_Camera(std::shared_ptr<void*> mfDeinitializer, const CameraInformation &information){
+    MediaFoundation_Camera::MediaFoundation_Camera(std::shared_ptr<void*> mfDeinitializer, const CameraInformation &information)
+        :CameraInterface()
+        ,information(information)
+    {
+        return;
     }
 
     MediaFoundation_Camera::~MediaFoundation_Camera(){
