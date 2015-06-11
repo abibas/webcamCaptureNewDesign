@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 #include <memory>  //std::shared_ptr include
+#include <iostream>
 
 #include "../utils.h"
 #include "../include/camera_interface.h"

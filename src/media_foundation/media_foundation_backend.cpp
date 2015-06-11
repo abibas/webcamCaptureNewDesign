@@ -10,6 +10,19 @@
 namespace webcam_capture {
 
   MediaFoundation_Backend::MediaFoundation_Backend() {
+      // Initialize COM
+      HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
+      if(FAILED(hr)) {
+          DEBUG_PRINT("Error: cannot intialize COM.\n");  //or The COM is already initialized.
+      }
+
+      // Initialize MediaFoundation
+      hr = MFStartup(MF_VERSION);
+      if(FAILED(hr)) {
+          //DEBUG_PRINT("Error: cannot startup the Media Foundation.\n" << err); // TODO ???
+          DEBUG_PRINT("Error: cannot startup the Media Foundation.\n");
+      }
+
       //TODO to create std::shared_ptr<void*> mfDeinitializer
   }
 
@@ -78,7 +91,7 @@ namespace webcam_capture {
       return NULL;
   }
 
-  void MediaFoundation_Backend::setAvailableCamerasChangedCallback(notifications_callback cb_notif){
+  void MediaFoundation_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback){
       //TODO start notifications by setting callback. If b_notif == NULL - stop notifications
   }
 

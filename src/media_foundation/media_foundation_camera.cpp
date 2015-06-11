@@ -11,17 +11,7 @@ namespace webcam_capture {
         ,imf_media_source(NULL)
         ,imf_source_reader(NULL)
     {
-        // Initialize COM
-        HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-        if(FAILED(hr)) {
-            DEBUG_PRINT("Error: cannot intialize COM.\n" << err);  //or The COM is already initialized.
-        }
 
-        // Initialize MediaFoundation
-        hr = MFStartup(MF_VERSION);
-        if(FAILED(hr)) {
-          DEBUG_PRINT("Error: cannot startup the Media Foundation.\n" << err);
-        }
     }
 
     MediaFoundation_Camera::~MediaFoundation_Camera(){
@@ -37,7 +27,7 @@ namespace webcam_capture {
         // Shutdown MediaFoundation
         HRESULT hr = MFShutdown();
         if(FAILED(hr)) {
-            DEBUG_PRINT("Error: failed to shutdown the MediaFoundation.\n" << err);
+            DEBUG_PRINT("Error: failed to shutdown the MediaFoundation.\n");
         }
 
         // Shutdown COM

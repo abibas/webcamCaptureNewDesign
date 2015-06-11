@@ -15,7 +15,10 @@ CONFIG += c++11
 
 INCLUDEPATH += ../include/ \
 
-DEFINES += DEBUG_VERSION
+DEFINES +=  DEBUG_VERSION \
+            MEDIA_FOUNDATION \
+            #V4L \
+            #AB_FOUNDATION
 
 SOURCES += main.cpp\
         mainwindow.cpp \

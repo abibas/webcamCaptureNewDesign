@@ -25,6 +25,12 @@
 #include "media_foundation_utils.h"
 #include "media_foundation_callback.h"
 
+#ifdef DEBUG_VERSION
+    #define DEBUG_PRINT(x) std::cerr << x << std::endl
+#else
+    #define DEBUG_PRINT(x)
+#endif
+
 namespace webcam_capture {
     typedef std::function<void(CameraInformation& information)> notifications_callback;
 
@@ -34,7 +40,7 @@ namespace webcam_capture {
         ~MediaFoundation_Backend();
         std::vector<CameraInformation> getAvailableCameras() const;
         CameraInterface* getCamera(const CameraInformation &information) const;
-        void setAvailableCamerasChangedCallback(notifications_callback cb_notif); //TODO
+        void setAvaliableCamerasChangedCallback(notifications_callback n_callback); //TODO
     private:
         notifications_callback cb_notif;
         std::shared_ptr<void*> mfDeinitializer;

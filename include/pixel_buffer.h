@@ -7,6 +7,7 @@
 #ifndef PIXEL_BUFFER_H
 #define PIXEL_BUFFER_H
 #include <format.h>
+#include <stdint.h>
 
 namespace webcam_capture  {
     /**
