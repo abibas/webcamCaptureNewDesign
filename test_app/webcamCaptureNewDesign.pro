@@ -13,6 +13,10 @@ TEMPLATE = app
 
 CONFIG += c++11
 
+INCLUDEPATH += ../include/ \
+
+DEFINES += DEBUG_VERSION
+
 SOURCES += main.cpp\
         mainwindow.cpp \
     ../src/utils.cpp \
@@ -40,7 +44,6 @@ HEADERS  += mainwindow.h \
     ../src/media_foundation/media_foundation_utils.h \
     ../src/media_foundation/media_foundation_callback.h
 
-INCLUDEPATH += ../include/ \
 
 FORMS    += mainwindow.ui
 

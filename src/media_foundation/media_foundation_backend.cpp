@@ -26,7 +26,7 @@ namespace webcam_capture {
   }
 
   void MediaFoundation_Backend::setAvailableCamerasChangedCallback(notifications_callback cb_notif){
-      return;
+
   }
 
 } // namespace webcam_capture

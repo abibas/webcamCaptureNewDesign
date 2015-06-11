@@ -18,7 +18,7 @@ namespace webcam_capture  {
         * @param h Sets frame height
         * @param fmt Set frame format
         */
-       void setup(int w, int h, int fmt);
+       void setup(int w, int h, Format fmt);
 
        /**
         *  When data is one continuous block of member you can use this, otherwise it points to the same location as plane[0].

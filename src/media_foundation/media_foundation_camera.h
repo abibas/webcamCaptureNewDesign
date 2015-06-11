@@ -7,6 +7,17 @@
 #ifndef MEDIA_FOUNDATION_CAMERA_H
 #define MEDIA_FOUNDATION_CAMERA_H
 
+#ifdef DEBUG_VERSION
+    #define DEBUG_PRINT(x) std::cerr << x << std::endl
+#else
+    #define DEBUG_PRINT(x)
+#endif
+
+/* States (may be be used by implementations) */
+#define CA_STATE_NONE 0x00                                                         /* Default state */
+#define CA_STATE_OPENED 0x01                                                       /* The user opened a device */
+#define CA_STATE_CAPTUREING 0x02                                                   /* The user started captureing */
+
 #include <windows.h>
 #include <mfapi.h>
 #include <mfplay.h>

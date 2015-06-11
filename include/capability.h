@@ -10,7 +10,10 @@
 
 
 namespace webcam_capture  {
-    /**
+
+    class MediaFoundation_Camera;   //to move to ifdef. TODO
+
+     /**
      * Contains valid values of a Capability
      */
     class Capability {
@@ -35,6 +38,16 @@ namespace webcam_capture  {
         * @return Capability FPS
         */
        int getFps() const { return fps; }
+
+       /**
+        * @return Capability index
+        */
+       int getCapabilityIndex() const { return capabilityIndex; }
+
+       /**
+        * @return Pixel format index
+        */
+       int getPixelFormatIndex() const { return pixelFormatIndex; }
     private:
 
        /**
@@ -56,8 +69,7 @@ namespace webcam_capture  {
                     capabilityIndex(capabilityIndex),
                     fpsIndex(fpsIndex),
                     pixelFormatIndex(pixelFormatIndex),
-                    description(description) {}       
-
+                    description(description) {}              
        const int width;
        const int height;
        /**

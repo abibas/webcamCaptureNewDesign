@@ -17,13 +17,13 @@ namespace webcam_capture {
     bool MediaFoundation_Callback::createInstance(MediaFoundation_Camera* cam, MediaFoundation_Callback** cb) {
 
       if(cb == NULL) {
-        printf("Error: the given MediaFoundation_Capture is invalid; cant create an instance.\n");
+        DEBUG_PRINT("Error: the given MediaFoundation_Capture is invalid; cant create an instance.\n");
         return false;
       }
 
       MediaFoundation_Callback* media_cb = new MediaFoundation_Callback(cam);
       if(!media_cb) {
-        printf("Error: cannot allocate a MediaFoundation_Callback object - out of memory\n");
+        DEBUG_PRINT("Error: cannot allocate a MediaFoundation_Callback object - out of memory\n");
         return false;
       }
 
@@ -104,7 +104,7 @@ namespace webcam_capture {
         if(cam->imf_source_reader && cam->state /*& CA_STATE_CAPTUREING*/) { //TODO to add STATE_CAPTURING defines
           hr = cam->imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
           if(FAILED(hr)) {
-            printf("Error: while trying to read the next sample.\n");
+            DEBUG_PRINT("Error: while trying to read the next sample.\n");
           }
         }
       }
