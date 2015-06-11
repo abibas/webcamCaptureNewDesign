@@ -11,11 +11,12 @@
 #include <mfidl.h>
 #include <mfreadwrite.h>
 #include <shlwapi.h>
-#include "media_foundation_camera.h"
 
 
 namespace webcam_capture {
-                                         
+
+  class MediaFoundation_Camera;
+
   class MediaFoundation_Callback : public IMFSourceReaderCallback {
   public:
     static bool createInstance(MediaFoundation_Camera* cam, MediaFoundation_Callback** cb);
@@ -40,6 +41,14 @@ namespace webcam_capture {
     long ref_count;
     CRITICAL_SECTION crit_sec;
   };
+
+  /* Safely release the given obj. */
+  template <class T> void safeReleaseMediaFoundation(T **t) {
+    if(*t) {
+      (*t)->Release();
+      *t = NULL;
+    }
+  }
 
 } // namespace webcam_capture
 
