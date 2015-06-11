@@ -23,7 +23,8 @@ SOURCES += main.cpp\
     ../src/media_foundation/media_foundation_backend.cpp \
     ../src/media_foundation/media_foundation_callback.cpp \
     ../src/media_foundation/media_foundation_camera.cpp \
-    ../src/media_foundation/media_foundation_utils.cpp
+    ../src/media_foundation/media_foundation_utils.cpp \
+    ../src/backend_factory.cpp
 
 HEADERS  += mainwindow.h \
     ../include/backend_interface.h \
