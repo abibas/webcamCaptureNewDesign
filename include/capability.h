@@ -15,7 +15,7 @@ namespace webcam_capture  {
      */
     class Capability {
     public:
-
+        ~Capability();
         /**
         * @return Capbility width
         */
@@ -56,8 +56,7 @@ namespace webcam_capture  {
                     capabilityIndex(capabilityIndex),
                     fpsIndex(fpsIndex),
                     pixelFormatIndex(pixelFormatIndex),
-                    description(description) {}
-       ~Capability();
+                    description(description) {}       
 
        const int width;
        const int height;
