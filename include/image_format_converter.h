@@ -1,6 +1,6 @@
 #ifndef IMAGE_FORMAT_CONVERTER
 #define IMAGE_FORMAT_CONVERTER
-#include "pixel_buffer.h"
+#include <pixel_buffer.h>
 
 namespace webcam_capture {
 

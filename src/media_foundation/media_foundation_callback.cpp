@@ -4,7 +4,7 @@
     http://www.apache.org/licenses/LICENSE-2.0
   */
 
-#include "../src/media_foundation/media_foundation_callback.h"
+#include "media_foundation_callback.h"
 
 #include <assert.h>
 #include <mfidl.h>

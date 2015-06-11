@@ -40,6 +40,8 @@ HEADERS  += mainwindow.h \
     ../src/media_foundation/media_foundation_utils.h \
     ../src/media_foundation/media_foundation_callback.h
 
+INCLUDEPATH += ../include/ \
+
 FORMS    += mainwindow.ui
 
 win32: LIBS +=  -lMfplat\

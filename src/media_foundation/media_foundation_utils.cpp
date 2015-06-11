@@ -1,4 +1,4 @@
-#include "../src/media_foundation/media_foundation_utils.h"
+#include "media_foundation_utils.h"
 
 namespace webcam_capture {
 

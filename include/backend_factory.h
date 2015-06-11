@@ -1,7 +1,7 @@
 #ifndef BACKEND_FACTORY
 #define BACKEND_FACTORY
-#include "backend_interface.h"
-#include "backend_implementation.h"
+#include <backend_interface.h>
+#include <backend_implementation.h>
 
 namespace webcam_capture {
 

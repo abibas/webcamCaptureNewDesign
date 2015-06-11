@@ -5,7 +5,7 @@
   */
 #include <iostream>
 
-#include "../src/media_foundation/media_foundation_backend.h"
+#include "media_foundation_backend.h"
 
 namespace webcam_capture {
 

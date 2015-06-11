@@ -10,10 +10,10 @@
 #include <functional>
 #include <vector>
 
-#include "capability.h"
-#include "pixel_buffer.h"
-#include "video_property_range.h"
-#include "video_property.h"
+#include <capability.h>
+#include <pixel_buffer.h>
+#include <video_property_range.h>
+#include <video_property.h>
 
 namespace webcam_capture {
     /**

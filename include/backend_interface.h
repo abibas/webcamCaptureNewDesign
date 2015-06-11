@@ -12,8 +12,8 @@
 #include <vector>
 #include <functional>
 
-#include "camera_interface.h"
-#include "camera_information.h"
+#include <camera_interface.h>
+#include <camera_information.h>
 
 namespace webcam_capture {
     /**
