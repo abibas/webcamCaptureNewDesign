@@ -20,7 +20,7 @@ namespace webcam_capture {
        * @param cameraName Camera Name
        */
       CameraInformation(int cameraId, std::string cameraName) : cameraId(cameraId), cameraName (cameraName) {}
-      ~CameraInformation();
+      ~CameraInformation() {}
 
       /**
        * @return Camera Id

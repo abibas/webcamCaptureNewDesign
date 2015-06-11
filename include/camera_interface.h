@@ -26,8 +26,8 @@ namespace webcam_capture {
      */
     class CameraInterface {
     public:
-        CameraInterface();        
-        virtual ~CameraInterface();
+        CameraInterface() {}
+        virtual ~CameraInterface() {}
 
         /**
          * open Open the camera device

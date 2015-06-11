@@ -9,7 +9,8 @@
 
 namespace webcam_capture {
 
-  MediaFoundation_Backend::MediaFoundation_Backend() {
+  MediaFoundation_Backend::MediaFoundation_Backend()
+  {
   }
 
   MediaFoundation_Backend::~MediaFoundation_Backend() {

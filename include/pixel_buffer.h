@@ -12,8 +12,7 @@ namespace webcam_capture  {
     /**
      *  Structure representing datatype for captured frames
      */
-    struct PixelBuffer{
-       PixelBuffer();
+    struct PixelBuffer{       
        /**
         * @param w Sets frame width
         * @param h Sets frame height

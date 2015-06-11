@@ -15,7 +15,7 @@ namespace webcam_capture  {
      */
     class Capability {
     public:
-        ~Capability();
+        ~Capability() {}
         /**
         * @return Capbility width
         */

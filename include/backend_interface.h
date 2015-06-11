@@ -26,8 +26,8 @@ namespace webcam_capture {
      */
     class BackendInterface {
     public:
-        BackendInterface();
-        virtual ~BackendInterface();
+        BackendInterface() {}
+        virtual ~BackendInterface() {}
         /**
          * @return Vectod of avaliable cameras
          */

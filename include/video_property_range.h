@@ -21,7 +21,7 @@ namespace webcam_capture {
                maxValue(max),
                stepValue(step),
                defaultValue(defaultValue) {}
-           ~VideoPropertyRange();
+           ~VideoPropertyRange() {}
            /**
             * @return Minimum video property value
             */
