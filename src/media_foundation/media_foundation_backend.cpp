@@ -9,24 +9,77 @@
 
 namespace webcam_capture {
 
-  MediaFoundation_Backend::MediaFoundation_Backend()
-  {
+  MediaFoundation_Backend::MediaFoundation_Backend() {
+      //TODO to create std::shared_ptr<void*> mfDeinitializer
   }
 
   MediaFoundation_Backend::~MediaFoundation_Backend() {
   }
 
   std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() const{
-      std::vector<CameraInformation> x;
-      return x;
+
+      std::vector<CameraInformation> result;
+      UINT32 count = 0;
+      IMFAttributes* config = NULL;
+      IMFActivate** devices = NULL;
+
+      HRESULT hr = MFCreateAttributes(&config, 1);
+      if(FAILED(hr)) {
+        goto done;
+      }
+
+      // Filter capture devices.
+      hr = config->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,  MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
+      if(FAILED(hr)) {
+        goto done;
+      }
+
+      // Enumerate devices
+      hr = MFEnumDeviceSources(config, &devices, &count);
+      if(FAILED(hr)) {
+        goto done;
+      }
+
+      if(count == 0) {
+        goto done;
+      }
+
+      for(DWORD i = 0; i < count; ++i) {
+
+        HRESULT hr = S_OK;
+        WCHAR* friendly_name = NULL;
+        UINT32 friendly_name_len = 0;
+        hr = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME,  &friendly_name, &friendly_name_len);
+        if(SUCCEEDED(hr)) {
+          std::string name = string_cast<std::string>(friendly_name);
+
+          CameraInformation camInfo(i, name);
+
+          result.push_back(camInfo);
+        }
+
+        CoTaskMemFree(friendly_name);
+      }
+
+    done:
+      safeReleaseMediaFoundation(&config);
+
+      for(DWORD i = 0; i < count; ++i) {
+        safeReleaseMediaFoundation(&devices[i]);
+      }
+
+      CoTaskMemFree(devices);
+
+      return result;
   }
 
   CameraInterface* MediaFoundation_Backend::getCamera(const CameraInformation &information) const{
+      //TODO Create MediaFoundation_Camera and return it.
       return NULL;
   }
 
   void MediaFoundation_Backend::setAvailableCamerasChangedCallback(notifications_callback cb_notif){
-
+      //TODO start notifications by setting callback. If b_notif == NULL - stop notifications
   }
 
 } // namespace webcam_capture
