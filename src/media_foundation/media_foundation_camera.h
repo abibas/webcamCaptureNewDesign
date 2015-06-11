@@ -16,7 +16,7 @@
 /* States (may be be used by implementations) */
 #define CA_STATE_NONE 0x00                                                         /* Default state */
 #define CA_STATE_OPENED 0x01                                                       /* The user opened a device */
-#define CA_STATE_CAPTUREING 0x02                                                   /* The user started captureing */
+#define CA_STATE_CAPTURING 0x02                                                   /* The user started captureing */
 
 #include <windows.h>
 #include <mfapi.h>
@@ -57,14 +57,14 @@ namespace webcam_capture {
         VideoPropertyRange getPropertyRange(VideoProperty property) const; // TODO
         int getProperty(VideoProperty property) const; //TODO
         bool setProperty(const VideoProperty property, const int value); //TODO
-        std::vector<Capability> getCapabilities() const;
+        std::vector<Capability> getCapabilities();
     private:
         //// SDK functions
         int createSourceReader(IMFMediaSource* mediaSource, IMFSourceReaderCallback* callback, IMFSourceReader** sourceReader);
-        int createVideoDeviceSource(int device, IMFMediaSource** source);
+        int createVideoDeviceSource(const int device, IMFMediaSource** source);
         int getCapabilities(IMFMediaSource* source, std::vector<Capability>& result);
         int setDeviceFormat(IMFMediaSource* source, DWORD formatIndex);
-        int setReaderFormat(IMFSourceReader* reader, Capability& cap);
+        int setReaderFormat(IMFSourceReader*reader, Capability& cap);
 
     public:
         std::shared_ptr<void*> mfDeinitializer;

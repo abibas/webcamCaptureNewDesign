@@ -26,7 +26,7 @@ namespace webcam_capture {
 
     MediaFoundation_Camera::~MediaFoundation_Camera(){
         // Close and stop
-        if(state & CA_STATE_CAPTUREING) {
+        if(state & CA_STATE_CAPTURING) {
             stop();
         }
 
@@ -108,40 +108,126 @@ namespace webcam_capture {
 
         /* Set the pixel buffer strides, widths and heights based on the selected format. */
         //pixel_buffer.setup(cap.getWidth(), cap.getHeight(), cap.getPixelFormat());  //TODO move to other method
+        return 1;      //TODO Err code
     }
 
     int MediaFoundation_Camera::close(){
-        return 0;
+        if(!imf_source_reader) {
+          DEBUG_PRINT("Error: cannot close the device because it seems that is hasn't been opend yet. Did you call openDevice?.\n");
+          return -1;      //TODO Err code
+        }
+
+        if(state & CA_STATE_CAPTURING) {
+          stop();
+        }
+
+        safeReleaseMediaFoundation(&imf_source_reader);
+        safeReleaseMediaFoundation(&imf_media_source);
+        safeReleaseMediaFoundation(&mf_callback);
+
+        state &= ~CA_STATE_OPENED;
+
+        return 1;      //TODO Err code
     }
 
     int MediaFoundation_Camera::start(){
-        return 0;
+        if(!imf_source_reader) {
+          DEBUG_PRINT("Error: cannot start capture becuase it looks like the device hasn't been opened yet.\n");
+          return -1;      //TODO Err code
+        }
+
+        if(!(state & CA_STATE_OPENED)) {
+          DEBUG_PRINT("Error: cannot start captureing because you haven't opened the device successfully.\n");
+          return -2;      //TODO Err code
+        }
+
+        if(state & CA_STATE_CAPTURING) {
+          DEBUG_PRINT("Error: cannot start capture because we are already capturing.\n");
+          return -3;      //TODO Err code
+        }
+
+        // Kick off the capture stream.
+        HRESULT hr = imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
+        if(FAILED(hr)) {
+          if(hr == MF_E_INVALIDREQUEST) {
+            DEBUG_PRINT("ReadSample returned MF_E_INVALIDREQUEST.\n");
+          }
+          else if(hr == MF_E_INVALIDSTREAMNUMBER) {
+            DEBUG_PRINT("ReadSample returned MF_E_INVALIDSTREAMNUMBER.\n");
+          }
+          else if(hr == MF_E_NOTACCEPTING) {
+            DEBUG_PRINT("ReadSample returned MF_E_NOTACCEPTING.\n");
+          }
+          else if(hr == E_INVALIDARG) {
+            DEBUG_PRINT("ReadSample returned E_INVALIDARG.\n");
+          }
+          else if(hr == E_POINTER) {
+            DEBUG_PRINT("ReadSample returned E_POINTER.\n");
+          }
+          else {
+            DEBUG_PRINT("ReadSample - unhandled result.\n");
+          }
+          DEBUG_PRINT("Error: while trying to ReadSample() on the imf_source_reader. \n");
+          #ifdef DEBUG_VERSION
+            std::cout << "Error: " << std::hex << hr << std::endl;
+          #endif
+          return -4;      //TODO Err code
+        }
+
+        state |= CA_STATE_CAPTURING;
+
+        return 1;      //TODO Err code
     }
 
     int MediaFoundation_Camera::stop(){
-        return 0;
+        if(!imf_source_reader) {
+          DEBUG_PRINT("Error: Cannot stop capture because it seems that the device hasn't been opened yet.\n");
+          return -1;    //TODO Err code
+        }
+
+        if(!state & CA_STATE_CAPTURING) {
+          DEBUG_PRINT("Error: Cannot stop capture because we're not capturing yet.\n");
+          return -2;    //TODO Err code
+        }
+
+        state &= ~CA_STATE_CAPTURING;
+
+        return 1;   //TODO Err code
     }
 
     PixelBuffer* MediaFoundation_Camera::CaptureFrame(){
+        //TODO to realise method
         return NULL;
     }
 
 // ---- Capabilities ----
     VideoPropertyRange MediaFoundation_Camera::getPropertyRange(VideoProperty property) const{
+        // TODO to realise method
         VideoPropertyRange vpr(0,0,0,0);
         return vpr;
     }
 
     int MediaFoundation_Camera::getProperty(VideoProperty property) const{
+        // TODO to realise method
         return 0;
     }
     bool MediaFoundation_Camera::setProperty(const VideoProperty property, const int value){
+        // TODO to realise method
         return false;
     }
 
-    std::vector<Capability> MediaFoundation_Camera::getCapabilities() const{
-        std::vector<Capability> x;
-        return x;
+    std::vector<Capability> MediaFoundation_Camera::getCapabilities(){
+
+        std::vector<Capability> result;
+        IMFMediaSource* source = NULL;
+
+        if(createVideoDeviceSource(information.getDeviceId(), &source) > 0){
+            getCapabilities(source, result);
+            safeReleaseMediaFoundation(&source);
+        }
+
+        return result;
+
     }
 
     /* PLATFORM SDK SPECIFIC */
@@ -255,7 +341,7 @@ namespace webcam_capture {
         int height;
 
         IMFMediaType* type = NULL;
-        hr = imf_source_reader->GetNativeMediaType(0, media_type_index, &type);
+        hr = reader->GetNativeMediaType(0, media_type_index, &type);
 
         if(SUCCEEDED(hr)) {
 
@@ -290,7 +376,7 @@ namespace webcam_capture {
              && height == cap.getHeight()
              && Format(pixelFormat) == cap.getPixelFormat())
             {
-              hr = imf_source_reader->SetCurrentMediaType(0, NULL, type);
+              hr = reader->SetCurrentMediaType(0, NULL, type);
               if(FAILED(hr)) {
                 DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
               }
@@ -486,7 +572,7 @@ namespace webcam_capture {
      *                                   given `device` parameter. When ready, call
      *                                   `safeReleaseMediaFoundation(&source)` to free memory.
      */
-    int MediaFoundation_Camera::createVideoDeviceSource(int device, IMFMediaSource** source) {
+    int MediaFoundation_Camera::createVideoDeviceSource(const int device, IMFMediaSource** source) {
 
       int result = 1;
       IMFAttributes* config = NULL;

@@ -101,7 +101,7 @@ namespace webcam_capture {
       }
 
       if(SUCCEEDED(hr)) {
-        if(cam->imf_source_reader && cam->state /*& CA_STATE_CAPTUREING*/) { //TODO to add STATE_CAPTURING defines
+        if(cam->imf_source_reader && cam->state & CA_STATE_CAPTURING) {
           hr = cam->imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
           if(FAILED(hr)) {
             DEBUG_PRINT("Error: while trying to read the next sample.\n");
