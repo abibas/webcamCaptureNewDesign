@@ -1,10 +1,16 @@
 #include "media_foundation_utils.h"
+#include <format.h>
 
 namespace webcam_capture {
 
 // Convert the MF format to one we can use.
-  int media_foundation_video_format_to_capture_format(GUID guid) {
-      return 0; //TODO
+  Format media_foundation_video_format_to_capture_format(GUID guid) {
+      if(IsEqualGUID(guid, MFVideoFormat_RGB24))     { return Format::RGB24;   }
+      else if(IsEqualGUID(guid, MFVideoFormat_I420)) { return Format::YUV420P; }
+      else if(IsEqualGUID(guid, MFVideoFormat_MJPG)) { return Format::MJPEG; }
+      else {
+        return Format::UNKNOWN;
+      }
   }
 
   // Convert a MF format to a string.

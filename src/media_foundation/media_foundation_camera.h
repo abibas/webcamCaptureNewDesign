@@ -63,7 +63,7 @@ namespace webcam_capture {
         //// SDK functions
         int createSourceReader(IMFMediaSource* mediaSource, IMFSourceReaderCallback* callback, IMFSourceReader** sourceReader);
         int createVideoDeviceSource(const int device, IMFMediaSource** source);
-        int getCapabilities(IMFMediaSource* source, std::vector<Capability>& result);
+        int getVideoCapabilities(IMFMediaSource* source, std::vector<Capability>& result);
         int setDeviceFormat(IMFMediaSource* source, DWORD formatIndex);
         int setReaderFormat(IMFSourceReader*reader, Capability& cap);
 

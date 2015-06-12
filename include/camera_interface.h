@@ -9,11 +9,14 @@
 
 #include <functional>
 #include <vector>
+#include <memory>
 
 #include <capability.h>
 #include <pixel_buffer.h>
+#include <camera_information.h>
 #include <video_property_range.h>
 #include <video_property.h>
+
 
 namespace webcam_capture {
     /**
@@ -80,7 +83,7 @@ namespace webcam_capture {
         /**
          * @return Capabilities vector
          */
-        virtual std::vector<Capability> getCapabilities() const = 0;
+        virtual std::vector<Capability> getCapabilities() = 0;
     };
 
 } // namespace webcam_capture

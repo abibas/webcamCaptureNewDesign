@@ -11,8 +11,7 @@ namespace webcam_capture {
     /**
      * Enum of supported video capture formats
      */
-    enum class Format { NONE = -1,
-                        UYVY422,    /* Cb Y0 Cr Y1 */
+    enum class Format { UYVY422,        /* Cb Y0 Cr Y1 */
                         YUYV422,        /* Y0 Cb Y1 Cr */
                         YUV422P,        /* YUV422 Planar */
                         YUV420P,        /* YUV420 Planar */
@@ -25,7 +24,8 @@ namespace webcam_capture {
                         RGB24,          /* RGB 8:8:8 24bit */
                         JPEG_OPENDML,   /* JPEG with Open-DML extensions */
                         H264,           /* H264 */
-                        MJPEG           /* MJPEG 2*/
+                        MJPEG,          /* MJPEG 2*/
+                        UNKNOWN         /* Unknown format*/
                       };
 } // namespace webcam_capture
 

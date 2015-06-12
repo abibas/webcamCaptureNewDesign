@@ -32,12 +32,15 @@ namespace webcam_capture {
         #ifdef MEDIA_FOUNDATION
             result.push_back(BackendImplementation::MediaFoundation);
         #endif
+
         #ifdef V4L
             result.push_back(BackendImplementation::v4l);
         #endif
+
         #ifdef AV_FOUNDATION
             result.push_back(BackendImplementation::AVFoundation);
         #endif
+
         return result;
     }
 

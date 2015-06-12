@@ -15,21 +15,21 @@ CONFIG += c++11
 
 INCLUDEPATH += ../include/ \
 
-DEFINES +=  DEBUG_VERSION \
-            MEDIA_FOUNDATION \
+DEFINES +=  MEDIA_FOUNDATION \
+            #DEBUG_VERSION \
             #V4L \
-            #AB_FOUNDATION
+            #AV_FOUNDATION
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
     ../src/utils.cpp \
     ../src/media_foundation/media_foundation_backend.cpp \
     ../src/media_foundation/media_foundation_callback.cpp \
     ../src/media_foundation/media_foundation_camera.cpp \
     ../src/media_foundation/media_foundation_utils.cpp \
-    ../src/backend_factory.cpp
+    ../src/backend_factory.cpp \
+    mainwindow.cpp
 
-HEADERS  += mainwindow.h \
+HEADERS  += \
     ../include/backend_interface.h \
     ../include/camera_interface.h \
     ../include/backend_implementation.h \
@@ -46,10 +46,11 @@ HEADERS  += mainwindow.h \
     ../src/media_foundation/media_foundation_backend.h \
     ../src/media_foundation/media_foundation_camera.h \
     ../src/media_foundation/media_foundation_utils.h \
-    ../src/media_foundation/media_foundation_callback.h
+    ../src/media_foundation/media_foundation_callback.h \
+    mainwindow.h
 
-
-FORMS    += mainwindow.ui
+FORMS    += \
+    mainwindow.ui
 
 win32: LIBS +=  -lMfplat\
                 -lOle32\

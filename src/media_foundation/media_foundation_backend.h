@@ -19,9 +19,9 @@
 #include <memory>               /* std::shared_ptr include */
 
 #include "../utils.h"
-#include "../include/backend_interface.h"
-#include "../include/camera_interface.h"
-#include "../include/camera_information.h"
+#include <backend_interface.h>
+#include <camera_interface.h>
+#include <camera_information.h>
 #include "media_foundation_utils.h"
 #include "media_foundation_callback.h"
 

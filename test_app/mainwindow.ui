@@ -6,30 +6,33 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>469</width>
+    <height>361</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="centralWidget">
-   <widget class="QComboBox" name="deviceComboBox">
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>80</y>
-      <width>161</width>
-      <height>22</height>
+      <y>10</y>
+      <width>81</width>
+      <height>16</height>
      </rect>
     </property>
+    <property name="text">
+     <string>Framework List</string>
+    </property>
    </widget>
-   <widget class="QLabel" name="deviceListLabel">
+   <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>60</y>
-      <width>71</width>
+      <width>81</width>
       <height>16</height>
      </rect>
     </property>
@@ -37,30 +40,50 @@
      <string>Device List</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="deviceListRefresh">
+   <widget class="QComboBox" name="frameworkListComboBox">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>80</y>
-      <width>61</width>
+      <x>10</x>
+      <y>30</y>
+      <width>141</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="createBackendBtn">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>30</y>
+      <width>101</width>
       <height>23</height>
      </rect>
     </property>
     <property name="text">
-     <string>refresh</string>
+     <string>Create backend</string>
     </property>
    </widget>
-   <widget class="QLabel" name="capabilityLabel">
+   <widget class="QComboBox" name="cameraListComboBox">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>120</y>
-      <width>71</width>
-      <height>16</height>
+      <y>80</y>
+      <width>141</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="createCameraBtn">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>80</y>
+      <width>101</width>
+      <height>23</height>
      </rect>
     </property>
     <property name="text">
-     <string>Capability</string>
+     <string>Create backend</string>
     </property>
    </widget>
    <widget class="QComboBox" name="capabilityComboBox">
@@ -68,63 +91,26 @@
      <rect>
       <x>10</x>
       <y>140</y>
-      <width>211</width>
+      <width>241</width>
       <height>22</height>
      </rect>
     </property>
    </widget>
-   <widget class="QPushButton" name="captureVideoBtn">
+   <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>190</y>
-      <width>101</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Capture Video</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="stopCapturingBtn">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>220</y>
-      <width>101</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Stop Captuing</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="BackendListLabel">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>71</width>
+      <y>120</y>
+      <width>91</width>
       <height>16</height>
      </rect>
     </property>
     <property name="text">
-     <string>Backend List</string>
-    </property>
-   </widget>
-   <widget class="QComboBox" name="backendListComboBox">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>30</y>
-      <width>161</width>
-      <height>22</height>
-     </rect>
+     <string>Camera capability</string>
     </property>
    </widget>
   </widget>
  </widget>
- <layoutdefault spacing="6" margin="11"/>
  <resources/>
  <connections/>
 </ui>

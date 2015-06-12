@@ -19,10 +19,12 @@
 #include <shlwapi.h>
 #include <string>
 
+#include <format.h>
+
 namespace webcam_capture {
 
   std::string media_foundation_video_format_to_string(const GUID& guid);           /* Convert a MF format to a string */
-  int media_foundation_video_format_to_capture_format(GUID guid);                  /* Convert a MF format to a capture format */
+  webcam_capture::Format media_foundation_video_format_to_capture_format(GUID guid);                  /* Convert a MF format to a capture format */
 
   // Convert a WCHAR to a std::string
   template<class T>

@@ -4,7 +4,7 @@
     http://www.apache.org/licenses/LICENSE-2.0
   */
 #include <iostream>
-
+#include "media_foundation_camera.h"
 #include "media_foundation_backend.h"
 
 namespace webcam_capture {
@@ -13,14 +13,13 @@ namespace webcam_capture {
       // Initialize COM
       HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
       if(FAILED(hr)) {
-          DEBUG_PRINT("Error: cannot intialize COM.\n");  //or The COM is already initialized.
+          DEBUG_PRINT("Error: cannot intialize COM.\n" << err);  //or The COM is already initialized.
       }
 
       // Initialize MediaFoundation
       hr = MFStartup(MF_VERSION);
       if(FAILED(hr)) {
-          //DEBUG_PRINT("Error: cannot startup the Media Foundation.\n" << err); // TODO ???
-          DEBUG_PRINT("Error: cannot startup the Media Foundation.\n");
+          DEBUG_PRINT("Error: cannot startup the Media Foundation.\n" << err);
       }
 
       //TODO to create std::shared_ptr<void*> mfDeinitializer
@@ -87,8 +86,7 @@ namespace webcam_capture {
   }
 
   CameraInterface* MediaFoundation_Backend::getCamera(const CameraInformation &information) const{
-      //TODO Create MediaFoundation_Camera and return it.
-      return NULL;
+      return new MediaFoundation_Camera(NULL, information);
   }
 
   void MediaFoundation_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback){
