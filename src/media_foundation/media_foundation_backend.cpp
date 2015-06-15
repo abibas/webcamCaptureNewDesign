@@ -6,6 +6,7 @@
 #include <iostream>
 #include "media_foundation_camera.h"
 #include "media_foundation_backend.h"
+#include <functional>
 
 #ifdef DEBUG_VERSION
     #define DEBUG_PRINT(x) std::cerr << x << std::endl
@@ -14,8 +15,31 @@
 #endif
 
 namespace webcam_capture {
+//TODO To refactor this..
+//class BackendDeinitializer
+//{
+//public:
+//    void operator()(void*)
+//    {
+//        DEBUG_PRINT("MediaFoundation_Backend Successfully deinited.\n" << err);
+//        /* Shutdown MediaFoundation */
+//        HRESULT hr = MFShutdown();
+//        if(FAILED(hr)) {
+//          DEBUG_PRINT("Error: failed to shutdown the MediaFoundation.\n" << err);
+//        }
 
-  MediaFoundation_Backend::MediaFoundation_Backend() {
+//        /* Shutdown COM */
+//        CoUninitialize();
+//    }
+//};
+
+
+
+  MediaFoundation_Backend::MediaFoundation_Backend()
+//      : mfDeinitializer(this, BackendDeinitializer())
+      //Trying to call Static member by shared_ptr deleter
+      :mfDeinitializer(this, MediaFoundation_Backend::DeinitBackend)
+    {
       // Initialize COM
       HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
       if(FAILED(hr)) {
@@ -28,10 +52,22 @@ namespace webcam_capture {
           DEBUG_PRINT("Error: cannot startup the Media Foundation.\n" << err);
       }
 
-      //TODO to create std::shared_ptr<void*> mfDeinitializer
+      //mfDeinitializer(this, BackendDeinitializer());
   }
 
   MediaFoundation_Backend::~MediaFoundation_Backend() {
+  }
+
+  void MediaFoundation_Backend::DeinitBackend(void*){
+      DEBUG_PRINT("MediaFoundation_Backend Successfully deinited.\n" << err);
+      /* Shutdown MediaFoundation */
+      HRESULT hr = MFShutdown();
+      if(FAILED(hr)) {
+          DEBUG_PRINT("Error: failed to shutdown the MediaFoundation.\n" << err);
+      }
+
+      /* Shutdown COM */
+      CoUninitialize();
   }
 
   std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() const{

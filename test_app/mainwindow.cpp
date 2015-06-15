@@ -139,8 +139,9 @@ void MainWindow::on_createBackendBtn_clicked()
 
 void MainWindow::on_createCameraBtn_clicked()
 {
-    camera = backend->getCamera(cameraInfoList[this->ui->cameraListComboBox->currentIndex()]);
-    fillCameraCapabilitiesCB();
+    delete backend;
+//    camera = backend->getCamera(cameraInfoList[this->ui->cameraListComboBox->currentIndex()]);
+//    fillCameraCapabilitiesCB();
 }
 
 void MainWindow::on_cameraListComboBox_currentIndexChanged(int index)

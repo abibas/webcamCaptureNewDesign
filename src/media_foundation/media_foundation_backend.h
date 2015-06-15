@@ -32,13 +32,13 @@ namespace webcam_capture {
     public:
         MediaFoundation_Backend(); // creates std::shared_ptr<void*> mfDeinitializer
         ~MediaFoundation_Backend();
+        static void DeinitBackend(void*);
         std::vector<CameraInformation> getAvailableCameras() const;
         CameraInterface* getCamera(const CameraInformation &information) const;
         void setAvaliableCamerasChangedCallback(notifications_callback n_callback); //TODO
     private:
         notifications_callback cb_notif;
-        std::shared_ptr<void*> mfDeinitializer;
+        std::shared_ptr<void> mfDeinitializer;
     };
-
 } // namespace webcam_capture
 #endif
