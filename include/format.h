@@ -74,7 +74,9 @@ namespace webcam_capture {
                         WMV2,           /* Windows Media Video 8 codec*/
                         WMV3,           /* Windows Media Video 9 codec*/
                         WVC1,           /* SMPTE 421M ("VC-1")*/
-                        O420           /* "420O" 8-bit per channel planar YUV 4:2:0 video*/
+                        O420,           /* "420O" 8-bit per channel planar YUV 4:2:0 video*/
+
+                        UNKNOWN         /* Unknown format*/
 //OLD TYPES
 //                        UYVY422,        /* Cb Y0 Cr Y1 */
 //                        YUYV422,        /* Y0 Cb Y1 Cr */
@@ -90,7 +92,7 @@ namespace webcam_capture {
 //                        JPEG_OPENDML,   /* JPEG with Open-DML extensions */
 //                        H264,           /* H264 */
 //                        MJPEG,          /* MJPEG 2*/
-//                        UNKNOWN         /* Unknown format*/
+//
                       };
 } // namespace webcam_capture
 
