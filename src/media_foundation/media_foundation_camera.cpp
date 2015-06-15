@@ -11,6 +11,7 @@ namespace webcam_capture {
         ,imf_media_source(NULL)
         ,imf_source_reader(NULL)
     {
+
     }
 
     MediaFoundation_Camera::~MediaFoundation_Camera(){
@@ -34,6 +35,7 @@ namespace webcam_capture {
     }
 
     int MediaFoundation_Camera::open(const Capability &capability, frame_callback cb){
+        cb_frame = cb;
         if(state & CA_STATE_OPENED) {
           DEBUG_PRINT("Error: already opened.\n");
           return -1; //TODO Err code
@@ -94,6 +96,8 @@ namespace webcam_capture {
             safeReleaseMediaFoundation(&imf_media_source);
             return -9;      //TODO Err code
         }
+
+        state |= CA_STATE_OPENED;
 
         /* Set the pixel buffer strides, widths and heights based on the selected format. */
         //pixel_buffer.setup(cap.getWidth(), cap.getHeight(), cap.getPixelFormat());  //TODO move to other method

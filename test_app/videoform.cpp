@@ -1,6 +1,11 @@
 #include "videoform.h"
 #include "ui_videoform.h"
-using namespace std::placeholders;
+
+using namespace std::placeholders; //for std::bind _1
+
+#include <fstream>
+using namespace std;
+std::fstream outfile;
 
 VideoForm::VideoForm(QWidget *parent) :
     QWidget(parent),
@@ -16,11 +21,20 @@ VideoForm::~VideoForm()
 
 void VideoForm::FrameCaptureCallback(PixelBuffer& buffer)
 {
-    int x = 1;
-    return;
+    /// Test of mjpeg writing.
+    printf("Frame callback: %lu bytes, stride: %lu \n", buffer.nbytes, buffer.stride[0]);
+    static int count = 0;
+    static char fname[1024];
+
+    sprintf(fname, "test_%04d.jpeg", count);
+
+    std::ofstream ofs(fname, std::ios::out | std::ios::binary);
+    ofs.write((char*)buffer.plane[0], buffer.nbytes);
+    ofs.close();
+    count++;
 }
 
-std::function<void(PixelBuffer& buffer)> VideoForm::getFrameCallback()
+frame_callback VideoForm::getFrameCallback()
 {
     return std::bind(&VideoForm::FrameCaptureCallback, this, _1);
 }
