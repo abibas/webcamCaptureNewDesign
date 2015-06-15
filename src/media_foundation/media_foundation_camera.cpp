@@ -472,8 +472,10 @@ namespace webcam_capture {
         int pixelFormatIndex;
         int width;
         int height;
-        int fps;
-        int fpsIndex;
+        int minFps;
+        int maxFps;
+        int currentFps;
+        int currentFpsIndex;
         int capabilityIndex;
 
         hr = media_handler->GetMediaTypeByIndex(i, &type);
@@ -516,23 +518,33 @@ namespace webcam_capture {
               width = (int)high;
               height = (int)low;
             }
-            else if(guid == MF_MT_FRAME_RATE_RANGE_MIN
-                    || guid == MF_MT_FRAME_RATE_RANGE_MAX
-                    || guid == MF_MT_FRAME_RATE)
-              {
-                // @todo - not all FPS are added to the capability list.
+            else if( guid == MF_MT_FRAME_RATE_RANGE_MIN ) {
                 UINT32 high = 0;
                 UINT32 low =  0;
                 Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                fps = fps_from_rational(low, high);
-                fpsIndex = j;
-              }
+                minFps = fps_from_rational(low, high);
+            }
+            else if ( guid == MF_MT_FRAME_RATE_RANGE_MAX ) {
+                UINT32 high = 0;
+                UINT32 low =  0;
+                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                maxFps = fps_from_rational(low, high);
+            }
+            else if ( guid == MF_MT_FRAME_RATE )
+            {
+              UINT32 high = 0;
+              UINT32 low =  0;
+              Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+              currentFps = fps_from_rational(low, high);
+              currentFps = j;
+            }
 
             PropVariantClear(&var);
           }
 
           capabilityIndex = i;
-          Capability cap (width, height, pixelFormat, fps, capabilityIndex, fpsIndex, pixelFormatIndex, "");
+          //TODO to get ability to set variable FPS rate
+          Capability cap (width, height, pixelFormat,minFps, maxFps, currentFps, capabilityIndex, currentFpsIndex, pixelFormatIndex, "");
           caps.push_back(cap);
         }
 

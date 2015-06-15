@@ -56,7 +56,7 @@ void MainWindow::fillCameraCapabilitiesCB()
                 arg(capabilityList[i].getCapabilityIndex()).
                 arg(capabilityList[i].getWidth()).
                 arg(capabilityList[i].getHeight()).
-                arg(capabilityList[i].getFps()/100.0f).
+                arg(capabilityList[i].getMaxFps()/100.0f).
                 arg(formatToString(capabilityList[i].getPixelFormat()).c_str());
         this->ui->capabilityComboBox->addItem(str);
 

@@ -35,9 +35,25 @@ namespace webcam_capture  {
        Format getPixelFormat() const { return pixelFormat; }
 
        /**
-        * @return Capability FPS
+        * @return Capability maximum fps
         */
-       int getFps() const { return fps; }
+       int getMaxFps() const { return maxFps; }
+
+       /**
+        * @return Capability minimum fps
+        */
+       int getMinFps() const { return minFps; }
+
+       /**
+        * @return Capability current fps
+        */
+       int getCurrentFps() const { return currentFps; }
+
+       /**
+        * @param fps Capability carrent fps
+        */
+       void setCurrentFps(int fps) { currentFps = fps; }
+
 
        /**
         * @return Capability index
@@ -56,18 +72,20 @@ namespace webcam_capture  {
         * @param pixelFormat Capability pixel format
         * @param fps Capability FPS
         * @param capabilityIndex Capablity index
-        * @param fpsIndex Capability fps index
+        * @param currentFpsIndex Capability fps index
         * @param pixelFormatIndex The pixel format one of the Format enum.
         * @param description Capability description
         */
-       Capability(int width, int height, Format pixelFormat, int fps,
-                  int capabilityIndex, int fpsIndex, int pixelFormatIndex, std::string description) :
+       Capability(int width, int height, Format pixelFormat, int minFps, int maxFps, int currentFps,
+                  int capabilityIndex, int currentFpsIndex, int pixelFormatIndex, std::string description) :
                     width(width),
                     height(height),
                     pixelFormat(pixelFormat),
-                    fps(fps),
+                    minFps(minFps),
+                    maxFps(maxFps),
+                    currentFps(currentFps),
                     capabilityIndex(capabilityIndex),
-                    fpsIndex(fpsIndex),
+                    currentFpsIndex(currentFpsIndex),
                     pixelFormatIndex(pixelFormatIndex),
                     description(description) {}              
        const int width;
@@ -76,7 +94,21 @@ namespace webcam_capture  {
         * pixelFormat The pixel format one of the Format enum
         */
        const Format pixelFormat;
-       const int fps;
+
+       /**
+        * maxFps Maximum fps value supported by cam
+        */
+       const int maxFps;
+
+       /**
+        * maxFps Minimum fps value supported by cam
+        */
+       const int minFps;
+
+       /**
+        * maxFps Current fps value
+        */
+       int currentFps;
 
        /* Set by the capturer implementation */
        /**
@@ -86,7 +118,7 @@ namespace webcam_capture  {
        /**
         * fpsIndex Used by the implementation, can be an index to an FPS array that is provided by the implementation
         */
-       const int fpsIndex;
+       const int currentFpsIndex;
        /**
         * pixelFormatIndex Used by the implementation, represents an index to the pixel format for the implementation
         */
