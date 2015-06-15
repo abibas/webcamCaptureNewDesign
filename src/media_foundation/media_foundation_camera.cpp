@@ -328,6 +328,9 @@ namespace webcam_capture {
         Format pixelFormat;
         int width;
         int height;
+        int frameRate;
+        int minFps;
+        int maxFps;
 
         IMFMediaType* type = NULL;
         hr = reader->GetNativeMediaType(0, media_type_index, &type);
@@ -360,11 +363,57 @@ namespace webcam_capture {
 
           PropVariantClear(&var);
 
+
+          //!!!! FOR DEBUG!!!!!!
+          //get FPS
+          PropVariantInit(&var);
+          {
+            hr = type->GetItem(MF_MT_FRAME_RATE, &var);
+            if(SUCCEEDED(hr)) {
+                UINT32 high = 0;
+                UINT32 low =  0;
+                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                frameRate = fps_from_rational(low, high);
+            }
+          }
+          PropVariantClear(&var);
+          ///// get Fps END
+
+          //get min FPS
+          PropVariantInit(&var);
+          {
+            hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
+            if(SUCCEEDED(hr)) {
+                UINT32 high = 0;
+                UINT32 low =  0;
+                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                minFps = fps_from_rational(low, high);
+            }
+          }
+          PropVariantClear(&var);
+          ///// get Fps END
+
+          //get maxFPS
+          PropVariantInit(&var);
+          {
+            hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
+            if(SUCCEEDED(hr)) {
+                UINT32 high = 0;
+                UINT32 low =  0;
+                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                maxFps = fps_from_rational(low, high);
+            }
+          }
+          PropVariantClear(&var);
+          ///// get Fps END
+          ///// !!!FOR DEBUG END
+
           // When the output media type of the source reader matches our specs, set it!
           if(width == cap.getWidth()
              && height == cap.getHeight()
              && pixelFormat == cap.getPixelFormat())
             {
+              ///TODO !!! now it's workaround and set's only max FPS value
               hr = reader->SetCurrentMediaType(0, NULL, type);
               if(FAILED(hr)) {
                 DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n" << err);
