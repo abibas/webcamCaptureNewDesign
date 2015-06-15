@@ -2,6 +2,9 @@
 #include "ui_mainwindow.h"
 
 #include <backend_factory.h>
+#include <memory>
+
+typedef std::function<void(PixelBuffer& buffer)> frame_callback;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -156,7 +159,15 @@ void MainWindow::on_deleteBackendBtn_clicked()
     delete backend;
 }
 
-void MainWindow::on_deleteBackendBtn_2_clicked()
+void MainWindow::on_captureVideoBtb_clicked()
 {
-    delete camera;
+    videoForm = new VideoForm();
+    videoForm->show();
+    camera->open(capabilityList[this->ui->capabilityComboBox->currentIndex()], videoForm->getFrameCallback());
+    camera->start();
+}
+
+void MainWindow::on_deleteCameraBtn_clicked()
+{
+     delete camera;
 }

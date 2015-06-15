@@ -27,7 +27,8 @@ SOURCES += main.cpp\
     ../src/media_foundation/media_foundation_camera.cpp \
     ../src/media_foundation/media_foundation_utils.cpp \
     ../src/backend_factory.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    videoform.cpp
 
 HEADERS  += \
     ../include/backend_interface.h \
@@ -47,10 +48,12 @@ HEADERS  += \
     ../src/media_foundation/media_foundation_camera.h \
     ../src/media_foundation/media_foundation_utils.h \
     ../src/media_foundation/media_foundation_callback.h \
-    mainwindow.h
+    mainwindow.h \
+    videoform.h
 
 FORMS    += \
-    mainwindow.ui
+    mainwindow.ui \
+    videoform.ui
 
 win32: LIBS +=  -lMfplat\
                 -lOle32\

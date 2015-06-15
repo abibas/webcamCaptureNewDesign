@@ -1,11 +1,12 @@
-/**
+/** License
     This header is using code from the https://github.com/roxlu/video_capture
     distributed under the Apache 2.0 license
     http://www.apache.org/licenses/LICENSE-2.0
   */
 
-/** Information about formats:
- *      windows - https://msdn.microsoft.com/en-us/library/windows/desktop/aa370819(v=vs.85).aspx
+/** Information about formats
+ *      windows formats: - https://msdn.microsoft.com/en-us/library/windows/desktop/aa370819(v=vs.85).aspx
+ *      description about the formats: https://msdn.microsoft.com/en-us/library/windows/desktop/dd206750(v=vs.85).aspx
   */
 
 #ifndef FORMAT_H
