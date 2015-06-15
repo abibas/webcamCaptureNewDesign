@@ -1,5 +1,14 @@
 #include <backend_factory.h>
 
+#ifdef MEDIA_FOUNDATION
+    #include "../src/media_foundation/media_foundation_backend.h"
+#endif
+#ifdef V4L
+#endif
+#ifdef AV_FOUNDATION
+#endif
+
+
 namespace webcam_capture {
 
     BackendFactory::BackendFactory(){

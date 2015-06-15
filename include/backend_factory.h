@@ -3,15 +3,6 @@
 #include <backend_interface.h>
 #include <backend_implementation.h>
 
-#ifdef MEDIA_FOUNDATION
-    #include "../src/media_foundation/media_foundation_backend.h"
-#endif
-#ifdef V4L
-#endif
-#ifdef AV_FOUNDATION
-#endif
-
-
 namespace webcam_capture {
 
     /**
