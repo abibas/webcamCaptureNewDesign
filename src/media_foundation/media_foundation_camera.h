@@ -47,7 +47,7 @@ namespace webcam_capture {
 
     class MediaFoundation_Camera : public CameraInterface {
     public:
-        MediaFoundation_Camera(std::shared_ptr<void*> mfDeinitializer, const CameraInformation &information);
+        MediaFoundation_Camera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
         ~MediaFoundation_Camera();
         int open(const Capability &capability, frame_callback cb);
         int close();
@@ -68,7 +68,7 @@ namespace webcam_capture {
         int setReaderFormat(IMFSourceReader*reader, Capability& cap);
 
     public:
-        std::shared_ptr<void*> mfDeinitializer;
+        std::shared_ptr<void> mfDeinitializer;
         PixelBuffer pixel_buffer;
         MediaFoundation_Callback* mf_callback;
         IMFMediaSource* imf_media_source;

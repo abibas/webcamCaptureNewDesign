@@ -3,7 +3,7 @@
 
 namespace webcam_capture {
 
-    MediaFoundation_Camera::MediaFoundation_Camera(std::shared_ptr<void*> mfDeinitializer, const CameraInformation &information)
+    MediaFoundation_Camera::MediaFoundation_Camera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information)
         :information(information)
         ,mfDeinitializer(mfDeinitializer)
         ,state(CA_STATE_NONE)
@@ -26,7 +26,7 @@ namespace webcam_capture {
         // Shutdown MediaFoundation
         HRESULT hr = MFShutdown();
         if(FAILED(hr)) {
-            DEBUG_PRINT("Error: failed to shutdown the MediaFoundation.\n" << err);
+            DEBUG_PRINT("Error: failed to shutdown the MediaFoundation.\n");
         }
 
         // Shutdown COM
@@ -35,31 +35,31 @@ namespace webcam_capture {
 
     int MediaFoundation_Camera::open(const Capability &capability, frame_callback cb){
         if(state & CA_STATE_OPENED) {
-          DEBUG_PRINT("Error: already opened.\n" << err);
+          DEBUG_PRINT("Error: already opened.\n");
           return -1; //TODO Err code
         }
 
         if(imf_media_source) {
-            DEBUG_PRINT("Error: already opened the media source.\n" << err);
+            DEBUG_PRINT("Error: already opened the media source.\n");
             return -2;        //TODO Err code
         }
 
         // Create the MediaSource
         if(createVideoDeviceSource(information.getDeviceId(), &imf_media_source) < 0) {
-            DEBUG_PRINT("Error: cannot create the media device source.\n" << err);
+            DEBUG_PRINT("Error: cannot create the media device source.\n");
             return -3;      //TODO Err code
         }
 
         // Set the media format, width, height
         std::vector<Capability> capabilities;
         if(getVideoCapabilities(imf_media_source, capabilities) < 0) {
-            DEBUG_PRINT("Error: cannot create the capabilities list to open the device.\n" << err);
+            DEBUG_PRINT("Error: cannot create the capabilities list to open the device.\n");
             safeReleaseMediaFoundation(&imf_media_source);
             return -4;      //TODO Err code
         }
 
         if(capability.getCapabilityIndex() >= capabilities.size()) {
-            DEBUG_PRINT("Error: invalid capability ID, cannot open the device.\n" << err);
+            DEBUG_PRINT("Error: invalid capability ID, cannot open the device.\n");
             safeReleaseMediaFoundation(&imf_media_source);
             return -5;      //TODO Err code
         }
@@ -67,13 +67,13 @@ namespace webcam_capture {
         //TODO we dont need this. (we already have the Capability in the input params
         Capability cap = capabilities.at(capability.getCapabilityIndex());
         if(cap.getPixelFormat() == Format::UNKNOWN) {
-            DEBUG_PRINT("Error: cannot set a pixel format for UNKNOWN.\n" << err);
+            DEBUG_PRINT("Error: cannot set a pixel format for UNKNOWN.\n");
             safeReleaseMediaFoundation(&imf_media_source);
             return -6;      //TODO Err code
         }
 
         if(setDeviceFormat(imf_media_source, (DWORD)cap.getPixelFormatIndex()) < 0) {
-            DEBUG_PRINT("Error: cannot set the device format.\n" << err);
+            DEBUG_PRINT("Error: cannot set the device format.\n");
             safeReleaseMediaFoundation(&imf_media_source);
             return -7;      //TODO Err code
         }
@@ -81,7 +81,7 @@ namespace webcam_capture {
         // Create the source reader.
         MediaFoundation_Callback::createInstance(this, &mf_callback);
         if(createSourceReader(imf_media_source, mf_callback, &imf_source_reader) < 0) {
-            DEBUG_PRINT("Error: cannot create the source reader.\n" << err);
+            DEBUG_PRINT("Error: cannot create the source reader.\n");
             safeReleaseMediaFoundation(&mf_callback);
             safeReleaseMediaFoundation(&imf_media_source);
             return -8;      //TODO Err code
@@ -89,7 +89,7 @@ namespace webcam_capture {
 
         // Set the source reader format.
         if(setReaderFormat(imf_source_reader, cap) < 0) {
-            DEBUG_PRINT("Error: cannot set the reader format.\n" << err);
+            DEBUG_PRINT("Error: cannot set the reader format.\n");
             safeReleaseMediaFoundation(&mf_callback);
             safeReleaseMediaFoundation(&imf_media_source);
             return -9;      //TODO Err code
@@ -102,7 +102,7 @@ namespace webcam_capture {
 
     int MediaFoundation_Camera::close(){
         if(!imf_source_reader) {
-          DEBUG_PRINT("Error: cannot close the device because it seems that is hasn't been opend yet. Did you call openDevice?.\n" << err);
+          DEBUG_PRINT("Error: cannot close the device because it seems that is hasn't been opend yet. Did you call openDevice?.\n");
           return -1;      //TODO Err code
         }
 
@@ -121,17 +121,17 @@ namespace webcam_capture {
 
     int MediaFoundation_Camera::start(){
         if(!imf_source_reader) {
-          DEBUG_PRINT("Error: cannot start capture becuase it looks like the device hasn't been opened yet.\n" << err);
+          DEBUG_PRINT("Error: cannot start capture becuase it looks like the device hasn't been opened yet.\n");
           return -1;      //TODO Err code
         }
 
         if(!(state & CA_STATE_OPENED)) {
-          DEBUG_PRINT("Error: cannot start captureing because you haven't opened the device successfully.\n" << err);
+          DEBUG_PRINT("Error: cannot start captureing because you haven't opened the device successfully.\n");
           return -2;      //TODO Err code
         }
 
         if(state & CA_STATE_CAPTURING) {
-          DEBUG_PRINT("Error: cannot start capture because we are already capturing.\n" << err);
+          DEBUG_PRINT("Error: cannot start capture because we are already capturing.\n");
           return -3;      //TODO Err code
         }
 
@@ -139,24 +139,24 @@ namespace webcam_capture {
         HRESULT hr = imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
         if(FAILED(hr)) {
           if(hr == MF_E_INVALIDREQUEST) {
-            DEBUG_PRINT("ReadSample returned MF_E_INVALIDREQUEST.\n" << err);
+            DEBUG_PRINT("ReadSample returned MF_E_INVALIDREQUEST.\n");
           }
           else if(hr == MF_E_INVALIDSTREAMNUMBER) {
-            DEBUG_PRINT("ReadSample returned MF_E_INVALIDSTREAMNUMBER.\n" << err);
+            DEBUG_PRINT("ReadSample returned MF_E_INVALIDSTREAMNUMBER.\n");
           }
           else if(hr == MF_E_NOTACCEPTING) {
-            DEBUG_PRINT("ReadSample returned MF_E_NOTACCEPTING.\n" << err);
+            DEBUG_PRINT("ReadSample returned MF_E_NOTACCEPTING.\n");
           }
           else if(hr == E_INVALIDARG) {
-            DEBUG_PRINT("ReadSample returned E_INVALIDARG.\n" << err);
+            DEBUG_PRINT("ReadSample returned E_INVALIDARG.\n");
           }
           else if(hr == E_POINTER) {
-            DEBUG_PRINT("ReadSample returned E_POINTER.\n" << err);
+            DEBUG_PRINT("ReadSample returned E_POINTER.\n");
           }
           else {
-            DEBUG_PRINT("ReadSample - unhandled result.\n" << err);
+            DEBUG_PRINT("ReadSample - unhandled result.\n");
           }
-          DEBUG_PRINT("Error: while trying to ReadSample() on the imf_source_reader. \n" << err);
+          DEBUG_PRINT("Error: while trying to ReadSample() on the imf_source_reader. \n");
           #ifdef DEBUG_VERSION
             std::cout << "Error: " << std::hex << hr << std::endl;
           #endif
@@ -170,12 +170,12 @@ namespace webcam_capture {
 
     int MediaFoundation_Camera::stop(){
         if(!imf_source_reader) {
-          DEBUG_PRINT("Error: Cannot stop capture because it seems that the device hasn't been opened yet.\n" << err);
+          DEBUG_PRINT("Error: Cannot stop capture because it seems that the device hasn't been opened yet.\n");
           return -1;    //TODO Err code
         }
 
         if(!state & CA_STATE_CAPTURING) {
-          DEBUG_PRINT("Error: Cannot stop capture because we're not capturing yet.\n" << err);
+          DEBUG_PRINT("Error: Cannot stop capture because we're not capturing yet.\n");
           return -2;    //TODO Err code
         }
 
@@ -232,7 +232,7 @@ namespace webcam_capture {
 
       HRESULT hr = source->CreatePresentationDescriptor(&pres_desc);
       if(FAILED(hr)) {
-        DEBUG_PRINT("source->CreatePresentationDescriptor() failed.\n" << err);
+        DEBUG_PRINT("source->CreatePresentationDescriptor() failed.\n");
         result = -1;        //TODO Err code
         goto done;
       }
@@ -240,28 +240,28 @@ namespace webcam_capture {
       BOOL selected;
       hr = pres_desc->GetStreamDescriptorByIndex(0, &selected, &stream_desc);
       if(FAILED(hr)) {
-        DEBUG_PRINT("pres_desc->GetStreamDescriptorByIndex failed.\n" << err);
+        DEBUG_PRINT("pres_desc->GetStreamDescriptorByIndex failed.\n");
         result = -2;        //TODO Err code
         goto done;
       }
 
       hr = stream_desc->GetMediaTypeHandler(&handler);
       if(FAILED(hr)) {
-        DEBUG_PRINT("stream_desc->GetMediaTypehandler() failed.\n" << err);
+        DEBUG_PRINT("stream_desc->GetMediaTypehandler() failed.\n");
         result = -3;        //TODO Err code
         goto done;
       }
 
       hr = handler->GetMediaTypeByIndex(formatIndex, &type);
       if(FAILED(hr)) {
-        DEBUG_PRINT("hander->GetMediaTypeByIndex failed.\n" << err);
+        DEBUG_PRINT("hander->GetMediaTypeByIndex failed.\n");
         result = -4;        //TODO Err code
         goto done;
       }
 
       hr = handler->SetCurrentMediaType(type);
       if(FAILED(hr)) {
-        DEBUG_PRINT("handler->SetCurrentMediaType failed.\n" << err);
+        DEBUG_PRINT("handler->SetCurrentMediaType failed.\n");
         result = -5;        //TODO Err code
         goto done;
       }
@@ -277,12 +277,12 @@ namespace webcam_capture {
     int MediaFoundation_Camera::createSourceReader(IMFMediaSource* mediaSource,  IMFSourceReaderCallback* callback, IMFSourceReader** sourceReader) {
 
       if(mediaSource == NULL) {
-        DEBUG_PRINT("Error: Cannot create a source reader because the IMFMediaSource passed into this function is not valid.\n" << err);
+        DEBUG_PRINT("Error: Cannot create a source reader because the IMFMediaSource passed into this function is not valid.\n");
         return -1;         //TODO Err code
       }
 
       if(callback == NULL) {
-        DEBUG_PRINT("Error: Cannot create a source reader because the calls back passed into this function is not valid.\n" << err);
+        DEBUG_PRINT("Error: Cannot create a source reader because the calls back passed into this function is not valid.\n");
         return -2;        //TODO Err code
       }
 
@@ -292,14 +292,14 @@ namespace webcam_capture {
 
       hr = MFCreateAttributes(&attrs, 1);
       if(FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot create attributes for the media source reader.\n" << err);
+        DEBUG_PRINT("Error: cannot create attributes for the media source reader.\n");
         result = -3;        //TODO Err code
         goto done;
       }
 
       hr = attrs->SetUnknown(MF_SOURCE_READER_ASYNC_CALLBACK, callback);
       if(FAILED(hr)) {
-        DEBUG_PRINT("Error: SetUnknown() failed on the source reader" << err);
+        DEBUG_PRINT("Error: SetUnknown() failed on the source reader");
         result = -4;        //TODO Err code
         goto done;
       }
@@ -307,7 +307,7 @@ namespace webcam_capture {
       // Create a source reader which sets up the pipeline for us so we get access to the pixels
       hr = MFCreateSourceReaderFromMediaSource(mediaSource, attrs, sourceReader);
       if(FAILED(hr)) {
-        DEBUG_PRINT("Error: while creating a source reader.\n" << err);
+        DEBUG_PRINT("Error: while creating a source reader.\n");
         result = -5;        //TODO Err code
         goto done;
       }
@@ -416,7 +416,7 @@ namespace webcam_capture {
               ///TODO !!! now it's workaround and set's only max FPS value
               hr = reader->SetCurrentMediaType(0, NULL, type);
               if(FAILED(hr)) {
-                DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n" << err);
+                DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
               }
               else {
                 hr = S_OK;
@@ -454,7 +454,7 @@ namespace webcam_capture {
 
       HRESULT hr = source->CreatePresentationDescriptor(&presentation_desc);
       if(FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot get presentation descriptor.\n" << err);
+        DEBUG_PRINT("Error: cannot get presentation descriptor.\n");
         result = -1;        //TODO Err code
         goto done;
       }
@@ -462,14 +462,14 @@ namespace webcam_capture {
       BOOL selected;
       hr = presentation_desc->GetStreamDescriptorByIndex(0, &selected, &stream_desc);
       if(FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot get stream descriptor.\n" << err);
+        DEBUG_PRINT("Error: cannot get stream descriptor.\n");
         result = -2;        //TODO Err code
         goto done;
       }
 
       hr = stream_desc->GetMediaTypeHandler(&media_handler);
       if(FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot get media type handler.\n" << err);
+        DEBUG_PRINT("Error: cannot get media type handler.\n");
         result = -3;        //TODO Err code
         goto done;
       }
@@ -477,7 +477,7 @@ namespace webcam_capture {
       DWORD types_count = 0;
       hr = media_handler->GetMediaTypeCount(&types_count);
       if(FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot get media type count.\n" << err);
+        DEBUG_PRINT("Error: cannot get media type count.\n");
         result = -4;        //TODO Err code
         goto done;
       }
@@ -503,10 +503,10 @@ namespace webcam_capture {
           test_type->SetGUID(MF_MT_SUBTYPE, types[i]);
           hr = media_handler->IsMediaTypeSupported(test_type, NULL);
           if(hr != S_OK) {
-            DEBUG_PRINT("> Not supported: %d\n"  << err);
+            DEBUG_PRINT("> Not supported: %d\n" );
           }
           else {
-            DEBUG_PRINT("> Yes, supported: %d\n", i << err);
+            DEBUG_PRINT("> Yes, supported: %d\n", i);
           }
         }
       }
@@ -530,7 +530,7 @@ namespace webcam_capture {
         hr = media_handler->GetMediaTypeByIndex(i, &type);
 
         if(FAILED(hr)) {
-          DEBUG_PRINT("Error: cannot get media type by index.\n" << err);
+          DEBUG_PRINT("Error: cannot get media type by index.\n");
           result = -5;        //TODO Err code
           goto done;
         }
@@ -538,7 +538,7 @@ namespace webcam_capture {
         UINT32 attr_count = 0;
         hr = type->GetCount(&attr_count);
         if(FAILED(hr)) {
-          DEBUG_PRINT("Error: cannot type param count.\n" << err);
+          DEBUG_PRINT("Error: cannot type param count.\n");
           result = -6;        //TODO Err code
           goto done;
         }
@@ -551,7 +551,7 @@ namespace webcam_capture {
 
             hr = type->GetItemByIndex(j, &guid, &var);
             if(FAILED(hr)) {
-              DEBUG_PRINT("Error: cannot get item by index.\n" << err);
+              DEBUG_PRINT("Error: cannot get item by index.\n");
               result = -7;        //TODO Err code
               goto done;
             }
@@ -638,7 +638,7 @@ namespace webcam_capture {
       // Filter on capture devices
       hr = config->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
       if(FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot set the GUID on the IMFAttributes*.\n" << err);
+        DEBUG_PRINT("Error: cannot set the GUID on the IMFAttributes*.\n");
         result = -2;        //TODO Err code
         goto done;
       }
@@ -646,7 +646,7 @@ namespace webcam_capture {
       // Enumerate devices.
       hr = MFEnumDeviceSources(config, &devices, &count);
       if(FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot get EnumDeviceSources.\n" << err);
+        DEBUG_PRINT("Error: cannot get EnumDeviceSources.\n");
         result = -3;        //TODO Err code
         goto done;
       }
@@ -661,7 +661,7 @@ namespace webcam_capture {
       // Activate the capture device.
       hr = devices[device]->ActivateObject(IID_PPV_ARGS(source));
       if(FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot activate the object." << err);
+        DEBUG_PRINT("Error: cannot activate the object.");
         result = -5;        //TODO Err code
         goto done;
       }

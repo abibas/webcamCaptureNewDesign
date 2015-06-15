@@ -16,7 +16,7 @@ CONFIG += c++11
 INCLUDEPATH += ../include/ \
 
 DEFINES +=  MEDIA_FOUNDATION \
-            #DEBUG_VERSION \
+            DEBUG_VERSION \
             #V4L \
             #AV_FOUNDATION
 

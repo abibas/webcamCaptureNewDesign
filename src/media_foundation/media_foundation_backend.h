@@ -18,6 +18,7 @@
 #include <vector>
 #include <memory>               /* std::shared_ptr include */
 
+
 #include "../utils.h"
 #include <backend_interface.h>
 #include <camera_interface.h>

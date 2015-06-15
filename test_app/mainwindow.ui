@@ -83,7 +83,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Create backend</string>
+     <string>Create Camera</string>
     </property>
    </widget>
    <widget class="QGroupBox" name="cameraCapabilityGB">
@@ -196,6 +196,32 @@
       </rect>
      </property>
     </widget>
+   </widget>
+   <widget class="QPushButton" name="deleteBackendBtn">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>30</y>
+      <width>101</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Delete Backend</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="deleteBackendBtn_2">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>80</y>
+      <width>101</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Delete Camera</string>
+    </property>
    </widget>
   </widget>
  </widget>

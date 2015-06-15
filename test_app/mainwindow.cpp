@@ -41,6 +41,7 @@ void MainWindow::fillFrameworkListCB()
 
 void MainWindow::fillCameraListCB()
 {
+    this->ui->cameraListComboBox->clear();
     cameraInfoList = backend->getAvailableCameras();
     for(size_t i = 0; i < cameraInfoList.size(); ++i) {
         this->ui->cameraListComboBox->addItem(cameraInfoList[i].getCameraName().c_str());
@@ -135,13 +136,10 @@ void MainWindow::on_createBackendBtn_clicked()
 }
 
 
-
-
 void MainWindow::on_createCameraBtn_clicked()
 {
-    delete backend;
-//    camera = backend->getCamera(cameraInfoList[this->ui->cameraListComboBox->currentIndex()]);
-//    fillCameraCapabilitiesCB();
+    camera = backend->getCamera(cameraInfoList[this->ui->cameraListComboBox->currentIndex()]);
+    fillCameraCapabilitiesCB();
 }
 
 void MainWindow::on_cameraListComboBox_currentIndexChanged(int index)
@@ -151,4 +149,14 @@ void MainWindow::on_cameraListComboBox_currentIndexChanged(int index)
     } else {
         this->ui->createCameraBtn->setVisible(false);
     }
+}
+
+void MainWindow::on_deleteBackendBtn_clicked()
+{
+    delete backend;
+}
+
+void MainWindow::on_deleteBackendBtn_2_clicked()
+{
+    delete camera;
 }

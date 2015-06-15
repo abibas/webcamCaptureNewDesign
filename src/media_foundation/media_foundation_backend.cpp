@@ -8,6 +8,7 @@
 #include "media_foundation_backend.h"
 #include <functional>
 
+
 #ifdef DEBUG_VERSION
     #define DEBUG_PRINT(x) std::cerr << x << std::endl
 #else
@@ -15,59 +16,36 @@
 #endif
 
 namespace webcam_capture {
-//TODO To refactor this..
-//class BackendDeinitializer
-//{
-//public:
-//    void operator()(void*)
-//    {
-//        DEBUG_PRINT("MediaFoundation_Backend Successfully deinited.\n" << err);
-//        /* Shutdown MediaFoundation */
-//        HRESULT hr = MFShutdown();
-//        if(FAILED(hr)) {
-//          DEBUG_PRINT("Error: failed to shutdown the MediaFoundation.\n" << err);
-//        }
-
-//        /* Shutdown COM */
-//        CoUninitialize();
-//    }
-//};
-
-
 
   MediaFoundation_Backend::MediaFoundation_Backend()
-//      : mfDeinitializer(this, BackendDeinitializer())
-      //Trying to call Static member by shared_ptr deleter
       :mfDeinitializer(this, MediaFoundation_Backend::DeinitBackend)
     {
       // Initialize COM
       HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
       if(FAILED(hr)) {
-          DEBUG_PRINT("Error: cannot intialize COM.\n" << err);  //or The COM is already initialized.
+          DEBUG_PRINT("Error: cannot intialize COM.\n");  //or The COM is already initialized.
       }
 
       // Initialize MediaFoundation
       hr = MFStartup(MF_VERSION);
       if(FAILED(hr)) {
-          DEBUG_PRINT("Error: cannot startup the Media Foundation.\n" << err);
+          DEBUG_PRINT("Error: cannot startup the Media Foundation.\n");
       }
-
-      //mfDeinitializer(this, BackendDeinitializer());
   }
 
   MediaFoundation_Backend::~MediaFoundation_Backend() {
   }
 
   void MediaFoundation_Backend::DeinitBackend(void*){
-      DEBUG_PRINT("MediaFoundation_Backend Successfully deinited.\n" << err);
       /* Shutdown MediaFoundation */
       HRESULT hr = MFShutdown();
       if(FAILED(hr)) {
-          DEBUG_PRINT("Error: failed to shutdown the MediaFoundation.\n" << err);
+          DEBUG_PRINT("Error: failed to shutdown the MediaFoundation.\n");
       }
 
       /* Shutdown COM */
       CoUninitialize();
+      DEBUG_PRINT("MediaFoundation_Backend Successfully deinited.\n");
   }
 
   std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() const{
@@ -128,7 +106,7 @@ namespace webcam_capture {
   }
 
   CameraInterface* MediaFoundation_Backend::getCamera(const CameraInformation &information) const{
-      return new MediaFoundation_Camera(NULL, information);
+      return new MediaFoundation_Camera(mfDeinitializer, information);
   }
 
   void MediaFoundation_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback){
