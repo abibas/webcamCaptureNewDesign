@@ -23,6 +23,7 @@ public:
     ~VideoForm();
     void FrameCaptureCallback(PixelBuffer& buffer);
     frame_callback getFrameCallback();
+    QImage YUV422toRGBA32(PixelBuffer& buffer);
 
 private:
     Ui::VideoForm *ui;
