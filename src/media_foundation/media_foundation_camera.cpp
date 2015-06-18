@@ -97,10 +97,11 @@ namespace webcam_capture {
             return -9;      //TODO Err code
         }
 
-        state |= CA_STATE_OPENED;
+        pixel_buffer.height[0] = cap.getHeight();
+        pixel_buffer.width[0] = cap.getWidth();
+        pixel_buffer.pixel_format = cap.getPixelFormat();
 
-        /* Set the pixel buffer strides, widths and heights based on the selected format. */
-        //pixel_buffer.setup(cap.getWidth(), cap.getHeight(), cap.getPixelFormat());  //TODO move to other method
+        state |= CA_STATE_OPENED;
         return 1;      //TODO Err code
     }
 

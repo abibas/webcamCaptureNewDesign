@@ -8,16 +8,18 @@ CameraForm::CameraForm(CameraInterface *camera, QWidget *parent) :
     ui(new Ui::CameraForm)
 {
     ui->setupUi(this);
-
+    videoForm = NULL;
     fillCameraCapabilitiesCB();
 }
 
 CameraForm::~CameraForm()
 {
     camera->stop();
+    camera->close();
     delete camera;
     delete ui;
 }
+
 
 void CameraForm::fillCameraCapabilitiesCB()
 {
@@ -37,11 +39,22 @@ void CameraForm::fillCameraCapabilitiesCB()
 
 void CameraForm::on_captureVideoBtb_clicked()
 {
-    videoForm = new VideoForm();
+    Capability cap = capabilityList[this->ui->capabilityComboBox->currentIndex()];
+    videoForm = new VideoForm(cap.getWidth(), cap.getHeight());
     videoForm->show();
-    camera->open(capabilityList[this->ui->capabilityComboBox->currentIndex()], videoForm->getFrameCallback());
+    camera->open(cap, videoForm->getFrameCallback());
     camera->start();
 }
+
+
+void CameraForm::on_stopCaptureVideoBtb_clicked()
+{
+    if (videoForm != NULL)
+    {
+        delete videoForm;
+    }
+}
+
 
 std::string  CameraForm::formatToString(Format format){
     switch(format) {
@@ -107,3 +120,4 @@ std::string  CameraForm::formatToString(Format format){
       default:                      return "Unknown format";
     }
 }
+

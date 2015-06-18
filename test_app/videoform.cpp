@@ -9,15 +9,26 @@ std::fstream outfile;
 
 #include <qdebug.h>
 
-VideoForm::VideoForm(QWidget *parent) :
+VideoForm::VideoForm(int width, int height, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::VideoForm)
 {
     ui->setupUi(this);
+    this->setFixedSize(width, height);
+    this->ui->videoLabel->setFixedSize(width, height);
 }
 
 VideoForm::~VideoForm()
 {
+    camera->stop();
+    camera->close();
+    delete ui;
+}
+
+void VideoForm::closeEvent(QCloseEvent *)
+{
+    camera->stop();
+    camera->close();
     delete ui;
 }
 
@@ -43,12 +54,13 @@ QImage VideoForm::YUV422toRGBA32(PixelBuffer& buffer)
 {
     const unsigned char *frame = buffer.plane[0];
     unsigned int frameSize = buffer.nbytes;
-    //TODO to move to RTTI or vectors.
-    int height = 480;
-    int width = 640;
-    int * redContainer = new int[480*640];
-    int * greenContainer = new int[480*640];
-    int * blueContainer = new int[480*640];
+
+    int height = buffer.height[0];
+    int width = buffer.width[0];
+
+    std::vector<int> redContainer;
+    std::vector<int> greenContainer;
+    std::vector<int> blueContainer;
 
     // Loop through 4 bytes at a time
     int cnt = -1;
@@ -79,31 +91,26 @@ QImage VideoForm::YUV422toRGBA32(PixelBuffer& buffer)
        cnt+=1;
 
        // Append to the array holding our RGB Values
-       redContainer[cnt] = r1;
-       greenContainer[cnt] = g1;
-       blueContainer[cnt] = b1;
+       redContainer.push_back(r1);
+       greenContainer.push_back(g1);
+       blueContainer.push_back(b1);
 
        // Increment again since we have 2 pixels per uv value
        cnt+=1;
 
        // Store the second pixel
-       redContainer[cnt] = r2;
-       greenContainer[cnt] = g2;
-       blueContainer[cnt] = b2;
+       redContainer.push_back(r2);
+       greenContainer.push_back(g2);
+       blueContainer.push_back(b2);
     }
     QImage rgbImage = QImage(width, height, QImage::Format_RGBA8888);
     int pixelCounter = -1;
     for ( int i = 0; i < height; ++i ) {
         for ( int j = 0; j < width; ++j ) {
-            pixelCounter+=1;
-            rgbImage.setPixel( j, i, qRgb( redContainer[pixelCounter] ,  greenContainer[pixelCounter] , blueContainer[pixelCounter] ) );
+            pixelCounter+=1;            
+            rgbImage.setPixel( j, i, qRgb( redContainer.at(pixelCounter) ,  greenContainer.at(pixelCounter) , blueContainer.at(pixelCounter) ) );
         }
-    }
-
-    // Print pixel counter
-
-//    qDebug() << "Counted number of pixels: " << pixelCounter;
-//    rgbImage.save("./rgb_from_yuv.bmp");
+    }    
     return rgbImage;
 }
 
