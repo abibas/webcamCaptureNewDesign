@@ -4,8 +4,6 @@
 #include <QMainWindow>
 #include <vector>
 
-#include "videoform.h"
-
 #include <backend_implementation.h>
 #include <camera_information.h>
 #include <capability.h>
@@ -33,27 +31,16 @@ private slots:
     void on_createCameraBtn_clicked();
 
     void on_cameraListComboBox_currentIndexChanged(int index);
-
-    void on_deleteBackendBtn_clicked();
-
-    void on_captureVideoBtb_clicked();
-
-    void on_deleteCameraBtn_clicked();
-
 private:
     void fillFrameworkListCB();
     void fillCameraListCB();
-    void fillCameraCapabilitiesCB();
     std::string formatToString(Format format);
 
 
     std::vector<BackendImplementation> backendList;
     std::vector<CameraInformation> cameraInfoList;
-    std::vector<Capability> capabilityList;
     BackendInterface* backend;
-    CameraInterface* camera;
 
-    VideoForm *videoForm;
     Ui::MainWindow *ui;
 };
 

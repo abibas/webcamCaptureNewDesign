@@ -11,9 +11,6 @@ namespace Ui {
 class VideoForm;
 }
 
-
-typedef std::function<void(PixelBuffer& buffer)> frame_callback;
-
 class VideoForm : public QWidget
 {
     Q_OBJECT
@@ -22,7 +19,7 @@ public:
     explicit VideoForm(QWidget *parent = 0);
     ~VideoForm();
     void FrameCaptureCallback(PixelBuffer& buffer);
-    frame_callback getFrameCallback();
+    std::function<void(PixelBuffer& buffer)> getFrameCallback();
     QImage YUV422toRGBA32(PixelBuffer& buffer);
 
 private:
