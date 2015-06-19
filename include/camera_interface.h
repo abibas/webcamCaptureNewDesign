@@ -65,13 +65,13 @@ namespace webcam_capture {
          * @param property Property is one of the VideoPropery enum
          * @return Video property range
          */
-        virtual VideoPropertyRange getPropertyRange(VideoProperty property) const = 0; // TODO
+        virtual VideoPropertyRange getPropertyRange(VideoProperty property) = 0; // TODO
 
         /**
          * @param property Property is one of the VideoPropery enum
          * @return Property current value
          */
-        virtual int getProperty(VideoProperty property) const = 0; //TODO       //TODO to add enum with error codes
+        virtual int getProperty(VideoProperty property) = 0; //TODO       //TODO to add enum with error codes
 
         /**
          * @param property Property is one of the VideoPropery enum

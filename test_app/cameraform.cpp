@@ -10,6 +10,11 @@ CameraForm::CameraForm(CameraInterface *camera, QWidget *parent) :
     ui->setupUi(this);
     videoForm = NULL;
     fillCameraCapabilitiesCB();
+    fillVideoPropertySettings();
+
+    connect(this->ui->brigtnessSlider, SIGNAL(valueChanged(int)), this, SLOT(changeBrightnessLabel(int)));
+    connect(this->ui->saturationSlider, SIGNAL(valueChanged(int)), this, SLOT(changeSaturationLabel(int)));
+    connect(this->ui->contrastSlider, SIGNAL(valueChanged(int)), this, SLOT(changeContrastLabel(int)));
 }
 
 CameraForm::~CameraForm()
@@ -31,8 +36,55 @@ void CameraForm::fillCameraCapabilitiesCB()
                 arg(capabilityList[i].getMaxFps()/100.0f).
                 arg(formatToString(capabilityList[i].getPixelFormat()).c_str());
         this->ui->capabilityComboBox->addItem(str);
-
     }
+}
+
+void CameraForm::fillVideoPropertySettings()
+{
+
+    //Brightness
+    VideoPropertyRange vprBrightness = camera->getPropertyRange(VideoProperty::Brightness);
+    this->ui->brigtnessSlider->setRange(vprBrightness.getMinValue(),
+                                        vprBrightness.getMaxValue());
+    this->ui->brigtnessSlider->setTickInterval(vprBrightness.getStepValue());
+    this->ui->brigtnessSlider->setValue(vprBrightness.getDefaultValue());  // !!!!!!
+    this->changeBrightnessLabel(vprBrightness.getDefaultValue()); // !!!!!!!
+    this->ui->minBrightnessLabel->setText(QString::number(vprBrightness.getMinValue()));
+    this->ui->maxBrightnessLabel->setText(QString::number(vprBrightness.getMaxValue()));
+
+    //Contrast
+    VideoPropertyRange vprContrast = camera->getPropertyRange(VideoProperty::Contrast);
+    this->ui->contrastSlider->setRange(vprContrast.getMinValue(),
+                                       vprContrast.getMaxValue());
+    this->ui->contrastSlider->setTickInterval(vprContrast.getStepValue());
+    this->ui->contrastSlider->setValue(vprContrast.getDefaultValue());  // !!!!!!
+    this->changeContrastLabel(vprContrast.getDefaultValue()); // !!!!!!!
+    this->ui->minContrastLabel->setText(QString::number(vprContrast.getMinValue()));
+    this->ui->maxContrastLabel->setText(QString::number(vprContrast.getMaxValue()));
+
+    //Saturation
+    VideoPropertyRange vprSaturation = camera->getPropertyRange(VideoProperty::Saturation);
+    this->ui->saturationSlider->setRange(vprSaturation.getMinValue(),
+                                         vprSaturation.getMaxValue());
+    this->ui->saturationSlider->setTickInterval(vprSaturation.getStepValue());
+    this->ui->saturationSlider->setValue(vprSaturation.getDefaultValue());  // !!!!!!
+    this->changeSaturationLabel(vprSaturation.getDefaultValue()); // !!!!!!
+    this->ui->minSaturationLabel->setText(QString::number(vprSaturation.getMinValue()));
+    this->ui->maxSaturationLabel->setText(QString::number(vprSaturation.getMaxValue()));
+}
+
+void CameraForm::changeBrightnessLabel(int value)
+{
+    this->ui->currentBrightnessLabel->setText(QString::number(value));
+}
+
+void CameraForm::changeSaturationLabel(int value)
+{
+    this->ui->currentSaturationLabel->setText(QString::number(value));
+}
+void CameraForm::changeContrastLabel(int value)
+{
+    this->ui->currentContrastLabel->setText(QString::number(value));
 }
 
 void CameraForm::on_captureVideoBtb_clicked()
@@ -45,6 +97,8 @@ void CameraForm::on_captureVideoBtb_clicked()
     camera->open(cap, videoForm->getFrameCallback());
     camera->start();
 }
+
+
 
 std::string  CameraForm::formatToString(Format format){
     switch(format) {

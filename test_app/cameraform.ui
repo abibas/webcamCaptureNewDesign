@@ -36,13 +36,13 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
      <string>Capability</string>
     </attribute>
-    <widget class="QLabel" name="fpsLabel_2">
+    <widget class="QLabel" name="resolutionLabel">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -65,7 +65,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QLabel" name="fpsLabel_3">
+    <widget class="QLabel" name="formatLabel">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -156,6 +156,201 @@
      </property>
      <property name="text">
       <string>Apply</string>
+     </property>
+    </widget>
+    <widget class="QSlider" name="brigtnessSlider">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>131</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="QLabel" name="maxBrightnessLabel">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>50</y>
+       <width>21</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>max</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="minBrightnessLabel">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>50</y>
+       <width>51</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>min</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="brigtnessLabel">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>51</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Brigtness</string>
+     </property>
+    </widget>
+    <widget class="QSlider" name="contrastSlider">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>100</y>
+       <width>131</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="QLabel" name="maxContrastLabel">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>120</y>
+       <width>21</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>max</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="minContrastLabel">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>120</y>
+       <width>51</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>min</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="contrastLabel">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>80</y>
+       <width>51</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Contrast</string>
+     </property>
+    </widget>
+    <widget class="QSlider" name="saturationSlider">
+     <property name="geometry">
+      <rect>
+       <x>200</x>
+       <y>30</y>
+       <width>131</width>
+       <height>19</height>
+      </rect>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="QLabel" name="maxSaturationLabel">
+     <property name="geometry">
+      <rect>
+       <x>310</x>
+       <y>50</y>
+       <width>21</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>max</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="minSaturationLabel">
+     <property name="geometry">
+      <rect>
+       <x>200</x>
+       <y>50</y>
+       <width>51</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>min</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="saturationLabel">
+     <property name="geometry">
+      <rect>
+       <x>200</x>
+       <y>10</y>
+       <width>61</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Saturation</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="currentBrightnessLabel">
+     <property name="geometry">
+      <rect>
+       <x>70</x>
+       <y>50</y>
+       <width>31</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>curr</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="currentSaturationLabel">
+     <property name="geometry">
+      <rect>
+       <x>260</x>
+       <y>50</y>
+       <width>31</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>curr</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="currentContrastLabel">
+     <property name="geometry">
+      <rect>
+       <x>70</x>
+       <y>120</y>
+       <width>31</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>curr</string>
      </property>
     </widget>
    </widget>

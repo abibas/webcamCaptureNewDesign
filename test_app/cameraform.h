@@ -18,11 +18,16 @@ class CameraForm : public QWidget
 public:
     explicit CameraForm(CameraInterface* camera, QWidget *parent = 0);
     ~CameraForm();
-    void fillCameraCapabilitiesCB();
 
 private slots:
     void on_captureVideoBtb_clicked();
     std::string CameraForm::formatToString(Format format);
+    void fillCameraCapabilitiesCB();
+    void fillVideoPropertySettings();
+
+    void changeBrightnessLabel(int value);
+    void changeContrastLabel(int value);
+    void changeSaturationLabel(int value);
 
 private:
     Ui::CameraForm *ui;
