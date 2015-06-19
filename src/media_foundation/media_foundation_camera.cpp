@@ -192,49 +192,87 @@ namespace webcam_capture {
 
         if(createVideoDeviceSource(information.getDeviceId(), &source) > 0){
             IAMVideoProcAmp *pProcAmp = NULL;
-            VideoProcAmpProperty ampProp;
+            VideoProcAmpProperty ampProperty;
             long lMin, lMax, lStep, lDefault, lCaps;
 
             HRESULT hr = source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
+            if (SUCCEEDED(hr)){
+                switch (property){
+                    case VideoProperty::Brightness : {
+                        ampProperty = VideoProcAmp_Brightness;
+                        break;
+                    }
+                    case VideoProperty::Contrast : {
+                        ampProperty = VideoProcAmp_Contrast;
+                        break;
+                    }
+                    case VideoProperty::Saturation : {
+                        ampProperty = VideoProcAmp_Saturation;
+                        break;
+                    }
+                    default: {
+                        VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
+                        return vpr;///TODO to return error value
+                    }
+                }
 
-            switch (property){
-                case VideoProperty::Brightness : {
-                    ampProp = VideoProcAmp_Brightness;
-                    break;
-                }
-                case VideoProperty::Contrast : {
-                    ampProp = VideoProcAmp_Contrast;
-                    break;
-                }
-                case VideoProperty::Saturation : {
-                    ampProp = VideoProcAmp_Saturation;
-                    break;
-                }
-                default: {
-                    VideoPropertyRange vpr(0,0,0,0);
-                    return vpr;
-                }
-            }
-
-           hr = pProcAmp->GetRange(
-                                  VideoProcAmp_Brightness,
-                                  &lMin,
-                                  &lMax,
-                                  &lStep,
-                                  &lDefault,
-                                  &lCaps
-                                  );
-           VideoPropertyRange vpr(lMin, lMax, lStep, lDefault);
-           safeReleaseMediaFoundation(&source);
-           return vpr;
+               hr = pProcAmp->GetRange(
+                                      ampProperty,
+                                      &lMin,
+                                      &lMax,
+                                      &lStep,
+                                      &lDefault,
+                                      &lCaps
+                                      );
+               if (SUCCEEDED(hr)){
+                   VideoPropertyRange vpr(lMin, lMax, lStep, lDefault);
+                   safeReleaseMediaFoundation(&source);
+                   return vpr;
+               }
+           }
         }
-        VideoPropertyRange vpr(0,0,0,0);
-        return vpr;
+        VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
+        return vpr;///TODO to return error value
     }
 
     int MediaFoundation_Camera::getProperty(VideoProperty property){
-        // TODO to realise method
-        return 0;
+        IMFMediaSource* source = NULL;
+
+
+        if(createVideoDeviceSource(information.getDeviceId(), &source) > 0){
+            IAMVideoProcAmp *pProcAmp = NULL;
+            VideoProcAmpProperty ampProperty;
+            HRESULT hr = source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
+            if (SUCCEEDED(hr)){
+                switch (property){
+                    case VideoProperty::Brightness : {
+                        ampProperty = VideoProcAmp_Brightness;
+                        break;
+                    }
+                    case VideoProperty::Contrast : {
+                        ampProperty = VideoProcAmp_Contrast;
+                        break;
+                    }
+                    case VideoProperty::Saturation : {
+                        ampProperty = VideoProcAmp_Saturation;
+                        break;
+                    }
+                    default: {
+                        return 0; ///TODO to return error value
+                    }
+                }
+                long value;
+                long flags;
+                hr = pProcAmp->Get(ampProperty,
+                                   &value,
+                                   &flags);
+                if (SUCCEEDED(hr)){
+                    return value;
+                }
+
+            }
+        }
+        return 0;///TODO to return error value
     }
     bool MediaFoundation_Camera::setProperty(const VideoProperty property, const int value){
         // TODO to realise method

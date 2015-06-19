@@ -44,33 +44,37 @@ void CameraForm::fillVideoPropertySettings()
 
     //Brightness
     VideoPropertyRange vprBrightness = camera->getPropertyRange(VideoProperty::Brightness);
+    int value;
     this->ui->brigtnessSlider->setRange(vprBrightness.getMinValue(),
                                         vprBrightness.getMaxValue());
     this->ui->brigtnessSlider->setTickInterval(vprBrightness.getStepValue());
-    this->ui->brigtnessSlider->setValue(vprBrightness.getDefaultValue());  // !!!!!!
-    this->changeBrightnessLabel(vprBrightness.getDefaultValue()); // !!!!!!!
     this->ui->minBrightnessLabel->setText(QString::number(vprBrightness.getMinValue()));
     this->ui->maxBrightnessLabel->setText(QString::number(vprBrightness.getMaxValue()));
+    value = camera->getProperty(VideoProperty::Brightness);
+    this->ui->brigtnessSlider->setValue(value);
+    this->changeBrightnessLabel(value);
 
     //Contrast
     VideoPropertyRange vprContrast = camera->getPropertyRange(VideoProperty::Contrast);
     this->ui->contrastSlider->setRange(vprContrast.getMinValue(),
                                        vprContrast.getMaxValue());
     this->ui->contrastSlider->setTickInterval(vprContrast.getStepValue());
-    this->ui->contrastSlider->setValue(vprContrast.getDefaultValue());  // !!!!!!
-    this->changeContrastLabel(vprContrast.getDefaultValue()); // !!!!!!!
     this->ui->minContrastLabel->setText(QString::number(vprContrast.getMinValue()));
     this->ui->maxContrastLabel->setText(QString::number(vprContrast.getMaxValue()));
+    value = camera->getProperty(VideoProperty::Contrast);
+    this->ui->contrastSlider->setValue(value);
+    this->changeContrastLabel(value);
 
     //Saturation
     VideoPropertyRange vprSaturation = camera->getPropertyRange(VideoProperty::Saturation);
     this->ui->saturationSlider->setRange(vprSaturation.getMinValue(),
                                          vprSaturation.getMaxValue());
     this->ui->saturationSlider->setTickInterval(vprSaturation.getStepValue());
-    this->ui->saturationSlider->setValue(vprSaturation.getDefaultValue());  // !!!!!!
-    this->changeSaturationLabel(vprSaturation.getDefaultValue()); // !!!!!!
     this->ui->minSaturationLabel->setText(QString::number(vprSaturation.getMinValue()));
     this->ui->maxSaturationLabel->setText(QString::number(vprSaturation.getMaxValue()));
+    value = camera->getProperty(VideoProperty::Saturation);
+    this->ui->saturationSlider->setValue(value);
+    this->changeSaturationLabel(value);
 }
 
 void CameraForm::changeBrightnessLabel(int value)
