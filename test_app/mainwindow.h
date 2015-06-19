@@ -27,10 +27,10 @@ public:
 
 private slots:
     void on_createBackendBtn_clicked();
-
     void on_createCameraBtn_clicked();
-
     void on_cameraListComboBox_currentIndexChanged(int index);
+    void on_deleteBackendBtn_clicked();
+
 private:
     void fillFrameworkListCB();
     void fillCameraListCB();

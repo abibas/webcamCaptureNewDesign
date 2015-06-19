@@ -9,9 +9,10 @@ std::fstream outfile;
 
 #include <qdebug.h>
 
-VideoForm::VideoForm(int width, int height, QWidget *parent) :
+VideoForm::VideoForm(CameraInterface* camera, int width, int height, QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::VideoForm)
+    ui(new Ui::VideoForm),
+    camera(camera)
 {
     ui->setupUi(this);
     this->setFixedSize(width, height);
@@ -19,13 +20,6 @@ VideoForm::VideoForm(int width, int height, QWidget *parent) :
 }
 
 VideoForm::~VideoForm()
-{
-    camera->stop();
-    camera->close();
-    delete ui;
-}
-
-void VideoForm::closeEvent(QCloseEvent *)
 {
     camera->stop();
     camera->close();

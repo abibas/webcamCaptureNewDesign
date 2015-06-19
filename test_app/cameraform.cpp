@@ -14,8 +14,6 @@ CameraForm::CameraForm(CameraInterface *camera, QWidget *parent) :
 
 CameraForm::~CameraForm()
 {
-    camera->stop();
-    camera->close();
     delete camera;
     delete ui;
 }
@@ -40,21 +38,13 @@ void CameraForm::fillCameraCapabilitiesCB()
 void CameraForm::on_captureVideoBtb_clicked()
 {
     Capability cap = capabilityList[this->ui->capabilityComboBox->currentIndex()];
-    videoForm = new VideoForm(cap.getWidth(), cap.getHeight());
+    videoForm = new VideoForm(camera, cap.getWidth(), cap.getHeight());
+    videoForm->setAttribute(Qt::WA_DeleteOnClose);
     videoForm->show();
+
     camera->open(cap, videoForm->getFrameCallback());
     camera->start();
 }
-
-
-void CameraForm::on_stopCaptureVideoBtb_clicked()
-{
-    if (videoForm != NULL)
-    {
-        delete videoForm;
-    }
-}
-
 
 std::string  CameraForm::formatToString(Format format){
     switch(format) {

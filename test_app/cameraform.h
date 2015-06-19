@@ -24,8 +24,6 @@ private slots:
     void on_captureVideoBtb_clicked();
     std::string CameraForm::formatToString(Format format);
 
-    void on_stopCaptureVideoBtb_clicked();
-
 private:
     Ui::CameraForm *ui;
     CameraInterface* camera;

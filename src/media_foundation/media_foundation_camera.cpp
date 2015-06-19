@@ -23,15 +23,6 @@ namespace webcam_capture {
         if(state & CA_STATE_OPENED) {
             close();
         }
-
-        // Shutdown MediaFoundation
-        HRESULT hr = MFShutdown();
-        if(FAILED(hr)) {
-            DEBUG_PRINT("Error: failed to shutdown the MediaFoundation.\n");
-        }
-
-        // Shutdown COM
-        CoUninitialize();
     }
 
     int MediaFoundation_Camera::open(const Capability &capability, frame_callback cb){
@@ -641,7 +632,8 @@ namespace webcam_capture {
       }
 
       // Filter on capture devices
-      hr = config->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
+      hr = config->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
+                           MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
       if(FAILED(hr)) {
         DEBUG_PRINT("Error: cannot set the GUID on the IMFAttributes*.\n");
         result = -2;        //TODO Err code
