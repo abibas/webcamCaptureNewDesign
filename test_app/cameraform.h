@@ -29,6 +29,8 @@ private slots:
     void changeContrastLabel(int value);
     void changeSaturationLabel(int value);
 
+    void on_pushButton_clicked();
+
 private:
     Ui::CameraForm *ui;
     CameraInterface* camera;

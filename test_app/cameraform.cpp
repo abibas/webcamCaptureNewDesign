@@ -103,6 +103,12 @@ void CameraForm::on_captureVideoBtb_clicked()
 }
 
 
+void CameraForm::on_pushButton_clicked()
+{
+    camera->setProperty(VideoProperty::Brightness, this->ui->brigtnessSlider->value());
+    camera->setProperty(VideoProperty::Contrast, this->ui->contrastSlider->value());
+    camera->setProperty(VideoProperty::Saturation, this->ui->saturationSlider->value());
+}
 
 std::string  CameraForm::formatToString(Format format){
     switch(format) {
@@ -168,4 +174,5 @@ std::string  CameraForm::formatToString(Format format){
       default:                      return "Unknown format";
     }
 }
+
 

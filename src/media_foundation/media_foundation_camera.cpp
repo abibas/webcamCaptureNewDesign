@@ -189,94 +189,156 @@ namespace webcam_capture {
     VideoPropertyRange MediaFoundation_Camera::getPropertyRange(VideoProperty property){
         IMFMediaSource* source = NULL;
 
-
-        if(createVideoDeviceSource(information.getDeviceId(), &source) > 0){
-            IAMVideoProcAmp *pProcAmp = NULL;
-            VideoProcAmpProperty ampProperty;
-            long lMin, lMax, lStep, lDefault, lCaps;
-
-            HRESULT hr = source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
-            if (SUCCEEDED(hr)){
-                switch (property){
-                    case VideoProperty::Brightness : {
-                        ampProperty = VideoProcAmp_Brightness;
-                        break;
-                    }
-                    case VideoProperty::Contrast : {
-                        ampProperty = VideoProcAmp_Contrast;
-                        break;
-                    }
-                    case VideoProperty::Saturation : {
-                        ampProperty = VideoProcAmp_Saturation;
-                        break;
-                    }
-                    default: {
-                        VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
-                        return vpr;///TODO to return error value
-                    }
-                }
-
-               hr = pProcAmp->GetRange(
-                                      ampProperty,
-                                      &lMin,
-                                      &lMax,
-                                      &lStep,
-                                      &lDefault,
-                                      &lCaps
-                                      );
-               if (SUCCEEDED(hr)){
-                   VideoPropertyRange vpr(lMin, lMax, lStep, lDefault);
-                   safeReleaseMediaFoundation(&source);
-                   return vpr;
-               }
-           }
+        if(createVideoDeviceSource(information.getDeviceId(), &source) <= 0){
+            DEBUG_PRINT("Can't create VideoDeviceSource. GetPropertyRange failed.\n");
+            VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
+            return vpr;///TODO to return error value
         }
-        VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
-        return vpr;///TODO to return error value
+
+        IAMVideoProcAmp *pProcAmp = NULL;
+        VideoProcAmpProperty ampProperty;
+        long lMin, lMax, lStep, lDefault, lCaps;
+
+        HRESULT hr = source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
+        if (FAILED(hr)){
+            DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
+            VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
+            return vpr;///TODO to return error value
+        }
+        switch (property){
+            case VideoProperty::Brightness : {
+                ampProperty = VideoProcAmp_Brightness;
+                break;
+            }
+            case VideoProperty::Contrast : {
+                ampProperty = VideoProcAmp_Contrast;
+                break;
+            }
+            case VideoProperty::Saturation : {
+                ampProperty = VideoProcAmp_Saturation;
+                break;
+            }
+            default: {
+                DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+                VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
+                return vpr;///TODO to return error value
+            }
+        }
+
+       hr = pProcAmp->GetRange(ampProperty, &lMin, &lMax, &lStep, &lDefault, &lCaps);
+       if (FAILED(hr)){
+           DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+           VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
+           return vpr;///TODO to return error value
+       }
+
+       VideoPropertyRange vpr(lMin, lMax, lStep, lDefault);
+       safeReleaseMediaFoundation(&source);
+       return vpr;
     }
 
     int MediaFoundation_Camera::getProperty(VideoProperty property){
         IMFMediaSource* source = NULL;
 
 
-        if(createVideoDeviceSource(information.getDeviceId(), &source) > 0){
-            IAMVideoProcAmp *pProcAmp = NULL;
-            VideoProcAmpProperty ampProperty;
-            HRESULT hr = source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
-            if (SUCCEEDED(hr)){
-                switch (property){
-                    case VideoProperty::Brightness : {
-                        ampProperty = VideoProcAmp_Brightness;
-                        break;
-                    }
-                    case VideoProperty::Contrast : {
-                        ampProperty = VideoProcAmp_Contrast;
-                        break;
-                    }
-                    case VideoProperty::Saturation : {
-                        ampProperty = VideoProcAmp_Saturation;
-                        break;
-                    }
-                    default: {
-                        return 0; ///TODO to return error value
-                    }
-                }
-                long value;
-                long flags;
-                hr = pProcAmp->Get(ampProperty,
-                                   &value,
-                                   &flags);
-                if (SUCCEEDED(hr)){
-                    return value;
-                }
+        if(createVideoDeviceSource(information.getDeviceId(), &source) <= 0){
+            DEBUG_PRINT("Can't create VideoDeviceSource. GetPropertyRange failed.\n");
+            return -99999;///TODO to return error value
+        }
+        IAMVideoProcAmp *pProcAmp = NULL;
+        VideoProcAmpProperty ampProperty;
+        HRESULT hr = source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
+        if (FAILED(hr)){
+            DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
+            safeReleaseMediaFoundation(&source);
+            return -99999;///TODO to return error value
+        }
 
+        switch (property){
+            case VideoProperty::Brightness : {
+                ampProperty = VideoProcAmp_Brightness;
+                break;
+            }
+            case VideoProperty::Contrast : {
+                ampProperty = VideoProcAmp_Contrast;
+                break;
+            }
+            case VideoProperty::Saturation : {
+                ampProperty = VideoProcAmp_Saturation;
+                break;
+            }
+            default: {
+                DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+                safeReleaseMediaFoundation(&source);
+                return -99999; ///TODO to return error value
             }
         }
-        return 0;///TODO to return error value
+
+        long value;
+        long flags;
+        hr = pProcAmp->Get(ampProperty, &value, &flags);
+        if (FAILED(hr)){
+            DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
+            safeReleaseMediaFoundation(&source);
+            return -99999;
+        }
+        safeReleaseMediaFoundation(&source);
+        return value;
     }
+
+
+
+
     bool MediaFoundation_Camera::setProperty(const VideoProperty property, const int value){
-        // TODO to realise method
-        return false;
+        IMFMediaSource* source = NULL;
+
+
+        if(createVideoDeviceSource(information.getDeviceId(), &source) <= 0){
+            DEBUG_PRINT("Can't create VideoDeviceSource. GetPropertyRange failed.\n");
+            return false;
+        }
+        IAMVideoProcAmp *pProcAmp = NULL;
+        VideoProcAmpProperty ampProperty;
+        HRESULT hr = source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
+        if (FAILED(hr)){
+            DEBUG_PRINT("Can't get IAMVideoProcAmp object. SetProperty failed.\n");
+            safeReleaseMediaFoundation(&source);
+            return false;
+        }
+        switch (property){
+            case VideoProperty::Brightness : {
+                ampProperty = VideoProcAmp_Brightness;
+                break;
+            }
+            case VideoProperty::Contrast : {
+                ampProperty = VideoProcAmp_Contrast;
+                break;
+            }
+            case VideoProperty::Saturation : {
+                ampProperty = VideoProcAmp_Saturation;
+                break;
+            }
+            default: {
+                return 0; ///TODO to return error value
+            }
+        }
+
+        long val;
+        long flags;
+        hr = pProcAmp->Get(ampProperty, &val, &flags);
+        if (FAILED(hr)){
+            DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
+            safeReleaseMediaFoundation(&source);
+            return false;
+        }
+        hr = pProcAmp->Set(ampProperty, value, flags);
+        if (FAILED(hr)){
+            DEBUG_PRINT("Error during IAMVideoProcAmp->Set. SetProperty failed.\n");
+            safeReleaseMediaFoundation(&source);
+            return false;
+        }
+        safeReleaseMediaFoundation(&source);
+        return true;
     }
 
     std::vector<Capability> MediaFoundation_Camera::getCapabilities(){
