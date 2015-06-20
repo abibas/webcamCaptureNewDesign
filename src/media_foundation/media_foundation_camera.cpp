@@ -240,7 +240,6 @@ namespace webcam_capture {
     int MediaFoundation_Camera::getProperty(VideoProperty property){
         IMFMediaSource* source = NULL;
 
-
         if(createVideoDeviceSource(information.getDeviceId(), &source) <= 0){
             DEBUG_PRINT("Can't create VideoDeviceSource. GetPropertyRange failed.\n");
             return -99999;///TODO to return error value

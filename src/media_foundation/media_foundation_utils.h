@@ -25,8 +25,8 @@ namespace webcam_capture {
 
   webcam_capture::Format media_foundation_video_format_to_capture_format(GUID guid);        /* Convert a MF format to a capture format */
 
-  // Convert a WCHAR to a std::string
-  template<class T>
+    // Convert a WCHAR to a std::string
+    template<class T>
     T string_cast( const wchar_t* src, unsigned int codePage = CP_ACP) {
 
     assert(src != 0);
@@ -47,7 +47,15 @@ namespace webcam_capture {
     else {
       return T();
     }
-  }
+    }
+
+    /* Safely release the given obj. */
+    template <class T> void safeReleaseMediaFoundation(T **t) {
+      if(*t) {
+        (*t)->Release();
+        *t = NULL;
+      }
+    }
   
 } // namespace webcam_capture
 
