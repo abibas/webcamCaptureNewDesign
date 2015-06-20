@@ -38,7 +38,7 @@ namespace webcam_capture {
          * @param cb Frame callback
          * @return Stutas code //TODO do we need the status code ?? If Yes - we have to add error's enum
          */
-        virtual int open(const Capability &capability, frame_callback cb) = 0; //TODO to add enum with error codes
+        virtual int open() = 0; //TODO to add enum with error codes
         /**
          * close Close camera device
          * @return Status code
@@ -48,7 +48,7 @@ namespace webcam_capture {
          * start Start capturing. Captured frames thows in frame callback
          * @return Status code
          */
-        virtual int start() = 0;        //TODO to add enum with error codes
+        virtual int start(const Capability &capability, frame_callback cb) = 0;        //TODO to add enum with error codes
         /**
          * stop Stop capturing
          * @return Status code

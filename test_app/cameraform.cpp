@@ -9,6 +9,8 @@ CameraForm::CameraForm(CameraInterface *camera, QWidget *parent) :
 {
     ui->setupUi(this);
     videoForm = NULL;
+    camera->open();  //Init Camera object.
+
     fillCameraCapabilitiesCB();
     fillVideoPropertySettings();
 
@@ -27,6 +29,8 @@ CameraForm::~CameraForm()
 void CameraForm::fillCameraCapabilitiesCB()
 {
     this->ui->capabilityComboBox->clear();
+    capabilityList = camera->getCapabilities();
+    capabilityList = camera->getCapabilities();
     capabilityList = camera->getCapabilities();
     for(size_t i = 0; i < capabilityList.size(); ++i) {
         QString str = QString("[%1] %2x%3 %4 fps, %5").
@@ -98,8 +102,7 @@ void CameraForm::on_captureVideoBtb_clicked()
     videoForm->setAttribute(Qt::WA_DeleteOnClose);
     videoForm->show();
 
-    camera->open(cap, videoForm->getFrameCallback());
-    camera->start();
+    camera->start(cap, videoForm->getFrameCallback());
 }
 
 

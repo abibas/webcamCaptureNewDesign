@@ -49,9 +49,9 @@ namespace webcam_capture {
     public:
         MediaFoundation_Camera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
         ~MediaFoundation_Camera();
-        int open(const Capability &capability, frame_callback cb);
+        int open();
         int close();
-        int start();
+        int start(const Capability &capability, frame_callback cb);
         int stop();
         PixelBuffer* CaptureFrame();  //TODO
         // ---- Capabilities ----

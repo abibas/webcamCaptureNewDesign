@@ -25,8 +25,7 @@ namespace webcam_capture {
         }
     }
 
-    int MediaFoundation_Camera::open(const Capability &capability, frame_callback cb){
-        cb_frame = cb;
+    int MediaFoundation_Camera::open(){
         if(state & CA_STATE_OPENED) {
           DEBUG_PRINT("Error: already opened.\n");
           return -1; //TODO Err code
@@ -41,6 +40,35 @@ namespace webcam_capture {
         if(createVideoDeviceSource(information.getDeviceId(), &imf_media_source) < 0) {
             DEBUG_PRINT("Error: cannot create the media device source.\n");
             return -3;      //TODO Err code
+        }
+
+        state |= CA_STATE_OPENED;
+        return 1;      //TODO Err code
+    }
+
+    int MediaFoundation_Camera::close(){
+        if(state & CA_STATE_CAPTURING) {
+          stop();
+        }
+
+        safeReleaseMediaFoundation(&imf_media_source);
+
+        state &= ~CA_STATE_OPENED;
+
+        return 1;      //TODO Err code
+    }
+
+    int MediaFoundation_Camera::start(const Capability &capability, frame_callback cb){
+        cb_frame = cb;
+
+        if(!(state & CA_STATE_OPENED)) {
+          DEBUG_PRINT("Error: cannot start captureing because you haven't opened the device successfully.\n");
+          return -2;      //TODO Err code
+        }
+
+        if(state & CA_STATE_CAPTURING) {
+          DEBUG_PRINT("Error: cannot start capture because we are already capturing.\n");
+          return -3;      //TODO Err code
         }
 
         // Set the media format, width, height
@@ -92,44 +120,6 @@ namespace webcam_capture {
         pixel_buffer.width[0] = cap.getWidth();
         pixel_buffer.pixel_format = cap.getPixelFormat();
 
-        state |= CA_STATE_OPENED;
-        return 1;      //TODO Err code
-    }
-
-    int MediaFoundation_Camera::close(){
-        if(!imf_source_reader) {
-          DEBUG_PRINT("Error: cannot close the device because it seems that is hasn't been opend yet. Did you call openDevice?.\n");
-          return -1;      //TODO Err code
-        }
-
-        if(state & CA_STATE_CAPTURING) {
-          stop();
-        }
-
-        safeReleaseMediaFoundation(&imf_source_reader);
-        safeReleaseMediaFoundation(&imf_media_source);
-        safeReleaseMediaFoundation(&mf_callback);
-
-        state &= ~CA_STATE_OPENED;
-
-        return 1;      //TODO Err code
-    }
-
-    int MediaFoundation_Camera::start(){
-        if(!imf_source_reader) {
-          DEBUG_PRINT("Error: cannot start capture becuase it looks like the device hasn't been opened yet.\n");
-          return -1;      //TODO Err code
-        }
-
-        if(!(state & CA_STATE_OPENED)) {
-          DEBUG_PRINT("Error: cannot start captureing because you haven't opened the device successfully.\n");
-          return -2;      //TODO Err code
-        }
-
-        if(state & CA_STATE_CAPTURING) {
-          DEBUG_PRINT("Error: cannot start capture because we are already capturing.\n");
-          return -3;      //TODO Err code
-        }
 
         // Kick off the capture stream.
         HRESULT hr = imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
@@ -176,6 +166,9 @@ namespace webcam_capture {
         }
 
         state &= ~CA_STATE_CAPTURING;
+
+        safeReleaseMediaFoundation(&imf_source_reader);
+        safeReleaseMediaFoundation(&mf_callback);
 
         return 1;   //TODO Err code
     }

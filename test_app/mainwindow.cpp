@@ -69,6 +69,7 @@ void MainWindow::on_createBackendBtn_clicked()
 void MainWindow::on_createCameraBtn_clicked()
 {   
     CameraForm * camForm = new CameraForm(backend->getCamera(cameraInfoList[this->ui->cameraListComboBox->currentIndex()]));
+
     camForm->setAttribute(Qt::WA_DeleteOnClose);
     camForm->show();
 }
