@@ -32,6 +32,8 @@ namespace webcam_capture  {
         const int fps;
 
         friend class MediaFoundation_Camera;  //to move to ifdef. TODO
+
+
     };
 
 
@@ -110,6 +112,7 @@ namespace webcam_capture  {
          * @return Capability Resolutions vector
          */
         std::vector<CapabilityResolution> getResolutionsVector() const { return resolutions; }
+
     private:
 
         /**
@@ -144,7 +147,6 @@ namespace webcam_capture  {
 
         friend class MediaFoundation_Camera;  //to move to ifdef. TODO
     };
-
 } // namespace webcam_capture
 
 #endif // NEW_CAPABILITY

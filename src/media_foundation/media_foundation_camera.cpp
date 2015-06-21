@@ -64,8 +64,8 @@ namespace webcam_capture {
     }
 
     int MediaFoundation_Camera::start(const CapabilityFormat &capabilityFormat,
-                                      const CapabilityResolution capabilityResolution,
-                                      const CapabilityFPS capabilityFPS,
+                                      const CapabilityResolution &capabilityResolution,
+                                      const CapabilityFPS &capabilityFPS,
                                       frame_callback cb){
         cb_frame = cb;
 
@@ -87,27 +87,44 @@ namespace webcam_capture {
         }
 
 //Check of "capabilities" have inputed params
-        std::vector<CapabilityFormat>::iterator capFormatBufIt;
-        capFormatBufIt = std::find(capabilities.begin(), capabilities.end(), capabilityFormat);
-        if( capFormatBufIt == capabilities.end() ) {
+        bool isFormatValid = false;
+        std::vector<CapabilityResolution> resolutionVectorBuf;
+        for (int i = 0; i < capabilities.size(); i++){
+            if ( capabilities.at(i).getPixelFormat() == capabilityFormat.getPixelFormat() &&
+                 capabilities.at(i).getPixelFormatIndex() == capabilityFormat.getPixelFormatIndex() )
+            {
+                resolutionVectorBuf = capabilities.at(i).getResolutionsVector();
+                isFormatValid = true;
+            }
+        }
+        if (!isFormatValid){
             DEBUG_PRINT("Error: cannot found such capabilityFormat in capabilities.\n");
             return -5;
         }
 
-        CapabilityFormat capFormatBuf = *capFormatBufIt;
-        std::vector<CapabilityResolution>::iterator capResolutionBufIt = std::find(capFormatBuf.getResolutionsVector().begin(),
-                                                          capFormatBuf.getResolutionsVector().end(),
-                                                          capabilityResolution);
-        if ( capResolutionBufIt == capFormatBuf.getResolutionsVector().end() ) {
+        bool isResolutionValid = false;
+        std::vector<CapabilityFPS> fpsVectorBuf;
+        for (int j = 0; j < resolutionVectorBuf.size(); j++) {
+            if (resolutionVectorBuf.at(j).getHeight()  == capabilityResolution.getHeight() &&
+                resolutionVectorBuf.at(j).getWidth() == capabilityResolution.getWidth() )
+            {
+                fpsVectorBuf = resolutionVectorBuf.at(j).getFpsVector();
+                isResolutionValid = true;
+            }
+        }
+        if ( !isResolutionValid ) {
             DEBUG_PRINT("Error: cannot found such capabilityResolution in capabilities.\n");
             return -6;
         }
 
-        CapabilityResolution capResolutionBuf = *capResolutionBufIt;
-        std::vector<CapabilityFPS>::iterator capFpsBufIt = std::find(capResolutionBuf.getFpsVector().begin(),
-                                            capResolutionBuf.getFpsVector().end(),
-                                            capabilityFPS);
-        if ( capFpsBufIt == capResolutionBuf.getFpsVector().end() ) {
+        bool isFpsValid = false;
+        for (int k = 0; k < fpsVectorBuf.size(); k++) {
+            if (fpsVectorBuf.at(k).getFps() == capabilityFPS.getFps() ){
+                isFpsValid = true;
+            }
+        }
+
+        if ( !isFpsValid ) {
             DEBUG_PRINT("Error: cannot found such capabilityFPS in capabilities.\n");
             return -7;
         }
@@ -362,7 +379,6 @@ namespace webcam_capture {
         }        
         return true;
     }
-
 
     /* PLATFORM SDK SPECIFIC */
     /* -------------------------------------- */

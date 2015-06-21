@@ -47,7 +47,7 @@ namespace webcam_capture {
         ~MediaFoundation_Camera();
         int open();
         int close();
-        int start(const CapabilityFormat &capabilityFormat, const CapabilityResolution capabilityResolution, const CapabilityFPS capabilityFPS, frame_callback cb);
+        int start(const CapabilityFormat &capabilityFormat, const CapabilityResolution &capabilityResolution, const CapabilityFPS &capabilityFPS, frame_callback cb);
         int stop();
         PixelBuffer* CaptureFrame();  //TODO
         // ---- Capabilities ----
@@ -55,6 +55,7 @@ namespace webcam_capture {
         int getProperty(VideoProperty property); //TODO
         bool setProperty(const VideoProperty property, const int value); //TODO
         std::vector<CapabilityFormat> getCapabilities();
+
     private:
         //// SDK functions
         int createSourceReader(IMFMediaSource* mediaSource, IMFSourceReaderCallback* callback, IMFSourceReader** sourceReader);
