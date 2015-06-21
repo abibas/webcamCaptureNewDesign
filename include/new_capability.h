@@ -56,7 +56,7 @@ namespace webcam_capture  {
         /**
          * @return CapabilityResolution FPS vector
          */
-        std::vector<CapabilityFPS> getFpsVector() { return resolutions; }
+        std::vector<CapabilityFPS> getFpsVector() { return fpses; }
     private:
 
         /**
@@ -72,7 +72,7 @@ namespace webcam_capture  {
         /**
          * @param capabilityFps CapabilityFPS
          */
-        AddCapabilityFPS (CapabilityFPS capabilityFps) { fpses.push_back(capabilityFps); }  // TODO change name
+        void addCapabilityFPS (CapabilityFPS capabilityFps) { fpses.push_back(capabilityFps); }  // TODO change name
 
         /**
          * @brief width Resolution width
@@ -125,7 +125,7 @@ namespace webcam_capture  {
         /**
          * @param resolution CapabilityResolution
          */
-        AddResolution(CapabilityResolution resolution) { resolutions.push_back(resolution); }
+        void addResolution(CapabilityResolution resolution) { resolutions.push_back(resolution); }
 
         /**
          * pixelFormat The pixel format one of the Format enum

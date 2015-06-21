@@ -582,6 +582,9 @@ namespace webcam_capture {
       IMFMediaType* type = NULL;
       int result = 1;        //TODO Err code
 
+      std::vector<CapabilityFormat> capFormatVector; // TEST
+
+
       HRESULT hr = source->CreatePresentationDescriptor(&presentation_desc);
       if (hr == MF_E_SHUTDOWN)
       {
@@ -650,6 +653,10 @@ namespace webcam_capture {
 
       // Loop over all the types
       PROPVARIANT var;
+
+
+
+
       for(DWORD i = 0; i < types_count; ++i) {
 
         Format pixelFormat;
@@ -727,11 +734,34 @@ namespace webcam_capture {
           }
 
           capabilityIndex = i;
-          //TODO to get ability to set variable FPS rate
+          //TODO to get ability to set variable FPS rate          
           Capability cap (width, height, pixelFormat,minFps, maxFps, currentFps, capabilityIndex, currentFpsIndex, pixelFormatIndex, "");
           caps.push_back(cap);
-        }
+//*test of the new_capability
+          bool isFormatInList = false;
+          //init fps vector
+          std::vector<CapabilityFPS> capFpsVector;
+          CapabilityFPS capMinFPS(minFps);
+          capFpsVector.push_back(capMinFPS);
+          CapabilityFPS capMaxFPS(maxFps);
+          capFpsVector.push_back(capMaxFPS);
+          //init capabilityVector
+          CapabilityResolution capRes(width, height, capFpsVector);
 
+          for (int i = 0; i < capFormatVector.size(); i++){
+              if ( capFormatVector.at(i).getPixelFormat() == pixelFormat ) {
+                  capFormatVector.at(i).addResolution(capRes);
+                  isFormatInList = true;
+              }
+          }
+          if ( !isFormatInList ) {
+              std::vector<CapabilityResolution> capResVector;
+              capResVector.push_back(capRes);
+              CapabilityFormat capFormat(pixelFormat, pixelFormatIndex, capResVector);
+              capFormatVector.push_back(capFormat);
+          }
+        }
+//end test
         safeReleaseMediaFoundation(&type);
       }
 

@@ -34,6 +34,8 @@
 #include "media_foundation_utils.h"
 #include "media_foundation_callback.h"
 
+//test
+#include "../include/new_capability.h"
 
 namespace webcam_capture {
 
