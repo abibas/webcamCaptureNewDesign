@@ -36,7 +36,7 @@ private slots:
 private:
     Ui::CameraForm *ui;
     CameraInterface* camera;
-    std::vector<Capability> capabilityList;
+    std::vector<CapabilityFormat> capabilityList;
     VideoForm *videoForm;
 };
 

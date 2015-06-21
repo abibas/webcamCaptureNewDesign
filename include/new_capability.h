@@ -17,7 +17,7 @@ namespace webcam_capture  {
         /**
          * @return Capability FPS
          */
-        int getFps() { return fps; }
+        int getFps() const { return fps; }
     private:
 
         /**
@@ -46,17 +46,17 @@ namespace webcam_capture  {
         /**
          * @return CapabilityResolution width
          */
-        int getWidth() { return width; }
+        int getWidth() const { return width; }
 
         /**
          * @return CapabilityResolution height
          */
-        int getHeight() { return height; }
+        int getHeight() const { return height; }
 
         /**
          * @return CapabilityResolution FPS vector
          */
-        std::vector<CapabilityFPS> getFpsVector() { return fpses; }
+        std::vector<CapabilityFPS> getFpsVector() const { return fpses; }
     private:
 
         /**
@@ -101,15 +101,15 @@ namespace webcam_capture  {
         /**
          * @return Capability pixel format
          */
-        Format getPixelFormat() { return pixelFormat; }
+        Format getPixelFormat() const { return pixelFormat; }
         /**
          * @return Capability format index
          */
-        int getPixelFormatIndex() { return pixelFormatIndex; }
+        int getPixelFormatIndex() const { return pixelFormatIndex; }
         /**
          * @return Capability Resolutions vector
          */
-        std::vector<CapabilityResolution> getResolutionsVector() { return resolutions; }
+        std::vector<CapabilityResolution> getResolutionsVector() const { return resolutions; }
     private:
 
         /**
