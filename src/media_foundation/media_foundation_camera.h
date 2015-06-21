@@ -47,7 +47,7 @@ namespace webcam_capture {
         ~MediaFoundation_Camera();
         int open();
         int close();
-        int start(const CapabilityFormat &capabilityFormat, const CapabilityResolution &capabilityResolution, const CapabilityFPS &capabilityFPS, frame_callback cb);
+        int start(const CapabilityFormat &capabilityFormat, const CapabilityResolution &capabilityResolution, const CapabilityFps &capabilityFps, frame_callback cb);
         int stop();
         PixelBuffer* CaptureFrame();  //TODO
         // ---- Capabilities ----

@@ -27,20 +27,74 @@ CameraForm::~CameraForm()
 
 void CameraForm::fillCameraCapabilitiesCB()
 {
-    this->ui->capabilityComboBox->clear();
+    this->ui->formatComboBox->clear();
+    this->ui->resolutionComboBox->clear();
+    this->ui->fpsComboBox->clear();
 
     capabilityList = camera->getCapabilities();
+    for (int i = 0; i < capabilityList.size(); i++) {
+        this->ui->formatComboBox->addItem(formatToString(capabilityList.at(i).getPixelFormat()).c_str());
+    }
 
-//    for(size_t i = 0; i < capabilityList.size(); ++i) {
-//        QString str = QString("[%1] %2x%3 %4 fps, %5").
-//                arg(capabilityList[i].getCapabilityIndex()).
-//                arg(capabilityList[i].getWidth()).
-//                arg(capabilityList[i].getHeight()).
-//                arg(capabilityList[i].getMaxFps()/100.0f).
-//                arg(formatToString(capabilityList[i].getPixelFormat()).c_str());
-//        this->ui->capabilityComboBox->addItem(str);
+//    std::vector<CapabilityResolution> resolutions = capabilityList.at(0).getResolutionsVector();
+//    for (int j = 0; j < resolutions.size(); j++){
+//        QString str = QString("%2 x %3").
+//                        arg(resolutions.at(j).getWidth()).
+//                        arg(resolutions.at(j).getHeight());
+//        this->ui->resolutionComboBox->addItem(str);
+//    }
+
+//    std::vector<CapabilityFps> fpsVector = resolutions.at(0).getFpsVector();
+//    for (int k = 0; k < fpsVector.size(); k++) {
+//        QString str = QString("%1").
+//                        arg(fpsVector.at(k).getFps()/100);
+//        this->ui->fpsComboBox->addItem(str);
 //    }
 }
+
+void CameraForm::on_formatComboBox_currentIndexChanged(int index)
+{
+    if (index == -1){
+        return;
+    }
+    this->ui->resolutionComboBox->clear();
+    this->ui->fpsComboBox->clear();
+
+    std::vector<CapabilityResolution> resolutions = capabilityList.at(index).getResolutionsVector();
+    for (int j = 0; j < resolutions.size(); j++){
+        QString str = QString("%2 x %3").
+                        arg(resolutions.at(j).getWidth()).
+                        arg(resolutions.at(j).getHeight());
+        this->ui->resolutionComboBox->addItem(str);
+    }
+}
+
+void CameraForm::on_resolutionComboBox_currentIndexChanged(int index)
+{
+    if (index == -1){
+        return;
+    }
+    this->ui->fpsComboBox->clear();
+    std::vector<CapabilityResolution> resolutions = capabilityList.
+                    at(this->ui->formatComboBox->currentIndex()).getResolutionsVector();
+    std::vector<CapabilityFps> fpsVector = resolutions.
+                    at(index).getFpsVector();
+
+    for (int k = 0; k < fpsVector.size(); k++) {
+        QString str = QString("%1").
+                        arg(fpsVector.at(k).getFps()/100);
+        this->ui->fpsComboBox->addItem(str);
+    }
+}
+
+void CameraForm::on_tabWidget_currentChanged(int index)
+{
+    if (index == 1)
+    {
+        fillVideoPropertySettings();
+    }
+}
+
 
 void CameraForm::fillVideoPropertySettings()
 {
@@ -96,16 +150,21 @@ void CameraForm::changeContrastLabel(int value)
 
 void CameraForm::on_captureVideoBtb_clicked()
 {
-//    Capability cap = capabilityList[this->ui->capabilityComboBox->currentIndex()];
-//    videoForm = new VideoForm(camera, cap.getWidth(), cap.getHeight());
-//    videoForm->setAttribute(Qt::WA_DeleteOnClose);
-//    videoForm->show();
+    CapabilityFormat capFormat = capabilityList.at(this->ui->formatComboBox->currentIndex());
+    CapabilityResolution capResolution = capabilityList.at(this->ui->formatComboBox->currentIndex()).
+                                        getResolutionsVector().at(this->ui->resolutionComboBox->currentIndex());
+    CapabilityFps capFps = capabilityList.at(this->ui->formatComboBox->currentIndex()).
+            getResolutionsVector().at(this->ui->resolutionComboBox->currentIndex()).
+            getFpsVector().at(this->ui->fpsComboBox->currentIndex());
 
-//    camera->start(cap, videoForm->getFrameCallback());
+    videoForm = new VideoForm(camera, capResolution.getWidth(), capResolution.getHeight());
+    videoForm->setAttribute(Qt::WA_DeleteOnClose);
+    videoForm->show();
+
+    camera->start(capFormat, capResolution, capFps, videoForm->getFrameCallback());
 }
 
-
-void CameraForm::on_pushButton_clicked()
+void CameraForm::on_applyImageSettingsButton_clicked()
 {
     camera->setProperty(VideoProperty::Brightness, this->ui->brigtnessSlider->value());
     camera->setProperty(VideoProperty::Contrast, this->ui->contrastSlider->value());
@@ -178,11 +237,3 @@ std::string  CameraForm::formatToString(Format format){
 }
 
 
-
-void CameraForm::on_tabWidget_currentChanged(int index)
-{
-    if (index == 1)
-    {
-        fillVideoPropertySettings();
-    }
-}

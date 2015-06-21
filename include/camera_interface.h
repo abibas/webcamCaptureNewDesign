@@ -49,7 +49,7 @@ namespace webcam_capture {
          * @return Status code
          */
         virtual int start(const CapabilityFormat &capabilityFormat, const CapabilityResolution &capabilityResolution,
-                          const CapabilityFPS &capabilityFPS, frame_callback cb) = 0; //TODO to add enum with error codes
+                          const CapabilityFps &capabilityFps, frame_callback cb) = 0; //TODO to add enum with error codes
         /**
          * stop Stop capturing
          * @return Status code

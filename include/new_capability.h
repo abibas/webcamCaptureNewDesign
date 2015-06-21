@@ -10,9 +10,9 @@ namespace webcam_capture  {
     /**
     * Contains valid values of a FPS
     */
-    class CapabilityFPS {
+    class CapabilityFps {
     public:
-        ~CapabilityFPS() {}
+        ~CapabilityFps() {}
 
         /**
          * @return Capability FPS
@@ -23,7 +23,7 @@ namespace webcam_capture  {
         /**
          * @param fps Capability FPS
          */
-        CapabilityFPS(int fps) :
+        CapabilityFps(int fps) :
             fps(fps) {}
 
         /**
@@ -58,7 +58,7 @@ namespace webcam_capture  {
         /**
          * @return CapabilityResolution FPS vector
          */
-        std::vector<CapabilityFPS> getFpsVector() const { return fpses; }
+        std::vector<CapabilityFps> getFpsVector() const { return fpses; }
     private:
 
         /**
@@ -66,7 +66,7 @@ namespace webcam_capture  {
          * @param height CapabilityResolution height
          * @param fpses CapabilityResolution fpses vector
          */
-        CapabilityResolution (int width, int height, std::vector<CapabilityFPS> fpses) :
+        CapabilityResolution (int width, int height, std::vector<CapabilityFps> fpses) :
             width(width),
             height(height),
             fpses(fpses) {}
@@ -74,7 +74,7 @@ namespace webcam_capture  {
         /**
          * @param capabilityFps CapabilityFPS
          */
-        void addCapabilityFPS (CapabilityFPS capabilityFps) { fpses.push_back(capabilityFps); }  // TODO change name
+        void addCapabilityFPS (CapabilityFps capabilityFps) { fpses.push_back(capabilityFps); }  // TODO change name
 
         /**
          * @brief width Resolution width
@@ -88,7 +88,7 @@ namespace webcam_capture  {
         /**
          * @brief Resolution fps vector
          */
-        std::vector<CapabilityFPS> fpses;
+        std::vector<CapabilityFps> fpses;
 
         friend class MediaFoundation_Camera;  //to move to ifdef. TODO
     };

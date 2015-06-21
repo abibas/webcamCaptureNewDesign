@@ -65,7 +65,7 @@ namespace webcam_capture {
 
     int MediaFoundation_Camera::start(const CapabilityFormat &capabilityFormat,
                                       const CapabilityResolution &capabilityResolution,
-                                      const CapabilityFPS &capabilityFPS,
+                                      const CapabilityFps &capabilityFps,
                                       frame_callback cb){
         cb_frame = cb;
 
@@ -103,7 +103,7 @@ namespace webcam_capture {
         }
 
         bool isResolutionValid = false;
-        std::vector<CapabilityFPS> fpsVectorBuf;
+        std::vector<CapabilityFps> fpsVectorBuf;
         for (int j = 0; j < resolutionVectorBuf.size(); j++) {
             if (resolutionVectorBuf.at(j).getHeight()  == capabilityResolution.getHeight() &&
                 resolutionVectorBuf.at(j).getWidth() == capabilityResolution.getWidth() )
@@ -119,19 +119,15 @@ namespace webcam_capture {
 
         bool isFpsValid = false;
         for (int k = 0; k < fpsVectorBuf.size(); k++) {
-            if (fpsVectorBuf.at(k).getFps() == capabilityFPS.getFps() ){
+            if (fpsVectorBuf.at(k).getFps() == capabilityFps.getFps() ){
                 isFpsValid = true;
             }
         }
-
         if ( !isFpsValid ) {
-            DEBUG_PRINT("Error: cannot found such capabilityFPS in capabilities.\n");
+            DEBUG_PRINT("Error: cannot found such capabilityFps in capabilities.\n");
             return -7;
         }
 //END OF Check of "capabilities" have inputed params
-
-        //TODO we dont need this. (we already have the Capability in the input params
-        //Capability cap = capabilities.at(capability.getCapabilityIndex());
         if(capabilityFormat.getPixelFormat() == Format::UNKNOWN) {
             DEBUG_PRINT("Error: cannot set a pixel format for UNKNOWN.\n");
             return -8;      //TODO Err code
@@ -153,7 +149,7 @@ namespace webcam_capture {
         // Set the source reader format.
         if(setReaderFormat(imf_source_reader, capabilityResolution.getWidth(),
                            capabilityResolution.getHeight(),
-                           capabilityFPS.getFps(),
+                           capabilityFps.getFps(),
                            capabilityFormat.getPixelFormat()) < 0) {
             DEBUG_PRINT("Error: cannot set the reader format.\n");
             safeReleaseMediaFoundation(&mf_callback);
@@ -702,7 +698,6 @@ namespace webcam_capture {
         int minFps;
         int maxFps;
         int currentFps;
-        int currentFpsIndex;
         int capabilityIndex;
 
         hr = media_handler->GetMediaTypeByIndex(i, &type);
@@ -779,11 +774,11 @@ namespace webcam_capture {
 //*test of the new_capability
           bool isFormatInList = false;
           //init fps vector
-          std::vector<CapabilityFPS> capFpsVector;
-          CapabilityFPS capMinFPS(minFps);
-          capFpsVector.push_back(capMinFPS);
-          CapabilityFPS capMaxFPS(maxFps);
-          capFpsVector.push_back(capMaxFPS);
+          std::vector<CapabilityFps> capFpsVector;
+          CapabilityFps capMinFps(minFps);
+          capFpsVector.push_back(capMinFps);
+          CapabilityFps capMaxFps(maxFps);
+          capFpsVector.push_back(capMaxFps);
           //init capabilityVector
           CapabilityResolution capRes(width, height, capFpsVector);
 
