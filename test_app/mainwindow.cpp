@@ -87,6 +87,7 @@ void MainWindow::on_deleteBackendBtn_clicked()
 {
     this->ui->deleteBackendBtn->setDisabled(true);
     this->ui->createCameraBtn->setDisabled(true);
+    this->ui->cameraListComboBox->clear();
     delete this->backend;
     this->backend = NULL;
 }

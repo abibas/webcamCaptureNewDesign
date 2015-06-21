@@ -8,13 +8,6 @@
 #include "media_foundation_backend.h"
 #include <functional>
 
-
-#ifdef DEBUG_VERSION
-    #define DEBUG_PRINT(x) std::cerr << x << std::endl
-#else
-    #define DEBUG_PRINT(x)
-#endif
-
 namespace webcam_capture {
 
   MediaFoundation_Backend::MediaFoundation_Backend()

@@ -7,6 +7,12 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#ifdef DEBUG_VERSION
+    #define DEBUG_PRINT(x) std::cerr << x << std::endl
+#else
+    #define DEBUG_PRINT(x)
+#endif
+
 #include <stdint.h>
 #include <string>
 

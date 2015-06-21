@@ -9,7 +9,6 @@ CameraForm::CameraForm(CameraInterface *camera, QWidget *parent) :
 {
     ui->setupUi(this);
     videoForm = NULL;
-    camera->close();
     camera->open();  //Init Camera object.
 
     fillCameraCapabilitiesCB();
@@ -21,7 +20,6 @@ CameraForm::CameraForm(CameraInterface *camera, QWidget *parent) :
 
 CameraForm::~CameraForm()
 {
-    delete this->videoForm;
     delete camera;
     delete ui;
 }
