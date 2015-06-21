@@ -11,7 +11,6 @@ namespace webcam_capture {
         ,imf_media_source(NULL)
         ,imf_source_reader(NULL)
     {
-
     }
 
     MediaFoundation_Camera::~MediaFoundation_Camera(){
@@ -27,7 +26,7 @@ namespace webcam_capture {
 
     int MediaFoundation_Camera::open(){
         if(state & CA_STATE_OPENED) {
-          DEBUG_PRINT("Error: already opened.\n");
+          DEBUG_PRINT("Error: already opened.\n");  //CAMERA_ALREADY_OPENED
           return -1; //TODO Err code
         }
 
@@ -47,6 +46,12 @@ namespace webcam_capture {
     }
 
     int MediaFoundation_Camera::close(){
+
+        if( !(state & CA_STATE_OPENED) ) {
+          DEBUG_PRINT("Error:doesn't opened.\n");  //CAMERA_DOESNT_OPENED
+          return -1; //TODO Err code
+        }
+
         if(state & CA_STATE_CAPTURING) {
           stop();
         }
@@ -179,20 +184,33 @@ namespace webcam_capture {
     }
 
 // ---- Capabilities ----
-    VideoPropertyRange MediaFoundation_Camera::getPropertyRange(VideoProperty property){
-        IMFMediaSource* source = NULL;
+    std::vector<Capability> MediaFoundation_Camera::getCapabilities(){
+        std::vector<Capability> result;
 
-        if(createVideoDeviceSource(information.getDeviceId(), &source) <= 0){
-            DEBUG_PRINT("Can't create VideoDeviceSource. GetPropertyRange failed.\n");
-            VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
-            return vpr;///TODO to return error value
+        if( !(state & CA_STATE_OPENED) ) {
+          DEBUG_PRINT("Error:doesn't opened.\n");  //CAMERA_DOESNT_OPENED
+          return result;
+        }
+
+        getVideoCapabilities(imf_media_source, result);
+
+        return result;
+    }
+
+
+
+    VideoPropertyRange MediaFoundation_Camera::getPropertyRange(VideoProperty property){
+        if( !(state & CA_STATE_OPENED) ) {
+          DEBUG_PRINT("Error:doesn't opened.\n");  //CAMERA_DOESNT_OPENED
+          VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
+          return vpr;///TODO to return error value
         }
 
         IAMVideoProcAmp *pProcAmp = NULL;
         VideoProcAmpProperty ampProperty;
         long lMin, lMax, lStep, lDefault, lCaps;
 
-        HRESULT hr = source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
+        HRESULT hr = imf_media_source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
         if (FAILED(hr)){
             DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
             VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
@@ -226,23 +244,22 @@ namespace webcam_capture {
        }
 
        VideoPropertyRange vpr(lMin, lMax, lStep, lDefault);
-       safeReleaseMediaFoundation(&source);
        return vpr;
     }
 
-    int MediaFoundation_Camera::getProperty(VideoProperty property){
-        IMFMediaSource* source = NULL;
 
-        if(createVideoDeviceSource(information.getDeviceId(), &source) <= 0){
-            DEBUG_PRINT("Can't create VideoDeviceSource. GetPropertyRange failed.\n");
-            return -99999;///TODO to return error value
+
+    int MediaFoundation_Camera::getProperty(VideoProperty property){
+        if( !(state & CA_STATE_OPENED) ) {
+          DEBUG_PRINT("Error:doesn't opened.\n");  //CAMERA_DOESNT_OPENED
+          return -99999;///TODO to return error value
         }
+
         IAMVideoProcAmp *pProcAmp = NULL;
         VideoProcAmpProperty ampProperty;
-        HRESULT hr = source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
+        HRESULT hr = imf_media_source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
         if (FAILED(hr)){
             DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
-            safeReleaseMediaFoundation(&source);
             return -99999;///TODO to return error value
         }
 
@@ -261,40 +278,32 @@ namespace webcam_capture {
             }
             default: {
                 DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
-                safeReleaseMediaFoundation(&source);
                 return -99999; ///TODO to return error value
             }
         }
-
         long value;
         long flags;
         hr = pProcAmp->Get(ampProperty, &value, &flags);
         if (FAILED(hr)){
-            DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
-            safeReleaseMediaFoundation(&source);
+            DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");            
             return -99999;
-        }
-        safeReleaseMediaFoundation(&source);
+        }        
         return value;
     }
 
 
 
-
     bool MediaFoundation_Camera::setProperty(const VideoProperty property, const int value){
-        IMFMediaSource* source = NULL;
-
-
-        if(createVideoDeviceSource(information.getDeviceId(), &source) <= 0){
-            DEBUG_PRINT("Can't create VideoDeviceSource. GetPropertyRange failed.\n");
-            return false;
+        if( !(state & CA_STATE_OPENED) ) {
+          DEBUG_PRINT("Error:doesn't opened.\n");  //CAMERA_DOESNT_OPENED
+          return false;///TODO to return error value
         }
+
         IAMVideoProcAmp *pProcAmp = NULL;
         VideoProcAmpProperty ampProperty;
-        HRESULT hr = source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
+        HRESULT hr = imf_media_source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
         if (FAILED(hr)){
-            DEBUG_PRINT("Can't get IAMVideoProcAmp object. SetProperty failed.\n");
-            safeReleaseMediaFoundation(&source);
+            DEBUG_PRINT("Can't get IAMVideoProcAmp object. SetProperty failed.\n");            
             return false;
         }
         switch (property){
@@ -319,33 +328,18 @@ namespace webcam_capture {
         long flags;
         hr = pProcAmp->Get(ampProperty, &val, &flags);
         if (FAILED(hr)){
-            DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
-            safeReleaseMediaFoundation(&source);
+            DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");            
             return false;
         }
+
         hr = pProcAmp->Set(ampProperty, value, flags);
         if (FAILED(hr)){
-            DEBUG_PRINT("Error during IAMVideoProcAmp->Set. SetProperty failed.\n");
-            safeReleaseMediaFoundation(&source);
+            DEBUG_PRINT("Error during IAMVideoProcAmp->Set. SetProperty failed.\n");            
             return false;
-        }
-        safeReleaseMediaFoundation(&source);
+        }        
         return true;
     }
 
-    std::vector<Capability> MediaFoundation_Camera::getCapabilities(){
-
-        std::vector<Capability> result;
-        IMFMediaSource* source = NULL;
-
-        if(createVideoDeviceSource(information.getDeviceId(), &source) > 0){
-            getVideoCapabilities(source, result);
-            safeReleaseMediaFoundation(&source);
-        }
-
-        return result;
-
-    }
 
     /* PLATFORM SDK SPECIFIC */
     /* -------------------------------------- */

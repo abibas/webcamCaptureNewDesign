@@ -9,10 +9,10 @@ CameraForm::CameraForm(CameraInterface *camera, QWidget *parent) :
 {
     ui->setupUi(this);
     videoForm = NULL;
+    camera->close();
     camera->open();  //Init Camera object.
 
     fillCameraCapabilitiesCB();
-    fillVideoPropertySettings();
 
     connect(this->ui->brigtnessSlider, SIGNAL(valueChanged(int)), this, SLOT(changeBrightnessLabel(int)));
     connect(this->ui->saturationSlider, SIGNAL(valueChanged(int)), this, SLOT(changeSaturationLabel(int)));
@@ -180,3 +180,11 @@ std::string  CameraForm::formatToString(Format format){
 }
 
 
+
+void CameraForm::on_tabWidget_currentChanged(int index)
+{
+    if (index == 1)
+    {
+        fillVideoPropertySettings();
+    }
+}
