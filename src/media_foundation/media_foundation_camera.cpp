@@ -418,7 +418,7 @@ namespace webcam_capture {
       IMFAttributes* attrs = NULL;
       int result = 1;        //TODO Err code
 
-      hr = MFCreateAttributes(&attrs, 1);
+      hr = MFCreateAttributes(&attrs, 2);
       if(FAILED(hr)) {
         DEBUG_PRINT("Error: cannot create attributes for the media source reader.\n");
         result = -3;        //TODO Err code
@@ -432,11 +432,19 @@ namespace webcam_capture {
         goto done;
       }
 
+      /// This attribute gives such result - source reader does not shut down the media source.
+      hr = attrs->SetUINT32(MF_SOURCE_READER_DISCONNECT_MEDIASOURCE_ON_SHUTDOWN, TRUE);
+      if(FAILED(hr)) {
+        DEBUG_PRINT("Error: SetUINT32() failed on the source reader");
+        result = -5;        //TODO Err code
+        goto done;
+      }
+
       // Create a source reader which sets up the pipeline for us so we get access to the pixels
       hr = MFCreateSourceReaderFromMediaSource(mediaSource, attrs, sourceReader);
       if(FAILED(hr)) {
         DEBUG_PRINT("Error: while creating a source reader.\n");
-        result = -5;        //TODO Err code
+        result = -6;        //TODO Err code
         goto done;
       }
 
@@ -581,6 +589,11 @@ namespace webcam_capture {
       int result = 1;        //TODO Err code
 
       HRESULT hr = source->CreatePresentationDescriptor(&presentation_desc);
+      if (hr == MF_E_SHUTDOWN)
+      {
+         DEBUG_PRINT("Error: The media source's Shutdown method has been called.\n");
+         goto done;
+      }
       if(FAILED(hr)) {
         DEBUG_PRINT("Error: cannot get presentation descriptor.\n");
         result = -1;        //TODO Err code
