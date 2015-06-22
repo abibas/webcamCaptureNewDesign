@@ -812,11 +812,12 @@ namespace webcam_capture {
                           std::vector<CapabilityFps> fpsesBuf = resolutionsBuf.at(j).getFpses();
                           bool needPush = false;
                           for (int k = 0; k < fpsesBuf.size(); k++) {
-                              if ( fpsesBuf.at(k).getFps() == maxFps ) {
+                              if ( fpsesBuf.at(k).getFps() == minFps ) {
                                   needPush = true;
                               }
                           }
-                          fpsesBuf.push_back(maxFps);
+                          CapabilityFps newMinFps(minFps);
+                          fpsesBuf.push_back(newMinFps);
 
                           needPush = false;
                           for (int k = 0; k < fpsesBuf.size(); k++) {
@@ -824,7 +825,8 @@ namespace webcam_capture {
                                   needPush = true;
                               }
                           }
-                          fpsesBuf.push_back(maxFps);
+                          CapabilityFps newMaxFps(maxFps);
+                          fpsesBuf.push_back(newMaxFps);
                       }
                   }
               }
@@ -834,8 +836,10 @@ namespace webcam_capture {
 
               //init fps vector
               std::vector<CapabilityFps> capFpsVector;
-              CapabilityFps capMinFps(minFps);
-              capFpsVector.push_back(capMinFps);
+              if (minFps != maxFps) {
+                  CapabilityFps capMinFps(minFps);
+                  capFpsVector.push_back(capMinFps);
+              }
               CapabilityFps capMaxFps(maxFps);
               capFpsVector.push_back(capMaxFps);
 
@@ -850,9 +854,11 @@ namespace webcam_capture {
 
           } else if ( !isResolutionInList && isFormatInList ) {
               //init fps vector
-              std::vector<CapabilityFps> capFpsVector;
-              CapabilityFps capMinFps(minFps);
-              capFpsVector.push_back(capMinFps);
+              std::vector<CapabilityFps> capFpsVector;              
+              if (minFps != maxFps) {
+                  CapabilityFps capMinFps(minFps);
+                  capFpsVector.push_back(capMinFps);
+              }
               CapabilityFps capMaxFps(maxFps);
               capFpsVector.push_back(capMaxFps);
 
