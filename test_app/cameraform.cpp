@@ -145,7 +145,10 @@ void CameraForm::on_captureVideoBtb_clicked()
     videoForm->setAttribute(Qt::WA_DeleteOnClose);
     videoForm->show();
 
-    camera->start(capFormat, capResolution, capFps, videoForm->getFrameCallback());
+    if ( camera->start(capFormat, capResolution, capFps, videoForm->getFrameCallback()) <0 ) {
+        delete videoForm;
+    }
+
 }
 
 void CameraForm::on_applyImageSettingsButton_clicked()

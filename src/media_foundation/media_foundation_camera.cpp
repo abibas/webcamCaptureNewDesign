@@ -37,6 +37,10 @@ namespace webcam_capture {
                                       const CapabilityResolution &capabilityResolution,
                                       const CapabilityFps &capabilityFps,
                                       frame_callback cb){
+        if ( !cb ) {
+            DEBUG_PRINT("Error: The callback function is empty. Capturing was not started.\n");
+            return -1;      //TODO Err code
+        }
         cb_frame = cb;
 
         if(state & CA_STATE_CAPTURING) {
@@ -47,7 +51,7 @@ namespace webcam_capture {
         // Set the media format, width, height
         std::vector<CapabilityFormat> capabilities;
         if(getVideoCapabilities(imf_media_source, capabilities) < 0) {
-            DEBUG_PRINT("Error: cannot create the capabilities list to start capturing.\n");
+            DEBUG_PRINT("Error: cannot create the capabilities list to start capturing. Capturing was not started.\n");
             return -4;      //TODO Err code
         }
 
@@ -169,13 +173,13 @@ namespace webcam_capture {
     }
 
     int MediaFoundation_Camera::stop(){
-        if(!imf_source_reader) {
-          DEBUG_PRINT("Error: Cannot stop capture because it seems that the device hasn't been opened yet.\n");
+        if(!state & CA_STATE_CAPTURING) {
+          DEBUG_PRINT("Error: Cannot stop capture because we're not capturing yet.\n");
           return -1;    //TODO Err code
         }
 
-        if(!state & CA_STATE_CAPTURING) {
-          DEBUG_PRINT("Error: Cannot stop capture because we're not capturing yet.\n");
+        if(!imf_source_reader) {
+          DEBUG_PRINT("Error: Cannot stop capture because sourceReader is empty yet.\n");
           return -2;    //TODO Err code
         }
 
