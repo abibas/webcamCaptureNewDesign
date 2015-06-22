@@ -55,11 +55,11 @@ namespace webcam_capture {
         MediaFoundation_Camera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information, IMFMediaSource * mediaSource);
 
         //// SDK functions
-        int createSourceReader(IMFMediaSource* mediaSource, IMFSourceReaderCallback* callback, IMFSourceReader** sourceReader);
+        const int createSourceReader(IMFMediaSource* mediaSource, IMFSourceReaderCallback* callback, IMFSourceReader** sourceReader);
         static int createVideoDeviceSource(const int device, IMFMediaSource** source);
-        int getVideoCapabilities(IMFMediaSource* source, std::vector<CapabilityFormat> &capFormatVector);
-        int setDeviceFormat(IMFMediaSource* source, DWORD formatIndex);
-        int setReaderFormat(IMFSourceReader*reader, const int width, const int height, const int fps, const Format pixelFormat);
+        const int getVideoCapabilities(IMFMediaSource* source, std::vector<CapabilityFormat> &capFormatVector);
+        const int setDeviceFormat(IMFMediaSource* source, DWORD formatIndex);
+        const int setReaderFormat(IMFSourceReader*reader, const int width, const int height, const int fps, const Format pixelFormat);
 
     public:
         std::shared_ptr<void> mfDeinitializer;

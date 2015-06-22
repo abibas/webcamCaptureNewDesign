@@ -336,7 +336,7 @@ namespace webcam_capture {
     /* PLATFORM SDK SPECIFIC */
     /* -------------------------------------- */
 
-    int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource* source, DWORD formatIndex) {
+    const int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource* source, DWORD formatIndex) {
 
       IMFPresentationDescriptor* pres_desc = NULL;
       IMFStreamDescriptor* stream_desc = NULL;
@@ -388,7 +388,7 @@ namespace webcam_capture {
       return result;
     }
 
-    int MediaFoundation_Camera::createSourceReader(IMFMediaSource* mediaSource,  IMFSourceReaderCallback* callback, IMFSourceReader** sourceReader) {
+    const int MediaFoundation_Camera::createSourceReader(IMFMediaSource* mediaSource,  IMFSourceReaderCallback* callback, IMFSourceReader** sourceReader) {
 
       if(mediaSource == NULL) {
         DEBUG_PRINT("Error: Cannot create a source reader because the IMFMediaSource passed into this function is not valid.\n");
@@ -439,7 +439,7 @@ namespace webcam_capture {
       return result;
     }
 
-    int MediaFoundation_Camera::setReaderFormat(IMFSourceReader* reader, const int width, const int height, const int fps, const Format pixelFormat) {
+    const int MediaFoundation_Camera::setReaderFormat(IMFSourceReader* reader, const int width, const int height, const int fps, const Format pixelFormat) {
 
       DWORD media_type_index = 0;
       int result = -1;        //TODO Err code
@@ -566,7 +566,7 @@ namespace webcam_capture {
      * @param IMFMediaSource* source [in]               Pointer to the video capture source.
      * @param std::vector<AVCapability>& caps [out]     This will be filled with capabilites
      */
-    int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource* source, std::vector<CapabilityFormat>& capFormatVector) {
+    const int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource* source, std::vector<CapabilityFormat>& capFormatVector) {
 
       IMFPresentationDescriptor* presentation_desc = NULL;
       IMFStreamDescriptor* stream_desc = NULL;
