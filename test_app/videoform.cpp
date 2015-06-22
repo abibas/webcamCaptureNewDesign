@@ -22,9 +22,8 @@ VideoForm::VideoForm(CameraInterface* camera, int width, int height, QWidget *pa
 
 VideoForm::~VideoForm()
 {
-    if (isCapturing){
-        camera->stop();
-    }
+
+    camera->stop();
     delete ui;
 }
 

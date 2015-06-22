@@ -44,10 +44,19 @@ namespace webcam_capture {
 
         if(state & CA_STATE_CAPTURING) {
           DEBUG_PRINT("Error: cannot start capture because we are already capturing.\n");
-          return -3;      //TODO Err code
+          return -2;      //TODO Err code
         }
 
         cb_frame = cb;
+
+//I KNOW THAT it is stupid way, but fps setting works only in this way. At first delete media source then create
+//if you wan't do it, after stopping the capturing, you won't be availiable to set another fps.
+        safeReleaseMediaFoundation(&imf_media_source);
+        if(MediaFoundation_Camera::createVideoDeviceSource(information.getDeviceId(), &imf_media_source) < 0) {
+            DEBUG_PRINT("Error: cannot create the media device source.\n");
+            return -3;
+        }
+// /////////
 
 
         // Set the media format, width, height
@@ -128,12 +137,15 @@ namespace webcam_capture {
         // Set the source reader format.
         if(setReaderFormat(imf_source_reader, capabilityResolution.getWidth(),
                            capabilityResolution.getHeight(),
-                           capabilityFps.getFps(),
                            capabilityFormat.getPixelFormat()) < 0) {
             DEBUG_PRINT("Error: cannot set the reader format.\n");
             safeReleaseMediaFoundation(&mf_callback);
             safeReleaseMediaFoundation(&imf_source_reader);
             return -9;      //TODO Err code
+        }
+
+        if (setDeviceFps(imf_media_source, capabilityFps.getFps()) < 0) {
+            DEBUG_PRINT("Error: cannot set device frame rate.\n");
         }
 
         pixel_buffer.height[0] = capabilityResolution.getHeight();
@@ -441,7 +453,7 @@ namespace webcam_capture {
       return result;
     }
 
-    const int MediaFoundation_Camera::setReaderFormat(IMFSourceReader* reader, const int width, const int height, const int fps, const Format pixelFormat) {
+    const int MediaFoundation_Camera::setReaderFormat(IMFSourceReader* reader, const int width, const int height, const Format pixelFormat) {
 
       DWORD media_type_index = 0;
       int result = -1;        //TODO Err code
@@ -490,67 +502,14 @@ namespace webcam_capture {
              && heightBuf == height
              && pixelFormatBuf == pixelFormat)
             {
-              bool fpsSeted = false;
-              int minFpsBuf;
-              int maxFpsBuf;
-
-              //NOW IT set's only max or min value.
-              //get min FPS
-              PropVariantInit(&var);
-              {
-                hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
-                if(SUCCEEDED(hr)) {
-                    UINT32 high = 0;
-                    UINT32 low =  0;
-                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                    minFpsBuf = fps_from_rational(low, high);
-                }
-              }
-              //if FPS == MF_MT_FRAME_RATE_RANGE_MIN fps
-              if ( fps == minFpsBuf ) {
-                  hr = type->SetItem(MF_MT_FRAME_RATE, var);
-                  if (FAILED(hr)) {
-                      DEBUG_PRINT("Error: Failed to set the current fps for the given settings.\n");
-                  } else {
-                      fpsSeted = true;
-                  }
-              }
-              PropVariantClear(&var);
-
-              if ( !fpsSeted ) {
-                  //get max FPS
-                  PropVariantInit(&var);
-                  {
-                    hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
-                    if(SUCCEEDED(hr)) {
-                        UINT32 high = 0;
-                        UINT32 low =  0;
-                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                        maxFpsBuf = fps_from_rational(low, high);
-                    }
-                  }
-                  //if FPS == MF_MT_FRAME_RATE_RANGE_MAX fps
-                  if ( fps == maxFpsBuf ) {
-                      hr = type->SetItem(MF_MT_FRAME_RATE, var);
-                      if (FAILED(hr)) {
-                          DEBUG_PRINT("Error: Failed to set the current fps for the given settings.\n");
-                      } else {
-                          fpsSeted = true;
-                      }
-                  }
-                  PropVariantClear(&var);
-              }
-
-              if ( fpsSeted ) {
-                  hr = reader->SetCurrentMediaType(0, NULL, type);
-                  if(FAILED(hr)) {
+                hr = reader->SetCurrentMediaType(0, NULL, type);
+                if(FAILED(hr)) {
                     DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
-                  }
-                  else {
-                    hr = S_OK;
-                    result = 1;        //TODO Err code
-                  }
-              }
+                }
+                else {
+                hr = S_OK;
+                result = 1;        //TODO Err code
+                }
             }
         }
         else {
@@ -563,6 +522,111 @@ namespace webcam_capture {
       }
 
       return result;
+    }
+
+
+    const int MediaFoundation_Camera::setDeviceFps(IMFMediaSource *source, int fps) {
+        int result = 1;
+        IMFPresentationDescriptor *pPD = NULL;
+        IMFStreamDescriptor *pSD = NULL;
+        IMFMediaTypeHandler *pHandler = NULL;
+        IMFMediaType *pType = NULL;
+
+        HRESULT hr = source->CreatePresentationDescriptor(&pPD);
+        if (FAILED(hr))
+        {
+            DEBUG_PRINT("Error: Failed to Create Presentation Descriptor.\n");
+            result = -1;
+            goto done;
+        }
+
+// Debug info (to get know how many stream Desctiptors)
+//        DWORD streamDesctiptorsCount;
+//        hr = pPD->GetStreamDescriptorCount(&streamDesctiptorsCount);
+
+        BOOL fSelected;
+        hr = pPD->GetStreamDescriptorByIndex(0, &fSelected, &pSD);
+        if (FAILED(hr))
+        {
+            DEBUG_PRINT("Error: Failed to Get Stream Descriptor By Index.\n");
+            result = -2;
+            goto done;
+        }
+
+        hr = pSD->GetMediaTypeHandler(&pHandler);
+        if (FAILED(hr))
+        {
+            DEBUG_PRINT("Error: Failed to Get Media Type Handler.\n");
+            result = -3;
+            goto done;
+        }
+
+        hr = pHandler->GetCurrentMediaType(&pType);
+        if (FAILED(hr))
+        {
+            DEBUG_PRINT("Error: Failed to Get Current Media Type.\n");
+            result = -4;
+            goto done;
+        }
+
+        // Get the maximum frame rate for the selected capture format.
+
+        // Note: To get the minimum frame rate, use the
+        // MF_MT_FRAME_RATE_RANGE_MIN attribute instead.
+
+        int fpsBuf;
+        PROPVARIANT var;
+        if (SUCCEEDED(pType->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var)))
+        {
+            if(SUCCEEDED(hr)) {
+                UINT32 high = 0;
+                UINT32 low =  0;
+                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                fpsBuf = fps_from_rational(low, high);
+            }
+            if ( fpsBuf == fps ) {
+                hr = pType->SetItem(MF_MT_FRAME_RATE, var);
+            }
+        }
+        PropVariantClear(&var);
+        if (FAILED(hr))
+        {
+            DEBUG_PRINT("Error: Failed to set the current frame rate.\n");
+            goto done;
+        }
+
+        if (SUCCEEDED(pType->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var)))
+        {
+            if(SUCCEEDED(hr)) {
+                UINT32 high = 0;
+                UINT32 low =  0;
+                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                fpsBuf = fps_from_rational(low, high);
+            }
+            if ( fpsBuf == fps ) {
+                hr = pType->SetItem(MF_MT_FRAME_RATE, var);
+            }
+        }
+        PropVariantClear(&var);
+        if (FAILED(hr))
+        {
+            DEBUG_PRINT("Error: Failed to set the current frame rate.\n");
+            goto done;
+        }
+
+        hr = pHandler->SetCurrentMediaType(pType);
+        if (FAILED(hr)) {
+            DEBUG_PRINT("Error: Can't set current media type.\n");
+            result = -6;
+        }
+
+    done:
+        safeReleaseMediaFoundation(&pPD);
+        safeReleaseMediaFoundation(&pSD);
+        safeReleaseMediaFoundation(&pHandler);
+        safeReleaseMediaFoundation(&pType);
+
+        return result;
     }
 
     /**

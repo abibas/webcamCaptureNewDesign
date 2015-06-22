@@ -18,7 +18,7 @@ CameraForm::CameraForm(CameraInterface *camera, QWidget *parent) :
 }
 
 CameraForm::~CameraForm()
-{
+{    
     delete camera;
     delete ui;
 }
