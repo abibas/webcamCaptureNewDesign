@@ -103,6 +103,7 @@ namespace webcam_capture {
             DEBUG_PRINT("Error: cannot found such capabilityFormat in capabilities.\n");
             return -5;
         }
+
 //chech resolution
         const std::vector<CapabilityResolution> &resolutionVectorBuf = capabilities.at(formatIndex).getResolutions();
         bool isResolutionValid = false;
@@ -134,6 +135,7 @@ namespace webcam_capture {
             return -7;
         }
 //END OF Check of "capabilities" have inputed params
+
         if(capabilityFormat.getPixelFormat() == Format::UNKNOWN) {
             DEBUG_PRINT("Error: cannot set a pixel format for UNKNOWN.\n");
             return -8;      //TODO Err code
@@ -842,8 +844,7 @@ namespace webcam_capture {
 
               //init capabilityVector
               CapabilityResolution capRes(width, height, capFpsVector);
-              //std::vector<CapabilityResolution> capResVector;
-              capFormatVector.at(formatIndexInList).addResolution(capRes);
+              capFormatVector.at(formatIndexInList).resolutions.push_back(capRes);
           }
         }
 //end test

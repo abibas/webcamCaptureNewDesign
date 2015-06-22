@@ -72,11 +72,6 @@ namespace webcam_capture  {
             fpses(fpses) {}
 
         /**
-         * @param capabilityFps CapabilityFPS
-         */
-        void addCapabilityFPS (CapabilityFps capabilityFps) { fpses.push_back(capabilityFps); }  // TODO change name
-
-        /**
          * @brief width Resolution width
          */
         const int width;
@@ -124,11 +119,6 @@ namespace webcam_capture  {
             pixelFormat(pixelFormat),
             pixelFormatIndex(pixelFormatIndex),
             resolutions(resolutions) {}
-
-        /**
-         * @param resolution CapabilityResolution
-         */
-        void addResolution(CapabilityResolution resolution) { resolutions.push_back(resolution); }
 
         /**
          * pixelFormat The pixel format one of the Format enum
