@@ -86,30 +86,34 @@ namespace webcam_capture {
             return -4;      //TODO Err code
         }
 
-//Check of "capabilities" have inputed params
+///Check of "capabilities" have inputed params
+//check format
         bool isFormatValid = false;
-        std::vector<CapabilityResolution> resolutionVectorBuf;
+        int formatIndex = 0;
         for (int i = 0; i < capabilities.size(); i++){
             if ( capabilities.at(i).getPixelFormat() == capabilityFormat.getPixelFormat() &&
                  capabilities.at(i).getPixelFormatIndex() == capabilityFormat.getPixelFormatIndex() )
             {
-                resolutionVectorBuf = capabilities.at(i).getResolutionsVector();
+                formatIndex = i;
                 isFormatValid = true;
+                break;
             }
         }
         if (!isFormatValid){
             DEBUG_PRINT("Error: cannot found such capabilityFormat in capabilities.\n");
             return -5;
         }
-
+//chech resolution
+        const std::vector<CapabilityResolution> &resolutionVectorBuf = capabilities.at(formatIndex).getResolutions();
         bool isResolutionValid = false;
-        std::vector<CapabilityFps> fpsVectorBuf;
+        int resolutionsIndex = 0;
         for (int j = 0; j < resolutionVectorBuf.size(); j++) {
             if (resolutionVectorBuf.at(j).getHeight()  == capabilityResolution.getHeight() &&
                 resolutionVectorBuf.at(j).getWidth() == capabilityResolution.getWidth() )
             {
-                fpsVectorBuf = resolutionVectorBuf.at(j).getFpsVector();
+                resolutionsIndex = j;
                 isResolutionValid = true;
+                break;
             }
         }
         if ( !isResolutionValid ) {
@@ -117,6 +121,8 @@ namespace webcam_capture {
             return -6;
         }
 
+//check fps
+        const std::vector<CapabilityFps> &fpsVectorBuf = resolutionVectorBuf.at(resolutionsIndex).getFpses();
         bool isFpsValid = false;
         for (int k = 0; k < fpsVectorBuf.size(); k++) {
             if (fpsVectorBuf.at(k).getFps() == capabilityFps.getFps() ){
@@ -781,13 +787,13 @@ namespace webcam_capture {
                   isFormatInList = true;
                   formatIndexInList = i;
 
-                  std::vector<CapabilityResolution> resolutionsBuf = capFormatVector.at(i).getResolutionsVector();
+                  std::vector<CapabilityResolution> resolutionsBuf = capFormatVector.at(i).getResolutions();
                   for (int j = 0; j < resolutionsBuf.size(); j++) {
                       if ( resolutionsBuf.at(j).getWidth() == width &&
                            resolutionsBuf.at(j).getHeight() == height ) {
                           isResolutionInList = true;
 
-                          std::vector<CapabilityFps> fpsesBuf = resolutionsBuf.at(j).getFpsVector();
+                          std::vector<CapabilityFps> fpsesBuf = resolutionsBuf.at(j).getFpses();
                           bool needPush = false;
                           for (int k = 0; k < fpsesBuf.size(); k++) {
                               if ( fpsesBuf.at(k).getFps() == maxFps ) {

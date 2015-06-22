@@ -58,7 +58,7 @@ namespace webcam_capture  {
         /**
          * @return CapabilityResolution FPS vector
          */
-        std::vector<CapabilityFps> getFpsVector() const { return fpses; }
+        const  std::vector<CapabilityFps>& getFpses() const { return fpses; }
     private:
 
         /**
@@ -111,7 +111,7 @@ namespace webcam_capture  {
         /**
          * @return Capability Resolutions vector
          */
-        std::vector<CapabilityResolution> getResolutionsVector() const { return resolutions; }
+        const std::vector<CapabilityResolution>& getResolutions() const { return resolutions; }
 
     private:
 
