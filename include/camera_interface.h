@@ -16,7 +16,6 @@
 #include <camera_information.h>
 #include <video_property_range.h>
 #include <video_property.h>
-#include <new_capability.h>
 
 namespace webcam_capture {
     /**

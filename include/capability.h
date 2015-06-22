@@ -6,131 +6,144 @@
 
 #ifndef CAPABILITY_H
 #define CAPABILITY_H
-#include <format.h>
 
+#include <vector>
+#include <format.h>
 
 namespace webcam_capture  {
 
     class MediaFoundation_Camera;   //to move to ifdef. TODO
 
-     /**
-     * Contains valid values of a Capability
-     */
-    class Capability {
+    /**
+    * Contains valid values of a FPS
+    */
+    class CapabilityFps {
     public:
-        ~Capability() {}
+        ~CapabilityFps() {}
+
         /**
-        * @return Capbility width
-        */
-       int getWidth() const { return width; }
-
-       /**
-        * @return Capability height
-        */
-       int getHeight() const { return height; }
-
-       /**
-        * @return Capability pixe; format
-        */
-       Format getPixelFormat() const { return pixelFormat; }
-
-       /**
-        * @return Capability maximum fps
-        */
-       int getMaxFps() const { return maxFps; }
-
-       /**
-        * @return Capability minimum fps
-        */
-       int getMinFps() const { return minFps; }
-
-       /**
-        * @return Capability current fps
-        */
-       int getCurrentFps() const { return currentFps; }
-
-       /**
-        * @param fps Capability carrent fps
-        */
-       void setCurrentFps(int fps) { currentFps = fps; }
-
-
-       /**
-        * @return Capability index
-        */
-       int getCapabilityIndex() const { return capabilityIndex; }
-
-       /**
-        * @return Pixel format index
-        */
-       int getPixelFormatIndex() const { return pixelFormatIndex; }
+         * @return Capability FPS
+         */
+        int getFps() const { return fps; }
     private:
 
-       /**
-        * @param width Capbility width
-        * @param height Capability height
-        * @param pixelFormat Capability pixel format
-        * @param fps Capability FPS
-        * @param capabilityIndex Capablity index
-        * @param currentFpsIndex Capability fps index
-        * @param pixelFormatIndex The pixel format one of the Format enum.
-        * @param description Capability description
-        */
-       Capability(int width, int height, Format pixelFormat, int minFps, int maxFps, int currentFps,
-                  int capabilityIndex, int currentFpsIndex, int pixelFormatIndex, std::string description) :
-                    width(width),
-                    height(height),
-                    pixelFormat(pixelFormat),
-                    minFps(minFps),
-                    maxFps(maxFps),
-                    currentFps(currentFps),
-                    capabilityIndex(capabilityIndex),
-                    currentFpsIndex(currentFpsIndex),
-                    pixelFormatIndex(pixelFormatIndex),
-                    description(description) {}              
-       const int width;
-       const int height;
-       /**
-        * pixelFormat The pixel format one of the Format enum
-        */
-       const Format pixelFormat;
+        /**
+         * @param fps Capability FPS
+         */
+        CapabilityFps(int fps) :
+            fps(fps) {}
 
-       /**
-        * maxFps Maximum fps value supported by cam
-        */
-       const int maxFps;
+        /**
+         * @brief fps Fps value
+         */
+        const int fps;
 
-       /**
-        * maxFps Minimum fps value supported by cam
-        */
-       const int minFps;
+        friend class MediaFoundation_Camera;  //to move to ifdef. TODO
 
-       /**
-        * maxFps Current fps value
-        */
-       int currentFps;
 
-       /* Set by the capturer implementation */
-       /**
-        * capabilityIndex Used by the implementation. Is the ID of this specific capability
-        */
-       const int capabilityIndex;
-       /**
-        * fpsIndex Used by the implementation, can be an index to an FPS array that is provided by the implementation
-        */
-       const int currentFpsIndex;
-       /**
-        * pixelFormatIndex Used by the implementation, represents an index to the pixel format for the implementation
-        */
-       const int pixelFormatIndex;
-       /**
-        * description A capture driver can add some additional information here
-        */
-       const std::string description;
-
-       friend class MediaFoundation_Camera;  //to move to ifdef. TODO
     };
 
+
+
+    /**
+    * Contains valid values of a width, height and fpses vector
+    */
+    class CapabilityResolution {
+    public:
+        ~CapabilityResolution() {}
+
+        /**
+         * @return CapabilityResolution width
+         */
+        int getWidth() const { return width; }
+
+        /**
+         * @return CapabilityResolution height
+         */
+        int getHeight() const { return height; }
+
+        /**
+         * @return CapabilityResolution FPS vector
+         */
+        const  std::vector<CapabilityFps>& getFpses() const { return fpses; }
+    private:
+
+        /**
+         * @param width CapbilityResolution width
+         * @param height CapabilityResolution height
+         * @param fpses CapabilityResolution fpses vector
+         */
+        CapabilityResolution (int width, int height, std::vector<CapabilityFps> fpses) :
+            width(width),
+            height(height),
+            fpses(fpses) {}
+
+        /**
+         * @brief width Resolution width
+         */
+        const int width;
+        /**
+         * @brief height Resolution height
+         */
+        const int height;
+
+        /**
+         * @brief Resolution fps vector
+         */
+        std::vector<CapabilityFps> fpses;
+
+        friend class MediaFoundation_Camera;  //to move to ifdef. TODO
+    };
+
+
+    /**
+    * Contains valid values of a PixelFormat and Resolutions vector
+    */
+    class CapabilityFormat{
+    public:
+        ~CapabilityFormat() {}
+        /**
+         * @return Capability pixel format
+         */
+        Format getPixelFormat() const { return pixelFormat; }
+        /**
+         * @return Capability format index
+         */
+        int getPixelFormatIndex() const { return pixelFormatIndex; }
+        /**
+         * @return Capability Resolutions vector
+         */
+        const std::vector<CapabilityResolution>& getResolutions() const { return resolutions; }
+
+    private:
+
+        /**
+         * @param pixelFormat Capability pixel format
+         * @param pixelFormatIndex The pixel format one of the Format enum.
+         * @param resolutions
+         */
+        CapabilityFormat (Format pixelFormat, int pixelFormatIndex, std::vector<CapabilityResolution> resolutions):
+            pixelFormat(pixelFormat),
+            pixelFormatIndex(pixelFormatIndex),
+            resolutions(resolutions) {}
+
+        /**
+         * pixelFormat The pixel format one of the Format enum
+         */
+        const Format pixelFormat;
+
+        /**
+         * @brief pixelFormatIndex Used by the implementation, represents an index to the pixel format for the implementation
+         */
+        const int pixelFormatIndex;
+
+        /**
+         * @brief resolutions CapabilityResolutions vector
+         */
+        std::vector<CapabilityResolution> resolutions;
+
+        friend class MediaFoundation_Camera;  //to move to ifdef. TODO
+    };
 } // namespace webcam_capture
 
 #endif // CAPABILITY_H

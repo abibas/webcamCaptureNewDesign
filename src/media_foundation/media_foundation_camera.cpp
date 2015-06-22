@@ -774,12 +774,7 @@ namespace webcam_capture {
 
           capabilityIndex = i;
 
-//TODO REMOVE - old version
-//          Capability cap (width, height, pixelFormat,minFps, maxFps, currentFps, capabilityIndex, currentFpsIndex, pixelFormatIndex, "");
-//          caps.push_back(cap);
-//END REMOVE
-
-//*test of the new_capability
+//Filling the Capability info
           bool isFormatInList = false;
           bool isResolutionInList = false;
           int formatIndexInList = 0;
@@ -847,7 +842,8 @@ namespace webcam_capture {
               capFormatVector.at(formatIndexInList).resolutions.push_back(capRes);
           }
         }
-//end test
+//END OF Filling the Capability info
+
         safeReleaseMediaFoundation(&type);
       }
 

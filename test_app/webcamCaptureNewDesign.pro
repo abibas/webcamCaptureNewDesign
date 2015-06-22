@@ -52,7 +52,6 @@ HEADERS  += \
     mainwindow.h \
     videoform.h \
     cameraform.h \
-    ../include/new_capability.h
 
 FORMS    += \
     mainwindow.ui \
