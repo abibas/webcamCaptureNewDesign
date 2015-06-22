@@ -452,9 +452,7 @@ namespace webcam_capture {
         Format pixelFormatBuf;
         int widthBuf;
         int heightBuf;
-        int frameRateBuf;
-        int minFpsBuf;
-        int maxFpsBuf;
+
 
         IMFMediaType* type = NULL;
         hr = reader->GetNativeMediaType(0, media_type_index, &type);
@@ -487,67 +485,73 @@ namespace webcam_capture {
 
           PropVariantClear(&var);
 
-
-          //!!!! FOR DEBUG!!!!!!
-          //get FPS
-          PropVariantInit(&var);
-          {
-            hr = type->GetItem(MF_MT_FRAME_RATE, &var);
-            if(SUCCEEDED(hr)) {
-                UINT32 high = 0;
-                UINT32 low =  0;
-                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                frameRateBuf = fps_from_rational(low, high);
-            }
-          }
-          PropVariantClear(&var);
-          ///// get Fps END
-
-          //get min FPS
-          PropVariantInit(&var);
-          {
-            hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
-            if(SUCCEEDED(hr)) {
-                UINT32 high = 0;
-                UINT32 low =  0;
-                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                minFpsBuf = fps_from_rational(low, high);
-            }
-          }
-          PropVariantClear(&var);
-          ///// get Fps END
-
-          //get maxFPS
-          PropVariantInit(&var);
-          {
-            hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
-            if(SUCCEEDED(hr)) {
-                UINT32 high = 0;
-                UINT32 low =  0;
-                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                maxFpsBuf = fps_from_rational(low, high);
-            }
-          }
-          PropVariantClear(&var);
-          ///// get Fps END
-          ///// !!!FOR DEBUG END
-
           // When the output media type of the source reader matches our specs, set it!
           if(widthBuf == width
              && heightBuf == height
              && pixelFormatBuf == pixelFormat)
             {
-              ///TODO !!! now it's workaround and set's only max FPS value
-              hr = reader->SetCurrentMediaType(0, NULL, type);
-              if(FAILED(hr)) {
-                DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
+              bool fpsSeted = false;
+              int minFpsBuf;
+              int maxFpsBuf;
+
+              //NOW IT set's only max or min value.
+              //get min FPS
+              PropVariantInit(&var);
+              {
+                hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
+                if(SUCCEEDED(hr)) {
+                    UINT32 high = 0;
+                    UINT32 low =  0;
+                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                    minFpsBuf = fps_from_rational(low, high);
+                }
               }
-              else {
-                hr = S_OK;
-                result = 1;        //TODO Err code
+              //if FPS == MF_MT_FRAME_RATE_RANGE_MIN fps
+              if ( fps == minFpsBuf ) {
+                  hr = type->SetItem(MF_MT_FRAME_RATE, var);
+                  if (FAILED(hr)) {
+                      DEBUG_PRINT("Error: Failed to set the current fps for the given settings.\n");
+                  } else {
+                      fpsSeted = true;
+                  }
+              }
+              PropVariantClear(&var);
+
+              if ( !fpsSeted ) {
+                  //get max FPS
+                  PropVariantInit(&var);
+                  {
+                    hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
+                    if(SUCCEEDED(hr)) {
+                        UINT32 high = 0;
+                        UINT32 low =  0;
+                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                        maxFpsBuf = fps_from_rational(low, high);
+                    }
+                  }
+                  //if FPS == MF_MT_FRAME_RATE_RANGE_MAX fps
+                  if ( fps == maxFpsBuf ) {
+                      hr = type->SetItem(MF_MT_FRAME_RATE, var);
+                      if (FAILED(hr)) {
+                          DEBUG_PRINT("Error: Failed to set the current fps for the given settings.\n");
+                      } else {
+                          fpsSeted = true;
+                      }
+                  }
+                  PropVariantClear(&var);
+              }
+
+              if ( fpsSeted ) {
+                  hr = reader->SetCurrentMediaType(0, NULL, type);
+                  if(FAILED(hr)) {
+                    DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
+                  }
+                  else {
+                    hr = S_OK;
+                    result = 1;        //TODO Err code
+                  }
               }
             }
-          //type->Release();  // tmp moved down and wrapped around safeReleaseMediaFoundation()
         }
         else {
           break;
