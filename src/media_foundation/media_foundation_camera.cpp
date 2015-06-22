@@ -773,26 +773,71 @@ namespace webcam_capture {
 
 //*test of the new_capability
           bool isFormatInList = false;
-          //init fps vector
-          std::vector<CapabilityFps> capFpsVector;
-          CapabilityFps capMinFps(minFps);
-          capFpsVector.push_back(capMinFps);
-          CapabilityFps capMaxFps(maxFps);
-          capFpsVector.push_back(capMaxFps);
-          //init capabilityVector
-          CapabilityResolution capRes(width, height, capFpsVector);
+          bool isResolutionInList = false;
+          int formatIndexInList = 0;
 
           for (int i = 0; i < capFormatVector.size(); i++){
               if ( capFormatVector.at(i).getPixelFormat() == pixelFormat ) {
-                  capFormatVector.at(i).addResolution(capRes);
                   isFormatInList = true;
+                  formatIndexInList = i;
+
+                  std::vector<CapabilityResolution> resolutionsBuf = capFormatVector.at(i).getResolutionsVector();
+                  for (int j = 0; j < resolutionsBuf.size(); j++) {
+                      if ( resolutionsBuf.at(j).getWidth() == width &&
+                           resolutionsBuf.at(j).getHeight() == height ) {
+                          isResolutionInList = true;
+
+                          std::vector<CapabilityFps> fpsesBuf = resolutionsBuf.at(j).getFpsVector();
+                          bool needPush = false;
+                          for (int k = 0; k < fpsesBuf.size(); k++) {
+                              if ( fpsesBuf.at(k).getFps() == maxFps ) {
+                                  needPush = true;
+                              }
+                          }
+                          fpsesBuf.push_back(maxFps);
+
+                          needPush = false;
+                          for (int k = 0; k < fpsesBuf.size(); k++) {
+                              if ( fpsesBuf.at(k).getFps() == maxFps ) {
+                                  needPush = true;
+                              }
+                          }
+                          fpsesBuf.push_back(maxFps);
+                      }
+                  }
               }
           }
+
           if ( !isFormatInList ) {
-              std::vector<CapabilityResolution> capResVector;
+
+              //init fps vector
+              std::vector<CapabilityFps> capFpsVector;
+              CapabilityFps capMinFps(minFps);
+              capFpsVector.push_back(capMinFps);
+              CapabilityFps capMaxFps(maxFps);
+              capFpsVector.push_back(capMaxFps);
+
+              //init capabilityVector
+              CapabilityResolution capRes(width, height, capFpsVector);
+              std::vector<CapabilityResolution> capResVector;             
               capResVector.push_back(capRes);
+
+              //init capabilityFormat to push in main vector
               CapabilityFormat capFormat(pixelFormat, pixelFormatIndex, capResVector);
               capFormatVector.push_back(capFormat);
+
+          } else if ( !isResolutionInList && isFormatInList ) {
+              //init fps vector
+              std::vector<CapabilityFps> capFpsVector;
+              CapabilityFps capMinFps(minFps);
+              capFpsVector.push_back(capMinFps);
+              CapabilityFps capMaxFps(maxFps);
+              capFpsVector.push_back(capMaxFps);
+
+              //init capabilityVector
+              CapabilityResolution capRes(width, height, capFpsVector);
+              //std::vector<CapabilityResolution> capResVector;
+              capFormatVector.at(formatIndexInList).addResolution(capRes);
           }
         }
 //end test
