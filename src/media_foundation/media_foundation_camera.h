@@ -9,8 +9,7 @@
 
 /* States (may be be used by implementations) */
 #define CA_STATE_NONE 0x00                                                         /* Default state */
-#define CA_STATE_OPENED 0x01                                                       /* The user opened a device */
-#define CA_STATE_CAPTURING 0x02                                                   /* The user started captureing */
+#define CA_STATE_CAPTURING 0x01                                                   /* The user started captureing */
 
 #include <windows.h>
 #include <mfapi.h>
@@ -39,11 +38,10 @@ namespace webcam_capture {
     typedef std::function<void(PixelBuffer& buffer)> frame_callback;
 
     class MediaFoundation_Camera : public CameraInterface {
-    public:
-        MediaFoundation_Camera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
+    public:        
         ~MediaFoundation_Camera();
-        int open();
-        int close();
+        static CameraInterface* createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
+
         int start(const CapabilityFormat &capabilityFormat, const CapabilityResolution &capabilityResolution, const CapabilityFps &capabilityFps, frame_callback cb);
         int stop();
         PixelBuffer* CaptureFrame();  //TODO
@@ -54,9 +52,11 @@ namespace webcam_capture {
         std::vector<CapabilityFormat> getCapabilities();
 
     private:
+        MediaFoundation_Camera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information, IMFMediaSource * mediaSource);
+
         //// SDK functions
         int createSourceReader(IMFMediaSource* mediaSource, IMFSourceReaderCallback* callback, IMFSourceReader** sourceReader);
-        int createVideoDeviceSource(const int device, IMFMediaSource** source);
+        static int createVideoDeviceSource(const int device, IMFMediaSource** source);
         int getVideoCapabilities(IMFMediaSource* source, std::vector<CapabilityFormat> &capFormatVector);
         int setDeviceFormat(IMFMediaSource* source, DWORD formatIndex);
         int setReaderFormat(IMFSourceReader*reader, const int width, const int height, const int fps, const Format pixelFormat);

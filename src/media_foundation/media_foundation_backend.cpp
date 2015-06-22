@@ -99,7 +99,8 @@ namespace webcam_capture {
   }
 
   CameraInterface* MediaFoundation_Backend::getCamera(const CameraInformation &information) const{
-      return new MediaFoundation_Camera(mfDeinitializer, information);
+      return MediaFoundation_Camera::createCamera(mfDeinitializer, information);
+      //return new MediaFoundation_Camera(mfDeinitializer, information);
   }
 
   void MediaFoundation_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback){

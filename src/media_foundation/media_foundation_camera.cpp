@@ -3,64 +3,34 @@
 
 namespace webcam_capture {
 
-    MediaFoundation_Camera::MediaFoundation_Camera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information)
+    MediaFoundation_Camera::MediaFoundation_Camera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information, IMFMediaSource *mediaSource)
         :information(information)
         ,mfDeinitializer(mfDeinitializer)
         ,state(CA_STATE_NONE)
+        ,imf_media_source(mediaSource)
         ,mf_callback(NULL)
-        ,imf_media_source(NULL)
         ,imf_source_reader(NULL)
     {
     }
 
+    CameraInterface* MediaFoundation_Camera::createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information) {
+        IMFMediaSource * mediaSource = NULL;
+        // Create the MediaSource
+        if(MediaFoundation_Camera::createVideoDeviceSource(information.getDeviceId(), &mediaSource) < 0) {
+            DEBUG_PRINT("Error: cannot create the media device source.\n");
+            return NULL;
+        }
+
+        return new MediaFoundation_Camera(mfDeinitializer, information, mediaSource);
+    }
+
     MediaFoundation_Camera::~MediaFoundation_Camera(){
-        // Close and stop
+        // Stop capturing
         if(state & CA_STATE_CAPTURING) {
             stop();
         }
-
-        if(state & CA_STATE_OPENED) {
-            close();
-        }
-    }
-
-    int MediaFoundation_Camera::open(){
-        if(state & CA_STATE_OPENED) {
-          DEBUG_PRINT("Error: already opened.\n");  //CAMERA_ALREADY_OPENED
-          return -1; //TODO Err code
-        }
-
-        if(imf_media_source) {
-            DEBUG_PRINT("Error: already opened the media source.\n");
-            return -2;        //TODO Err code
-        }
-
-        // Create the MediaSource
-        if(createVideoDeviceSource(information.getDeviceId(), &imf_media_source) < 0) {
-            DEBUG_PRINT("Error: cannot create the media device source.\n");
-            return -3;      //TODO Err code
-        }
-
-        state |= CA_STATE_OPENED;
-        return 1;      //TODO Err code
-    }
-
-    int MediaFoundation_Camera::close(){
-
-        if( !(state & CA_STATE_OPENED) ) {
-          DEBUG_PRINT("Error:doesn't opened.\n");  //CAMERA_DOESNT_OPENED
-          return -1; //TODO Err code
-        }
-
-        if(state & CA_STATE_CAPTURING) {
-          stop();
-        }
-
+        //Release mediaSource
         safeReleaseMediaFoundation(&imf_media_source);
-
-        state &= ~CA_STATE_OPENED;
-
-        return 1;      //TODO Err code
     }
 
     int MediaFoundation_Camera::start(const CapabilityFormat &capabilityFormat,
@@ -68,11 +38,6 @@ namespace webcam_capture {
                                       const CapabilityFps &capabilityFps,
                                       frame_callback cb){
         cb_frame = cb;
-
-        if(!(state & CA_STATE_OPENED)) {
-          DEBUG_PRINT("Error: cannot start captureing because you haven't opened the device successfully.\n");
-          return -2;      //TODO Err code
-        }
 
         if(state & CA_STATE_CAPTURING) {
           DEBUG_PRINT("Error: cannot start capture because we are already capturing.\n");
@@ -230,12 +195,6 @@ namespace webcam_capture {
 // ---- Capabilities ----
     std::vector<CapabilityFormat> MediaFoundation_Camera::getCapabilities(){
         std::vector<CapabilityFormat> result;
-
-        if( !(state & CA_STATE_OPENED) ) {
-          DEBUG_PRINT("Error:doesn't opened.\n");  //CAMERA_DOESNT_OPENED
-          return result;
-        }
-
         getVideoCapabilities(imf_media_source, result);
 
         return result;
@@ -244,12 +203,6 @@ namespace webcam_capture {
 
 
     VideoPropertyRange MediaFoundation_Camera::getPropertyRange(VideoProperty property){
-        if( !(state & CA_STATE_OPENED) ) {
-          DEBUG_PRINT("Error:doesn't opened.\n");  //CAMERA_DOESNT_OPENED
-          VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
-          return vpr;///TODO to return error value
-        }
-
         IAMVideoProcAmp *pProcAmp = NULL;
         VideoProcAmpProperty ampProperty;
         long lMin, lMax, lStep, lDefault, lCaps;
@@ -294,10 +247,6 @@ namespace webcam_capture {
 
 
     int MediaFoundation_Camera::getProperty(VideoProperty property){
-        if( !(state & CA_STATE_OPENED) ) {
-          DEBUG_PRINT("Error:doesn't opened.\n");  //CAMERA_DOESNT_OPENED
-          return -99999;///TODO to return error value
-        }
 
         IAMVideoProcAmp *pProcAmp = NULL;
         VideoProcAmpProperty ampProperty;
@@ -338,10 +287,6 @@ namespace webcam_capture {
 
 
     bool MediaFoundation_Camera::setProperty(const VideoProperty property, const int value){
-        if( !(state & CA_STATE_OPENED) ) {
-          DEBUG_PRINT("Error:doesn't opened.\n");  //CAMERA_DOESNT_OPENED
-          return false;///TODO to return error value
-        }
 
         IAMVideoProcAmp *pProcAmp = NULL;
         VideoProcAmpProperty ampProperty;

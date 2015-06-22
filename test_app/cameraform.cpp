@@ -9,7 +9,6 @@ CameraForm::CameraForm(CameraInterface *camera, QWidget *parent) :
 {
     ui->setupUi(this);
     videoForm = NULL;
-    camera->open();  //Init Camera object.
 
     fillCameraCapabilitiesCB();
 
