@@ -41,12 +41,14 @@ namespace webcam_capture {
             DEBUG_PRINT("Error: The callback function is empty. Capturing was not started.\n");
             return -1;      //TODO Err code
         }
-        cb_frame = cb;
 
         if(state & CA_STATE_CAPTURING) {
           DEBUG_PRINT("Error: cannot start capture because we are already capturing.\n");
           return -3;      //TODO Err code
         }
+
+        cb_frame = cb;
+
 
         // Set the media format, width, height
         std::vector<CapabilityFormat> capabilities;

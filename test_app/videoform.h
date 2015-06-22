@@ -28,9 +28,12 @@ public:
     std::function<void(PixelBuffer& buffer)> getFrameCallback();
     QImage YUV422toRGBA32(PixelBuffer& buffer);
 
+    void setCapturingStatus(bool isCapturing);
+
 private:
     Ui::VideoForm *ui;
     CameraInterface* camera;
+    bool isCapturing;
 };
 
 #endif // VIDEOFORM_H

@@ -12,7 +12,8 @@ std::fstream outfile;
 VideoForm::VideoForm(CameraInterface* camera, int width, int height, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::VideoForm),
-    camera(camera)
+    camera(camera),
+    isCapturing(false)
 {
     ui->setupUi(this);
     this->setFixedSize(width, height);
@@ -21,7 +22,9 @@ VideoForm::VideoForm(CameraInterface* camera, int width, int height, QWidget *pa
 
 VideoForm::~VideoForm()
 {
-    camera->stop();
+    if (isCapturing){
+        camera->stop();
+    }
     delete ui;
 }
 
@@ -41,6 +44,10 @@ void VideoForm::FrameCaptureCallback(PixelBuffer& buffer)
 //    ofs.write((char*)buffer.plane[0], buffer.nbytes);
 //    ofs.close();
 //    count++;
+}
+
+void VideoForm::setCapturingStatus(bool isCapturing){
+    this->isCapturing = isCapturing;
 }
 
 QImage VideoForm::YUV422toRGBA32(PixelBuffer& buffer)
@@ -106,7 +113,6 @@ QImage VideoForm::YUV422toRGBA32(PixelBuffer& buffer)
     }    
     return rgbImage;
 }
-
 
 std::function<void(PixelBuffer& buffer)> VideoForm::getFrameCallback()
 {

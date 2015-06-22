@@ -147,8 +147,9 @@ void CameraForm::on_captureVideoBtb_clicked()
 
     if ( camera->start(capFormat, capResolution, capFps, videoForm->getFrameCallback()) <0 ) {
         delete videoForm;
+    } else {
+        videoForm->setCapturingStatus(true);
     }
-
 }
 
 void CameraForm::on_applyImageSettingsButton_clicked()
