@@ -18,6 +18,7 @@ VideoForm::VideoForm(CameraInterface* camera, int width, int height, QWidget *pa
     ui->setupUi(this);
     this->setFixedSize(width, height);
     this->ui->videoLabel->setFixedSize(width, height);
+    this->x = 0;
 }
 
 VideoForm::~VideoForm()
@@ -29,6 +30,11 @@ VideoForm::~VideoForm()
 
 void VideoForm::FrameCaptureCallback(PixelBuffer& buffer)
 {
+    if ( x >= 100 ) {
+        x = 0;
+    }
+    x += 1;
+
     this->ui->videoLabel->setPixmap(QPixmap::fromImage(YUV422toRGBA32(buffer)));
 
 //    //TO SAVE mjpg to file

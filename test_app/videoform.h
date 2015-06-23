@@ -34,6 +34,7 @@ private:
     Ui::VideoForm *ui;
     CameraInterface* camera;
     bool isCapturing;
+    int x;
 };
 
 #endif // VIDEOFORM_H

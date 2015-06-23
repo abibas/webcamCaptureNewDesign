@@ -49,16 +49,6 @@ namespace webcam_capture {
 
         cb_frame = cb;
 
-//I KNOW THAT it is stupid way, but fps setting works only in this way. At first delete media source then create
-//if you wan't do it, after stopping the capturing, you won't be availiable to set another fps.
-        safeReleaseMediaFoundation(&imf_media_source);
-        if(MediaFoundation_Camera::createVideoDeviceSource(information.getDeviceId(), &imf_media_source) < 0) {
-            DEBUG_PRINT("Error: cannot create the media device source.\n");
-            return -3;
-        }
-// /////////
-
-
         // Set the media format, width, height
         std::vector<CapabilityFormat> capabilities;
         if(getVideoCapabilities(imf_media_source, capabilities) < 0) {
@@ -146,10 +136,6 @@ namespace webcam_capture {
             safeReleaseMediaFoundation(&imf_source_reader);
             return -11;      //TODO Err code
         }
-
-//        if (setDeviceFps(imf_media_source, capabilityFps.getFps()) < 0) {
-//            DEBUG_PRINT("Error: cannot set device frame rate.\n");
-//        }
 
         pixel_buffer.height[0] = capabilityResolution.getHeight();
         pixel_buffer.width[0] = capabilityResolution.getWidth();
@@ -598,35 +584,35 @@ namespace webcam_capture {
               pixelFormatBuf == pixelFormat) {
                 int fpsBuf;
                 //Compare input fps with max\min fpses and preset it
-                PropVariantInit(&var);
-                {
-                  hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
-                  if(SUCCEEDED(hr)) {
-                    UINT32 high = 0;
-                    UINT32 low =  0;
-                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                    fpsBuf = fps_from_rational(low, high);
-                    if ( fpsBuf == fps ) {
-                        hr = type->SetItem(MF_MT_FRAME_RATE, var);
-                    }
-                  }
-                }
-                PropVariantClear(&var);
+//                PropVariantInit(&var);
+//                {
+//                  hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
+//                  if(SUCCEEDED(hr)) {
+//                    UINT32 high = 0;
+//                    UINT32 low =  0;
+//                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+//                    fpsBuf = fps_from_rational(low, high);
+//                    if ( fpsBuf == fps ) {
+//                        hr = type->SetItem(MF_MT_FRAME_RATE, var);
+//                    }
+//                  }
+//                }
+//                PropVariantClear(&var);
 
-                PropVariantInit(&var);
-                {
-                  hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
-                  if(SUCCEEDED(hr)) {
-                    UINT32 high = 0;
-                    UINT32 low =  0;
-                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                    fpsBuf = fps_from_rational(low, high);
-                    if ( fpsBuf == fps ) {
-                        hr = type->SetItem(MF_MT_FRAME_RATE, var);
-                    }
-                  }
-                }
-                PropVariantClear(&var);
+//                PropVariantInit(&var);
+//                {
+//                  hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
+//                  if(SUCCEEDED(hr)) {
+//                    UINT32 high = 0;
+//                    UINT32 low =  0;
+//                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+//                    fpsBuf = fps_from_rational(low, high);
+//                    if ( fpsBuf == fps ) {
+//                        hr = type->SetItem(MF_MT_FRAME_RATE, var);
+//                    }
+//                  }
+//                }
+//                PropVariantClear(&var);
 
 
                 hr = reader->SetCurrentMediaType(0, NULL, type);
@@ -652,109 +638,6 @@ namespace webcam_capture {
     }
 
 
-    const int MediaFoundation_Camera::setDeviceFps(IMFMediaSource *source, int fps) {
-        int result = 1;
-        IMFPresentationDescriptor *pPD = NULL;
-        IMFStreamDescriptor *pSD = NULL;
-        IMFMediaTypeHandler *pHandler = NULL;
-        IMFMediaType *pType = NULL;
-
-        HRESULT hr = source->CreatePresentationDescriptor(&pPD);
-        if (FAILED(hr))
-        {
-            DEBUG_PRINT("Error: Failed to Create Presentation Descriptor.\n");
-            result = -1;
-            goto done;
-        }
-
-// Debug info (to get know how many stream Desctiptors)
-//        DWORD streamDesctiptorsCount;
-//        hr = pPD->GetStreamDescriptorCount(&streamDesctiptorsCount);
-
-        BOOL fSelected;
-        hr = pPD->GetStreamDescriptorByIndex(0, &fSelected, &pSD);
-        if (FAILED(hr))
-        {
-            DEBUG_PRINT("Error: Failed to Get Stream Descriptor By Index.\n");
-            result = -2;
-            goto done;
-        }
-
-        hr = pSD->GetMediaTypeHandler(&pHandler);
-        if (FAILED(hr))
-        {
-            DEBUG_PRINT("Error: Failed to Get Media Type Handler.\n");
-            result = -3;
-            goto done;
-        }
-
-        hr = pHandler->GetCurrentMediaType(&pType);
-        if (FAILED(hr))
-        {
-            DEBUG_PRINT("Error: Failed to Get Current Media Type.\n");
-            result = -4;
-            goto done;
-        }
-
-        // Get the maximum frame rate for the selected capture format.
-
-        // Note: To get the minimum frame rate, use the
-        // MF_MT_FRAME_RATE_RANGE_MIN attribute instead.
-
-        int fpsBuf;
-        PROPVARIANT var;
-        if (SUCCEEDED(pType->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var)))
-        {
-            if(SUCCEEDED(hr)) {
-                UINT32 high = 0;
-                UINT32 low =  0;
-                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                fpsBuf = fps_from_rational(low, high);
-            }
-            if ( fpsBuf == fps ) {
-                hr = pType->SetItem(MF_MT_FRAME_RATE, var);
-            }
-        }
-        PropVariantClear(&var);
-        if (FAILED(hr))
-        {
-            DEBUG_PRINT("Error: Failed to set the current frame rate.\n");
-            goto done;
-        }
-
-        if (SUCCEEDED(pType->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var)))
-        {
-            if(SUCCEEDED(hr)) {
-                UINT32 high = 0;
-                UINT32 low =  0;
-                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                fpsBuf = fps_from_rational(low, high);
-            }
-            if ( fpsBuf == fps ) {
-                hr = pType->SetItem(MF_MT_FRAME_RATE, var);
-            }
-        }
-        PropVariantClear(&var);
-        if (FAILED(hr))
-        {
-            DEBUG_PRINT("Error: Failed to set the current frame rate.\n");
-            goto done;
-        }
-
-        hr = pHandler->SetCurrentMediaType(pType);
-        if (FAILED(hr)) {
-            DEBUG_PRINT("Error: Can't set current media type.\n");
-            result = -6;
-        }
-
-    done:
-        safeReleaseMediaFoundation(&pPD);
-        safeReleaseMediaFoundation(&pSD);
-        safeReleaseMediaFoundation(&pHandler);
-        safeReleaseMediaFoundation(&pType);
-
-        return result;
-    }
 
     /**
      * Get capabilities for the given IMFMediaSource which represents
