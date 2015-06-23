@@ -71,8 +71,7 @@ namespace webcam_capture {
         bool isFormatValid = false;
         int formatIndex = 0;
         for (int i = 0; i < capabilities.size(); i++){
-            if ( capabilities.at(i).getPixelFormat() == capabilityFormat.getPixelFormat() &&
-                 capabilities.at(i).getPixelFormatIndex() == capabilityFormat.getPixelFormatIndex() )
+            if ( capabilities.at(i).getPixelFormat() == capabilityFormat.getPixelFormat() )
             {
                 formatIndex = i;
                 isFormatValid = true;
@@ -121,7 +120,10 @@ namespace webcam_capture {
             return -8;      //TODO Err code
         }
 
-        if(setDeviceFormat(imf_media_source, (DWORD)capabilityFormat.getPixelFormatIndex()) < 0) {
+        if(setDeviceFormat(imf_media_source, capabilityResolution.getWidth(),
+                           capabilityResolution.getHeight(),
+                           capabilityFormat.getPixelFormat(),
+                           capabilityFps.getFps() ) < 0) {
             DEBUG_PRINT("Error: cannot set the device format.\n");
             return -9;      //TODO Err code
         }
@@ -137,16 +139,17 @@ namespace webcam_capture {
         // Set the source reader format.
         if(setReaderFormat(imf_source_reader, capabilityResolution.getWidth(),
                            capabilityResolution.getHeight(),
-                           capabilityFormat.getPixelFormat()) < 0) {
+                           capabilityFormat.getPixelFormat(),
+                           capabilityFps.getFps() ) < 0) {
             DEBUG_PRINT("Error: cannot set the reader format.\n");
             safeReleaseMediaFoundation(&mf_callback);
             safeReleaseMediaFoundation(&imf_source_reader);
-            return -9;      //TODO Err code
+            return -11;      //TODO Err code
         }
 
-        if (setDeviceFps(imf_media_source, capabilityFps.getFps()) < 0) {
-            DEBUG_PRINT("Error: cannot set device frame rate.\n");
-        }
+//        if (setDeviceFps(imf_media_source, capabilityFps.getFps()) < 0) {
+//            DEBUG_PRINT("Error: cannot set device frame rate.\n");
+//        }
 
         pixel_buffer.height[0] = capabilityResolution.getHeight();
         pixel_buffer.width[0] = capabilityResolution.getWidth();
@@ -351,11 +354,11 @@ namespace webcam_capture {
     /* PLATFORM SDK SPECIFIC */
     /* -------------------------------------- */
 
-    const int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource* source, DWORD formatIndex) {
+    const int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource* source, const int width, const int height, const Format pixelFormat, const int fps) {
 
       IMFPresentationDescriptor* pres_desc = NULL;
       IMFStreamDescriptor* stream_desc = NULL;
-      IMFMediaTypeHandler* handler = NULL;
+      IMFMediaTypeHandler* media_handler = NULL;
       IMFMediaType* type = NULL;
       int result = 1; //TODO Err code
 
@@ -374,32 +377,124 @@ namespace webcam_capture {
         goto done;
       }
 
-      hr = stream_desc->GetMediaTypeHandler(&handler);
+      hr = stream_desc->GetMediaTypeHandler(&media_handler);
       if(FAILED(hr)) {
         DEBUG_PRINT("stream_desc->GetMediaTypehandler() failed.\n");
         result = -3;        //TODO Err code
         goto done;
       }
 
-      hr = handler->GetMediaTypeByIndex(formatIndex, &type);
+      DWORD types_count = 0;
+      hr = media_handler->GetMediaTypeCount(&types_count);
       if(FAILED(hr)) {
-        DEBUG_PRINT("hander->GetMediaTypeByIndex failed.\n");
+        DEBUG_PRINT("Error: cannot get media type count.\n");
         result = -4;        //TODO Err code
         goto done;
       }
 
-      hr = handler->SetCurrentMediaType(type);
-      if(FAILED(hr)) {
-        DEBUG_PRINT("handler->SetCurrentMediaType failed.\n");
-        result = -5;        //TODO Err code
-        goto done;
+      PROPVARIANT var;
+      for(DWORD i = 0; i < types_count; ++i) {
+
+        Format pixelFormatBuf;
+        int widthBuf;
+        int heightBuf;
+        int fpsBuf;
+
+        hr = media_handler->GetMediaTypeByIndex(i, &type);
+
+        if(FAILED(hr)) {
+          DEBUG_PRINT("Error: cannot get media type by index.\n");
+          result = -5;        //TODO Err code
+          goto done;
+        }
+
+        UINT32 attr_count = 0;
+        hr = type->GetCount(&attr_count);
+        if(FAILED(hr)) {
+          DEBUG_PRINT("Error: cannot type param count.\n");
+          result = -6;        //TODO Err code
+          goto done;
+        }
+
+        if(attr_count > 0) {
+          for(UINT32 j = 0; j < attr_count; ++j) {
+
+            GUID guid = { 0 };
+            PropVariantInit(&var);
+
+            hr = type->GetItemByIndex(j, &guid, &var);
+            if(FAILED(hr)) {
+              DEBUG_PRINT("Error: cannot get item by index.\n");
+              result = -7;        //TODO Err code
+              goto done;
+            }
+
+            if(guid == MF_MT_SUBTYPE && var.vt == VT_CLSID) {
+              pixelFormatBuf = media_foundation_video_format_to_capture_format(*var.puuid);
+            }
+            else if(guid == MF_MT_FRAME_SIZE) {
+              UINT32 high = 0;
+              UINT32 low =  0;
+              Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+              widthBuf = (int)high;
+              heightBuf = (int)low;
+            }
+            PropVariantClear(&var);
+          }
+
+        // When the output media type of the source reader matches our specs, set it!
+        if( widthBuf == width &&
+            heightBuf == height &&
+            pixelFormatBuf == pixelFormat) {
+
+              //Compare input fps with max\min fpses and preset it
+              PropVariantInit(&var);
+              {
+                hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
+                if(SUCCEEDED(hr)) {
+                  UINT32 high = 0;
+                  UINT32 low =  0;
+                  Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                  fpsBuf = fps_from_rational(low, high);
+                  if ( fpsBuf == fps ) {
+                      hr = type->SetItem(MF_MT_FRAME_RATE, var);
+                  }
+                }
+              }
+              PropVariantClear(&var);
+
+              PropVariantInit(&var);
+              {
+                hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
+                if(SUCCEEDED(hr)) {
+                  UINT32 high = 0;
+                  UINT32 low =  0;
+                  Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                  fpsBuf = fps_from_rational(low, high);
+                  if ( fpsBuf == fps ) {
+                      hr = type->SetItem(MF_MT_FRAME_RATE, var);
+                  }
+                }
+              }
+              PropVariantClear(&var);
+
+
+              hr = media_handler->SetCurrentMediaType(type);
+              if(FAILED(hr)) {
+                  DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
+              } else { break; }
+           }
+        }
+        safeReleaseMediaFoundation(&type);
       }
 
     done:
       safeReleaseMediaFoundation(&pres_desc);
       safeReleaseMediaFoundation(&stream_desc);
-      safeReleaseMediaFoundation(&handler);
+      safeReleaseMediaFoundation(&media_handler);
       safeReleaseMediaFoundation(&type);
+      PropVariantClear(&var);
+
       return result;
     }
 
@@ -454,7 +549,7 @@ namespace webcam_capture {
       return result;
     }
 
-    const int MediaFoundation_Camera::setReaderFormat(IMFSourceReader* reader, const int width, const int height, const Format pixelFormat) {
+    const int MediaFoundation_Camera::setReaderFormat(IMFSourceReader* reader, const int width, const int height, const Format pixelFormat, const int fps) {
 
       DWORD media_type_index = 0;
       int result = -1;        //TODO Err code
@@ -495,14 +590,45 @@ namespace webcam_capture {
               heightBuf = low;
             }
           }
-
           PropVariantClear(&var);
 
           // When the output media type of the source reader matches our specs, set it!
-          if(widthBuf == width
-             && heightBuf == height
-             && pixelFormatBuf == pixelFormat)
-            {
+          if( widthBuf == width &&
+              heightBuf == height &&
+              pixelFormatBuf == pixelFormat) {
+                int fpsBuf;
+                //Compare input fps with max\min fpses and preset it
+                PropVariantInit(&var);
+                {
+                  hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
+                  if(SUCCEEDED(hr)) {
+                    UINT32 high = 0;
+                    UINT32 low =  0;
+                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                    fpsBuf = fps_from_rational(low, high);
+                    if ( fpsBuf == fps ) {
+                        hr = type->SetItem(MF_MT_FRAME_RATE, var);
+                    }
+                  }
+                }
+                PropVariantClear(&var);
+
+                PropVariantInit(&var);
+                {
+                  hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
+                  if(SUCCEEDED(hr)) {
+                    UINT32 high = 0;
+                    UINT32 low =  0;
+                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                    fpsBuf = fps_from_rational(low, high);
+                    if ( fpsBuf == fps ) {
+                        hr = type->SetItem(MF_MT_FRAME_RATE, var);
+                    }
+                  }
+                }
+                PropVariantClear(&var);
+
+
                 hr = reader->SetCurrentMediaType(0, NULL, type);
                 if(FAILED(hr)) {
                     DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
@@ -720,13 +846,11 @@ namespace webcam_capture {
       for(DWORD i = 0; i < types_count; ++i) {
 
         Format pixelFormat;
-        int pixelFormatIndex;
         int width;
         int height;
         int minFps;
         int maxFps;
         int currentFps;
-        int capabilityIndex;
 
         hr = media_handler->GetMediaTypeByIndex(i, &type);
 
@@ -759,7 +883,6 @@ namespace webcam_capture {
 
             if(guid == MF_MT_SUBTYPE && var.vt == VT_CLSID) {
               pixelFormat = media_foundation_video_format_to_capture_format(*var.puuid);
-              pixelFormatIndex = j;
             }
             else if(guid == MF_MT_FRAME_SIZE) {
               UINT32 high = 0;
@@ -791,8 +914,6 @@ namespace webcam_capture {
 
             PropVariantClear(&var);
           }
-
-          capabilityIndex = i;
 
 //Filling the Capability info
           bool isFormatInList = false;
@@ -850,7 +971,7 @@ namespace webcam_capture {
               capResVector.push_back(capRes);
 
               //init capabilityFormat to push in main vector
-              CapabilityFormat capFormat(pixelFormat, pixelFormatIndex, capResVector);
+              CapabilityFormat capFormat(pixelFormat, capResVector);
               capFormatVector.push_back(capFormat);
 
           } else if ( !isResolutionInList && isFormatInList ) {

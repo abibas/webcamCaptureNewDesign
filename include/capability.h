@@ -106,10 +106,7 @@ namespace webcam_capture  {
          * @return Capability pixel format
          */
         Format getPixelFormat() const { return pixelFormat; }
-        /**
-         * @return Capability format index
-         */
-        int getPixelFormatIndex() const { return pixelFormatIndex; }
+
         /**
          * @return Capability Resolutions vector
          */
@@ -122,20 +119,14 @@ namespace webcam_capture  {
          * @param pixelFormatIndex The pixel format one of the Format enum.
          * @param resolutions
          */
-        CapabilityFormat (Format pixelFormat, int pixelFormatIndex, std::vector<CapabilityResolution> resolutions):
+        CapabilityFormat (Format pixelFormat, std::vector<CapabilityResolution> resolutions):
             pixelFormat(pixelFormat),
-            pixelFormatIndex(pixelFormatIndex),
             resolutions(resolutions) {}
 
         /**
          * pixelFormat The pixel format one of the Format enum
          */
         const Format pixelFormat;
-
-        /**
-         * @brief pixelFormatIndex Used by the implementation, represents an index to the pixel format for the implementation
-         */
-        const int pixelFormatIndex;
 
         /**
          * @brief resolutions CapabilityResolutions vector
