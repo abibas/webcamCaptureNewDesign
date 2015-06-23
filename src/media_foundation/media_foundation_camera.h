@@ -46,9 +46,9 @@ namespace webcam_capture {
         int stop();
         PixelBuffer* CaptureFrame();  //TODO
         // ---- Capabilities ----
-        VideoPropertyRange getPropertyRange(VideoProperty property); // TODO
-        int getProperty(VideoProperty property); //TODO
-        bool setProperty(const VideoProperty property, const int value); //TODO
+        bool getPropertyRange(VideoProperty property, VideoPropertyRange * videoPropRange);
+        int getProperty(VideoProperty property);
+        bool setProperty(const VideoProperty property, const int value);
         std::vector<CapabilityFormat> getCapabilities();
 
     private:

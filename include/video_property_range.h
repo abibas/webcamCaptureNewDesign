@@ -7,6 +7,7 @@ namespace webcam_capture {
      */
     class VideoPropertyRange {
         public:
+            VideoPropertyRange() {}
             /**
             * @param min Minimum video property value
             *
@@ -27,22 +28,43 @@ namespace webcam_capture {
             */
            int getMinValue() const { return minValue; }
            /**
-            * @return Maximum video property value
+            * @return Maximum  video property value
             */
            int getMaxValue() const { return maxValue; }
            /**
-            * @return Delta stepping value
+            * @return Delta video property stepping value
             */
            int getStepValue() const { return stepValue; }
            /**
             * @return Default video property value
             */
            int getDefaultValue() const { return defaultValue; }
+
+           /**
+            * @param minVal Set minimum video property value
+            */
+           void setMinValue(const int minVal) { minValue = minVal; }
+
+           /**
+            * @param maxVal Set maximum video property value
+            */
+           void setMaxValue(const int maxVal) { maxValue = maxVal; }
+
+           /**
+            * @param stepVal Set video property stepping value
+            */
+           void setStepValue(const int stepVal) { stepValue = stepVal; }
+
+           /**
+            * @param defaultVal Set defuaut video property value
+            */
+           void setDefaultValue(const int defaultVal) { defaultValue = defaultVal; }
+
         private:
-           const int minValue;
-           const int maxValue;
-           const int stepValue;
-           const int defaultValue;
+           int minValue;
+           int maxValue;
+           int stepValue;
+           int defaultValue;
     };
 
 } // namespace webcam_capture

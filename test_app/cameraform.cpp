@@ -84,35 +84,50 @@ void CameraForm::fillVideoPropertySettings()
 {
 
     //Brightness
-    VideoPropertyRange vprBrightness = camera->getPropertyRange(VideoProperty::Brightness);
+    VideoPropertyRange* vprBrightness = new VideoPropertyRange();
+    if ( !camera->getPropertyRange(VideoProperty::Brightness, vprBrightness) )
+    {
+        //CAN'T get VideoPropertyRange
+        return;
+    }
     int value;
-    this->ui->brigtnessSlider->setRange(vprBrightness.getMinValue(),
-                                        vprBrightness.getMaxValue());
-    this->ui->brigtnessSlider->setTickInterval(vprBrightness.getStepValue());
-    this->ui->minBrightnessLabel->setText(QString::number(vprBrightness.getMinValue()));
-    this->ui->maxBrightnessLabel->setText(QString::number(vprBrightness.getMaxValue()));
+    this->ui->brigtnessSlider->setRange(vprBrightness->getMinValue(),
+                                        vprBrightness->getMaxValue());
+    this->ui->brigtnessSlider->setTickInterval(vprBrightness->getStepValue());
+    this->ui->minBrightnessLabel->setText(QString::number(vprBrightness->getMinValue()));
+    this->ui->maxBrightnessLabel->setText(QString::number(vprBrightness->getMaxValue()));
     value = camera->getProperty(VideoProperty::Brightness);
     this->ui->brigtnessSlider->setValue(value);
     this->changeBrightnessLabel(value);
 
     //Contrast
-    VideoPropertyRange vprContrast = camera->getPropertyRange(VideoProperty::Contrast);
-    this->ui->contrastSlider->setRange(vprContrast.getMinValue(),
-                                       vprContrast.getMaxValue());
-    this->ui->contrastSlider->setTickInterval(vprContrast.getStepValue());
-    this->ui->minContrastLabel->setText(QString::number(vprContrast.getMinValue()));
-    this->ui->maxContrastLabel->setText(QString::number(vprContrast.getMaxValue()));
+    VideoPropertyRange* vprContrast = new VideoPropertyRange();
+    if ( !camera->getPropertyRange(VideoProperty::Contrast, vprContrast) )
+    {
+        //CAN'T get VideoPropertyRange
+        return;
+    }
+    this->ui->contrastSlider->setRange(vprContrast->getMinValue(),
+                                       vprContrast->getMaxValue());
+    this->ui->contrastSlider->setTickInterval(vprContrast->getStepValue());
+    this->ui->minContrastLabel->setText(QString::number(vprContrast->getMinValue()));
+    this->ui->maxContrastLabel->setText(QString::number(vprContrast->getMaxValue()));
     value = camera->getProperty(VideoProperty::Contrast);
     this->ui->contrastSlider->setValue(value);
     this->changeContrastLabel(value);
 
     //Saturation
-    VideoPropertyRange vprSaturation = camera->getPropertyRange(VideoProperty::Saturation);
-    this->ui->saturationSlider->setRange(vprSaturation.getMinValue(),
-                                         vprSaturation.getMaxValue());
-    this->ui->saturationSlider->setTickInterval(vprSaturation.getStepValue());
-    this->ui->minSaturationLabel->setText(QString::number(vprSaturation.getMinValue()));
-    this->ui->maxSaturationLabel->setText(QString::number(vprSaturation.getMaxValue()));
+    VideoPropertyRange* vprSaturation = new VideoPropertyRange();
+    if ( !camera->getPropertyRange(VideoProperty::Saturation, vprSaturation) )
+    {
+        //CAN'T get VideoPropertyRange
+        return;
+    }
+    this->ui->saturationSlider->setRange(vprSaturation->getMinValue(),
+                                         vprSaturation->getMaxValue());
+    this->ui->saturationSlider->setTickInterval(vprSaturation->getStepValue());
+    this->ui->minSaturationLabel->setText(QString::number(vprSaturation->getMinValue()));
+    this->ui->maxSaturationLabel->setText(QString::number(vprSaturation->getMaxValue()));
     value = camera->getProperty(VideoProperty::Saturation);
     this->ui->saturationSlider->setValue(value);
     this->changeSaturationLabel(value);

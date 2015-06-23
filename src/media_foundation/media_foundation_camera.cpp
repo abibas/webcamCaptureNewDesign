@@ -220,16 +220,15 @@ namespace webcam_capture {
 
 
 
-    VideoPropertyRange MediaFoundation_Camera::getPropertyRange(VideoProperty property){
+    bool MediaFoundation_Camera::getPropertyRange(VideoProperty property, VideoPropertyRange *videoPropRange){
         IAMVideoProcAmp *pProcAmp = NULL;
         VideoProcAmpProperty ampProperty;
         long lMin, lMax, lStep, lDefault, lCaps;
 
         HRESULT hr = imf_media_source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
         if (FAILED(hr)){
-            DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
-            VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
-            return vpr;///TODO to return error value
+            DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");            
+            return false;
         }
         switch (property){
             case VideoProperty::Brightness : {
@@ -246,20 +245,22 @@ namespace webcam_capture {
             }
             default: {
                 DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
-                VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
-                return vpr;///TODO to return error value
+                return false;
             }
         }
 
        hr = pProcAmp->GetRange(ampProperty, &lMin, &lMax, &lStep, &lDefault, &lCaps);
        if (FAILED(hr)){
            DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
-           VideoPropertyRange vpr(0,0,0,0);///TODO to return error value
-           return vpr;///TODO to return error value
+           return false;
        }
 
-       VideoPropertyRange vpr(lMin, lMax, lStep, lDefault);
-       return vpr;
+       videoPropRange->setMaxValue(lMax);
+       videoPropRange->setMinValue(lMin);
+       videoPropRange->setStepValue(lStep);
+       videoPropRange->setDefaultValue(lDefault);
+
+       return true;
     }
 
 
