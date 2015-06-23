@@ -129,8 +129,7 @@ namespace webcam_capture {
         // Set the source reader format.
         if(setReaderFormat(imf_source_reader, capabilityResolution.getWidth(),
                            capabilityResolution.getHeight(),
-                           capabilityFormat.getPixelFormat(),
-                           capabilityFps.getFps() ) < 0) {
+                           capabilityFormat.getPixelFormat()) < 0) {
             DEBUG_PRINT("Error: cannot set the reader format.\n");
             safeReleaseMediaFoundation(&mf_callback);
             safeReleaseMediaFoundation(&imf_source_reader);
@@ -535,11 +534,12 @@ namespace webcam_capture {
       return result;
     }
 
-    const int MediaFoundation_Camera::setReaderFormat(IMFSourceReader* reader, const int width, const int height, const Format pixelFormat, const int fps) {
+    const int MediaFoundation_Camera::setReaderFormat(IMFSourceReader* reader, const int width, const int height, const Format pixelFormat) {
 
       DWORD media_type_index = 0;
       int result = -1;        //TODO Err code
       HRESULT hr = S_OK;
+        int fff;
 
       while(SUCCEEDED(hr)) {
 
@@ -578,42 +578,22 @@ namespace webcam_capture {
           }
           PropVariantClear(&var);
 
+          PropVariantInit(&var);
+          {
+            hr = type->GetItem(MF_MT_FRAME_RATE, &var);
+            if(SUCCEEDED(hr)) {
+              UINT32 high = 0;
+              UINT32 low =  0;
+              Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+              fff = fps_from_rational(low, high);
+            }
+          }
+          PropVariantClear(&var);
+
           // When the output media type of the source reader matches our specs, set it!
           if( widthBuf == width &&
               heightBuf == height &&
               pixelFormatBuf == pixelFormat) {
-                int fpsBuf;
-                //Compare input fps with max\min fpses and preset it
-//                PropVariantInit(&var);
-//                {
-//                  hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
-//                  if(SUCCEEDED(hr)) {
-//                    UINT32 high = 0;
-//                    UINT32 low =  0;
-//                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-//                    fpsBuf = fps_from_rational(low, high);
-//                    if ( fpsBuf == fps ) {
-//                        hr = type->SetItem(MF_MT_FRAME_RATE, var);
-//                    }
-//                  }
-//                }
-//                PropVariantClear(&var);
-
-//                PropVariantInit(&var);
-//                {
-//                  hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
-//                  if(SUCCEEDED(hr)) {
-//                    UINT32 high = 0;
-//                    UINT32 low =  0;
-//                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-//                    fpsBuf = fps_from_rational(low, high);
-//                    if ( fpsBuf == fps ) {
-//                        hr = type->SetItem(MF_MT_FRAME_RATE, var);
-//                    }
-//                  }
-//                }
-//                PropVariantClear(&var);
-
 
                 hr = reader->SetCurrentMediaType(0, NULL, type);
                 if(FAILED(hr)) {

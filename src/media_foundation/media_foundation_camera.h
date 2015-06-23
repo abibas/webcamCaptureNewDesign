@@ -59,7 +59,7 @@ namespace webcam_capture {
         static int createVideoDeviceSource(const int device, IMFMediaSource** source);
         const int getVideoCapabilities(IMFMediaSource* source, std::vector<CapabilityFormat> &capFormatVector);
         const int setDeviceFormat(IMFMediaSource* source, const int width, const int height, const Format pixelFormat, const int fps);
-        const int setReaderFormat(IMFSourceReader* reader, const int width, const int height, const Format pixelFormat, const int fps);
+        const int setReaderFormat(IMFSourceReader* reader, const int width, const int height, const Format pixelFormat);
 
     public:
         std::shared_ptr<void> mfDeinitializer;
