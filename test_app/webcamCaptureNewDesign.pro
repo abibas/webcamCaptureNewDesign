@@ -51,7 +51,7 @@ HEADERS  += \
     ../src/media_foundation/media_foundation_callback.h \
     mainwindow.h \
     videoform.h \
-    cameraform.h \
+    cameraform.h
 
 FORMS    += \
     mainwindow.ui \

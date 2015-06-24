@@ -24,6 +24,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    void CameraEventCaptureCallback(CameraInformation& information);
 
 private slots:
     void on_createBackendBtn_clicked();

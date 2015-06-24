@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 #include <memory>               /* std::shared_ptr include */
-
+#include <functional>
 
 #include "../utils.h"
 #include <backend_interface.h>
@@ -27,7 +27,6 @@
 #include "media_foundation_callback.h"
 
 namespace webcam_capture {
-    typedef std::function<void(CameraInformation& information)> notifications_callback;
 
     class MediaFoundation_Backend : public BackendInterface {
     public:

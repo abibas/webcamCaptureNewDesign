@@ -4,6 +4,10 @@
 
 #include <backend_factory.h>
 #include <memory>
+#include <functional>
+
+
+using namespace std::placeholders; //for std::bind _1
 
 typedef std::function<void(PixelBuffer& buffer)> frame_callback;
 
@@ -62,6 +66,7 @@ void MainWindow::on_createBackendBtn_clicked()
     this->ui->createCameraBtn->setDisabled(false);
     this->ui->deleteBackendBtn->setDisabled(false);
     backend = BackendFactory::getBackend(backendList[this->ui->frameworkListComboBox->currentIndex()]);
+    backend->setAvaliableCamerasChangedCallback(std::bind(&MainWindow::CameraEventCaptureCallback, this, _1));
     fillCameraListCB();
 }
 
@@ -84,10 +89,17 @@ void MainWindow::on_cameraListComboBox_currentIndexChanged(int index)
 }
 
 void MainWindow::on_deleteBackendBtn_clicked()
-{
+{    
     this->ui->deleteBackendBtn->setDisabled(true);
     this->ui->createCameraBtn->setDisabled(true);
     this->ui->cameraListComboBox->clear();
+
+    backend->setAvaliableCamerasChangedCallback(nullptr); //deinit notifications callback
     delete this->backend;
     this->backend = NULL;
+}
+
+void MainWindow::CameraEventCaptureCallback(CameraInformation &information)
+{
+    int x = 0;
 }

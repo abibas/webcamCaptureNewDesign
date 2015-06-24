@@ -8,10 +8,6 @@
 
 using namespace webcam_capture;
 
-
-
-using namespace webcam_capture;
-
 namespace Ui {
 class VideoForm;
 }
@@ -34,7 +30,6 @@ private:
     Ui::VideoForm *ui;
     CameraInterface* camera;
     bool isCapturing;
-    int x;
 };
 
 #endif // VIDEOFORM_H
