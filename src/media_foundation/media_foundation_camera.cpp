@@ -620,64 +620,64 @@ namespace webcam_capture {
 
 
 
-    /**
-     * Get capabilities for the given IMFMediaSource which represents
-     * a video capture device.
-     *
-     * @param IMFMediaSource* source [in]               Pointer to the video capture source.
-     * @param std::vector<AVCapability>& caps [out]     This will be filled with capabilites
-     */
-    const int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource* source, std::vector<CapabilityFormat>& capFormatVector) {
+/**
+ * Get capabilities for the given IMFMediaSource which represents
+ * a video capture device.
+ *
+ * @param IMFMediaSource* source [in]               Pointer to the video capture source.
+ * @param std::vector<AVCapability>& caps [out]     This will be filled with capabilites
+ */
+const int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource* source, std::vector<CapabilityFormat>& capFormatVector) {
 
-      IMFPresentationDescriptor* presentation_desc = NULL;
-      IMFStreamDescriptor* stream_desc = NULL;
-      IMFMediaTypeHandler* media_handler = NULL;
-      IMFMediaType* type = NULL;
-      int result = 1;        //TODO Err code
+    IMFPresentationDescriptor* presentation_desc = NULL;
+    IMFStreamDescriptor* stream_desc = NULL;
+    IMFMediaTypeHandler* media_handler = NULL;
+    IMFMediaType* type = NULL;
+    int result = 1;        //TODO Err code
 
-      HRESULT hr = source->CreatePresentationDescriptor(&presentation_desc);
-      if (hr == MF_E_SHUTDOWN)
-      {
-         DEBUG_PRINT("Error: The media source's Shutdown method has been called.\n");
-         goto done;
-      }
-      if(FAILED(hr)) {
+    HRESULT hr = source->CreatePresentationDescriptor(&presentation_desc);
+    if (hr == MF_E_SHUTDOWN)
+    {
+        DEBUG_PRINT("Error: The media source's Shutdown method has been called.\n");
+        goto done;
+    }
+    if(FAILED(hr)) {
         DEBUG_PRINT("Error: cannot get presentation descriptor.\n");
         result = -1;        //TODO Err code
         goto done;
-      }
+    }
 
-      BOOL selected;
-      hr = presentation_desc->GetStreamDescriptorByIndex(0, &selected, &stream_desc);
-      if(FAILED(hr)) {
+    BOOL selected;
+    hr = presentation_desc->GetStreamDescriptorByIndex(0, &selected, &stream_desc);
+    if(FAILED(hr)) {
         DEBUG_PRINT("Error: cannot get stream descriptor.\n");
         result = -2;        //TODO Err code
         goto done;
-      }
+    }
 
-      hr = stream_desc->GetMediaTypeHandler(&media_handler);
-      if(FAILED(hr)) {
+    hr = stream_desc->GetMediaTypeHandler(&media_handler);
+    if(FAILED(hr)) {
         DEBUG_PRINT("Error: cannot get media type handler.\n");
         result = -3;        //TODO Err code
         goto done;
-      }
+    }
 
-      DWORD types_count = 0;
-      hr = media_handler->GetMediaTypeCount(&types_count);
-      if(FAILED(hr)) {
+    DWORD types_count = 0;
+    hr = media_handler->GetMediaTypeCount(&types_count);
+    if(FAILED(hr)) {
         DEBUG_PRINT("Error: cannot get media type count.\n");
         result = -4;        //TODO Err code
         goto done;
-      }
+    }
 
-  #if 0
-      // The list of supported types is not garantueed to return everything :)
-      // this was a test to check if some types that are supported by my test-webcam
-      // were supported when I check them manually. (they didn't).
-      // See the Remark here for more info: http://msdn.microsoft.com/en-us/library/windows/desktop/bb970473(v=vs.85).aspx
-      IMFMediaType* test_type = NULL;
-      MFCreateMediaType(&test_type);
-      if(test_type) {
+#if 0
+    // The list of supported types is not garantueed to return everything :)
+    // this was a test to check if some types that are supported by my test-webcam
+    // were supported when I check them manually. (they didn't).
+    // See the Remark here for more info: http://msdn.microsoft.com/en-us/library/windows/desktop/bb970473(v=vs.85).aspx
+    IMFMediaType* test_type = NULL;
+    MFCreateMediaType(&test_type);
+    if(test_type) {
         GUID types[] = { MFVideoFormat_UYVY,
                          MFVideoFormat_I420,
                          MFVideoFormat_IYUV,
@@ -688,28 +688,25 @@ namespace webcam_capture {
 
         test_type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
         for(int i = 0; i < 7; ++i) {
-          test_type->SetGUID(MF_MT_SUBTYPE, types[i]);
-          hr = media_handler->IsMediaTypeSupported(test_type, NULL);
-          if(hr != S_OK) {
-            DEBUG_PRINT("> Not supported: %d\n" );
-          }
-          else {
-            DEBUG_PRINT("> Yes, supported: %d\n", i);
-          }
+            test_type->SetGUID(MF_MT_SUBTYPE, types[i]);
+            hr = media_handler->IsMediaTypeSupported(test_type, NULL);
+            if(hr != S_OK) {
+                DEBUG_PRINT("> Not supported: %d\n" );
+            }
+            else {
+                DEBUG_PRINT("> Yes, supported: %d\n", i);
+            }
         }
-      }
-      safeReleaseMediaFoundation(&test_type);
-  #endif
+    }
+    safeReleaseMediaFoundation(&test_type);
+#endif
     {
-        typedef std::pair<int, int> IntPair;
-        typedef const IntPair& IntPairConstRef;
-
-        auto resolutionHash = [](IntPairConstRef p) -> std::size_t
+        auto resolutionHash = [](const std::pair<int, int>& p) -> std::size_t
             {
                 return std::hash<int>()(p.first + p.second);
             };
 
-        auto resolutionEquals = [](IntPairConstRef p, IntPairConstRef q) -> bool
+        auto resolutionEquals = [](const std::pair<int, int>& p, const std::pair<int, int>& q) -> bool
             {
                 return p.first == q.first && p.second == q.second;
             };
@@ -724,8 +721,8 @@ namespace webcam_capture {
 
         typedef std::unordered_map<std::pair<int, int>,
                 FpsMap,
-                std::function<std::size_t(IntPairConstRef)>,
-                std::function<bool(IntPairConstRef, IntPairConstRef)>>
+                std::function<std::size_t(const std::pair<int, int>&)>,
+                std::function<bool(const std::pair<int, int>&, const std::pair<int, int>&)>>
                 ResolutionMap;
 
         typedef std::unordered_map<Format, ResolutionMap,
@@ -734,136 +731,142 @@ namespace webcam_capture {
 
         FormatMap formatMap(5, formatHash);
 
-      // Loop over all the types
-      PROPVARIANT var;
+        // Loop over all the types
+        PROPVARIANT var;
 
-      for(DWORD i = 0; i < types_count; ++i) {
+        for(DWORD i = 0; i < types_count; ++i) {
 
-        Format pixelFormat = Format::UNKNOWN;
-        int width = 0;
-        int height = 0;
-        int minFps = 0;
-        int maxFps = 0;
-        int currentFps = 0;
+            Format pixelFormat = Format::UNKNOWN;
+            int width = 0;
+            int height = 0;
+            int minFps = 0;
+            int maxFps = 0;
+            int currentFps = 0;
 
-        hr = media_handler->GetMediaTypeByIndex(i, &type);
+            hr = media_handler->GetMediaTypeByIndex(i, &type);
 
-        if(FAILED(hr)) {
-          DEBUG_PRINT("Error: cannot get media type by index.\n");
-          safeReleaseMediaFoundation(&type);
-          continue;
-        }
-
-        UINT32 attr_count = 0;
-        hr = type->GetCount(&attr_count);
-        if(FAILED(hr)) {
-          DEBUG_PRINT("Error: cannot type param count.\n");
-          safeReleaseMediaFoundation(&type);
-          continue;
-        }
-
-        if(attr_count > 0) {
-          for(UINT32 j = 0; j < attr_count; ++j) {
-
-            GUID guid = { 0 };
-            PropVariantInit(&var);
-
-            hr = type->GetItemByIndex(j, &guid, &var);
             if(FAILED(hr)) {
-              DEBUG_PRINT("Error: cannot get item by index.\n");
-              PropVariantClear(&var);
-              continue;
+                DEBUG_PRINT("Error: cannot get media type by index.\n");
+                safeReleaseMediaFoundation(&type);
+                continue;
             }
 
-            if(guid == MF_MT_SUBTYPE && var.vt == VT_CLSID) {
-              pixelFormat = media_foundation_video_format_to_capture_format(*var.puuid);
-            }
-            else if(guid == MF_MT_FRAME_SIZE) {
-              UINT32 high = 0;
-              UINT32 low =  0;
-              Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-              width = (int)high;
-              height = (int)low;
-            }
-            else if( guid == MF_MT_FRAME_RATE_RANGE_MIN ) {
-                UINT32 high = 0;
-                UINT32 low =  0;
-                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                minFps = fps_from_rational(low, high);
-            }
-            else if ( guid == MF_MT_FRAME_RATE_RANGE_MAX ) {
-                UINT32 high = 0;
-                UINT32 low =  0;
-                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                maxFps = fps_from_rational(low, high);
-            }
-            else if ( guid == MF_MT_FRAME_RATE )
-            {
-              UINT32 high = 0;
-              UINT32 low =  0;
-              Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-              currentFps = fps_from_rational(low, high);
+            UINT32 attr_count = 0;
+            hr = type->GetCount(&attr_count);
+            if(FAILED(hr)) {
+                DEBUG_PRINT("Error: cannot type param count.\n");
+                safeReleaseMediaFoundation(&type);
+                continue;
             }
 
-            PropVariantClear(&var);
-          }
+            if(attr_count > 0) {
+                for(UINT32 j = 0; j < attr_count; ++j) {
 
-          // check that all required fields were set
-          if (pixelFormat == Format::UNKNOWN || !width || !height || !minFps || !maxFps || !currentFps) {
-              continue;
-          }
+                    GUID guid = { 0 };
+                    PropVariantInit(&var);
 
-          auto formatMapItem = formatMap.find(pixelFormat);
-          if (formatMapItem == formatMap.end()) {
-              // no such format found, explicitly insert it, since ResolutionMap is not default constuctable (map of a custom type)
-              formatMap[pixelFormat] = ResolutionMap(7, resolutionHash, resolutionEquals);
-          }
-          FpsMap& fpsMap = formatMap[pixelFormat][std::pair<int, int>(width, height)];
-          fpsMap[minFps] = true;
-          if (maxFps != minFps) {
-              fpsMap[maxFps] = true;
-          }
-          if (currentFps != minFps && currentFps != maxFps) {
-              fpsMap[currentFps] = true;
-          }
+                    hr = type->GetItemByIndex(j, &guid, &var);
+                    if(FAILED(hr)) {
+                        DEBUG_PRINT("Error: cannot get item by index.\n");
+                        PropVariantClear(&var);
+                        continue;
+                    }
 
+                    if(guid == MF_MT_SUBTYPE && var.vt == VT_CLSID) {
+                        pixelFormat = media_foundation_video_format_to_capture_format(*var.puuid);
+                    }
+                    else if(guid == MF_MT_FRAME_SIZE) {
+                        UINT32 high = 0;
+                        UINT32 low =  0;
+                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                        width = (int)high;
+                        height = (int)low;
+                    }
+                    else if( guid == MF_MT_FRAME_RATE_RANGE_MIN ) {
+                        UINT32 high = 0;
+                        UINT32 low =  0;
+                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                        minFps = fps_from_rational(low, high);
+                    }
+                    else if ( guid == MF_MT_FRAME_RATE_RANGE_MAX ) {
+                        UINT32 high = 0;
+                        UINT32 low =  0;
+                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                        maxFps = fps_from_rational(low, high);
+                    }
+                    else if ( guid == MF_MT_FRAME_RATE )
+                    {
+                        UINT32 high = 0;
+                        UINT32 low =  0;
+                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                        currentFps = fps_from_rational(low, high);
+                    }
+
+                    PropVariantClear(&var);
+                }
+
+                // check that all required fields were set
+                if (pixelFormat == Format::UNKNOWN || !width || !height || !minFps || !maxFps || !currentFps) {
+                    continue;
+                }
+
+                // create keys for format, resolution and fps we got
+                auto formatMapItem = formatMap.find(pixelFormat);
+                if (formatMapItem == formatMap.end()) {
+                    // no such format found, explicitly insert it, since ResolutionMap is not default constuctable (map of a custom type)
+                    formatMap[pixelFormat] = ResolutionMap(7, resolutionHash, resolutionEquals);
+                }
+                FpsMap& fpsMap = formatMap[pixelFormat][std::pair<int, int>(width, height)];
+                fpsMap[minFps] = true;
+                if (maxFps != minFps) {
+                    fpsMap[maxFps] = true;
+                }
+                if (currentFps != minFps && currentFps != maxFps) {
+                    fpsMap[currentFps] = true;
+                }
+
+            }
+
+            safeReleaseMediaFoundation(&type);
         }
 
-        safeReleaseMediaFoundation(&type);
-      }
 
-      capFormatVector.reserve(formatMap.size());
+        // convert the map into std::vector<CapabilityFormat>
+        capFormatVector.reserve(formatMap.size());
 
-      for (auto formatMapItem : formatMap) {
-          const Format& format               = formatMapItem.first;
-          const ResolutionMap& resolutionMap = formatMapItem.second;
+        for (auto formatMapItem : formatMap) {
+            const Format& format               = formatMapItem.first;
+            const ResolutionMap& resolutionMap = formatMapItem.second;
 
-          std::vector<CapabilityResolution> capResolutions;
-          capResolutions.reserve(resolutionMap.size());
+            std::vector<CapabilityResolution> capResolutions;
+            capResolutions.reserve(resolutionMap.size());
 
-          for (auto resolutionMapItem : resolutionMap) {
-              const std::pair<int, int>& resolution = resolutionMapItem.first;
-              const FpsMap& fpsMap                  = resolutionMapItem.second;
+            for (auto resolutionMapItem : resolutionMap) {
+                const std::pair<int, int>& resolution = resolutionMapItem.first;
+                const FpsMap& fpsMap                  = resolutionMapItem.second;
 
-              std::vector<CapabilityFps> capFps;
-              capFps.reserve(fpsMap.size());
+                std::vector<CapabilityFps> capFps;
+                capFps.reserve(fpsMap.size());
 
-              for (auto fpsMapItem : fpsMap) {
-                  capFps.push_back(CapabilityFps(fpsMapItem.first));
-              }
+                for (auto fpsMapItem : fpsMap) {
+                    capFps.push_back(CapabilityFps(fpsMapItem.first));
+                }
 
-              capResolutions.push_back(CapabilityResolution(resolution.first, resolution.second, std::move(capFps)));
-          }
+                capResolutions.push_back(CapabilityResolution(resolution.first, resolution.second, std::move(capFps)));
+            }
 
-          capFormatVector.push_back(CapabilityFormat(format, std::move(capResolutions)));
-      }
+            capFormatVector.push_back(CapabilityFormat(format, std::move(capResolutions)));
+        }
+
     }
-    done:
-      safeReleaseMediaFoundation(&presentation_desc);
-      safeReleaseMediaFoundation(&stream_desc);
-      safeReleaseMediaFoundation(&media_handler);
-      return result;
-    }
+
+done:
+    safeReleaseMediaFoundation(&presentation_desc);
+    safeReleaseMediaFoundation(&stream_desc);
+    safeReleaseMediaFoundation(&media_handler);
+
+    return result;
+}
 
     /**
      * Create and active the given `device`.
