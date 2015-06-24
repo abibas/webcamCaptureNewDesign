@@ -1,5 +1,6 @@
 #include "media_foundation_camera.h"
 #include <iostream>
+#include <unordered_map>
 
 namespace webcam_capture {
 
@@ -699,36 +700,66 @@ namespace webcam_capture {
       }
       safeReleaseMediaFoundation(&test_type);
   #endif
+    {
+        typedef std::pair<int, int> IntPair;
+        typedef const IntPair& IntPairConstRef;
+
+        auto resolutionHash = [](IntPairConstRef p) -> std::size_t
+            {
+                return std::hash<int>()(p.first + p.second);
+            };
+
+        auto resolutionEquals = [](IntPairConstRef p, IntPairConstRef q) -> bool
+            {
+                return p.first == q.first && p.second == q.second;
+            };
+
+        auto formatHash = [](const Format& f) -> std::size_t
+            {
+                return static_cast<std::size_t>(f);
+            };
+
+        typedef std::unordered_map<int, bool>
+                FpsMap;
+
+        typedef std::unordered_map<std::pair<int, int>,
+                FpsMap,
+                std::function<std::size_t(IntPairConstRef)>,
+                std::function<bool(IntPairConstRef, IntPairConstRef)>>
+                ResolutionMap;
+
+        typedef std::unordered_map<Format, ResolutionMap,
+                std::function<std::size_t(const Format&)>>
+                FormatMap;
+
+        FormatMap formatMap(5, formatHash);
 
       // Loop over all the types
       PROPVARIANT var;
 
-
-
-
       for(DWORD i = 0; i < types_count; ++i) {
 
-        Format pixelFormat;
-        int width;
-        int height;
-        int minFps;
-        int maxFps;
-        int currentFps;
+        Format pixelFormat = Format::UNKNOWN;
+        int width = 0;
+        int height = 0;
+        int minFps = 0;
+        int maxFps = 0;
+        int currentFps = 0;
 
         hr = media_handler->GetMediaTypeByIndex(i, &type);
 
         if(FAILED(hr)) {
           DEBUG_PRINT("Error: cannot get media type by index.\n");
-          result = -5;        //TODO Err code
-          goto done;
+          safeReleaseMediaFoundation(&type);
+          continue;
         }
 
         UINT32 attr_count = 0;
         hr = type->GetCount(&attr_count);
         if(FAILED(hr)) {
           DEBUG_PRINT("Error: cannot type param count.\n");
-          result = -6;        //TODO Err code
-          goto done;
+          safeReleaseMediaFoundation(&type);
+          continue;
         }
 
         if(attr_count > 0) {
@@ -740,8 +771,8 @@ namespace webcam_capture {
             hr = type->GetItemByIndex(j, &guid, &var);
             if(FAILED(hr)) {
               DEBUG_PRINT("Error: cannot get item by index.\n");
-              result = -7;        //TODO Err code
-              goto done;
+              PropVariantClear(&var);
+              continue;
             }
 
             if(guid == MF_MT_SUBTYPE && var.vt == VT_CLSID) {
@@ -772,97 +803,65 @@ namespace webcam_capture {
               UINT32 low =  0;
               Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
               currentFps = fps_from_rational(low, high);
-              currentFps = j;
             }
 
             PropVariantClear(&var);
           }
 
-//Filling the Capability info
-          bool isFormatInList = false;
-          bool isResolutionInList = false;
-          int formatIndexInList = 0;
-
-          for (int i = 0; i < capFormatVector.size(); i++){
-              if ( capFormatVector.at(i).getPixelFormat() == pixelFormat ) {
-                  isFormatInList = true;
-                  formatIndexInList = i;
-
-                  std::vector<CapabilityResolution> resolutionsBuf = capFormatVector.at(i).getResolutions();
-                  for (int j = 0; j < resolutionsBuf.size(); j++) {
-                      if ( resolutionsBuf.at(j).getWidth() == width &&
-                           resolutionsBuf.at(j).getHeight() == height ) {
-                          isResolutionInList = true;
-
-                          std::vector<CapabilityFps> fpsesBuf = resolutionsBuf.at(j).getFpses();
-                          bool needPush = false;
-                          for (int k = 0; k < fpsesBuf.size(); k++) {
-                              if ( fpsesBuf.at(k).getFps() == minFps ) {
-                                  needPush = true;
-                              }
-                          }
-                          CapabilityFps newMinFps(minFps);
-                          fpsesBuf.push_back(newMinFps);
-
-                          needPush = false;
-                          for (int k = 0; k < fpsesBuf.size(); k++) {
-                              if ( fpsesBuf.at(k).getFps() == maxFps ) {
-                                  needPush = true;
-                              }
-                          }
-                          CapabilityFps newMaxFps(maxFps);
-                          fpsesBuf.push_back(newMaxFps);
-                      }
-                  }
-              }
+          // check that all required fields were set
+          if (pixelFormat == Format::UNKNOWN || !width || !height || !minFps || !maxFps || !currentFps) {
+              continue;
           }
 
-          if ( !isFormatInList ) {
-
-              //init fps vector
-              std::vector<CapabilityFps> capFpsVector;
-              if (minFps != maxFps) {
-                  CapabilityFps capMinFps(minFps);
-                  capFpsVector.push_back(capMinFps);
-              }
-              CapabilityFps capMaxFps(maxFps);
-              capFpsVector.push_back(capMaxFps);
-
-              //init capabilityVector
-              CapabilityResolution capRes(width, height, capFpsVector);
-              std::vector<CapabilityResolution> capResVector;             
-              capResVector.push_back(capRes);
-
-              //init capabilityFormat to push in main vector
-              CapabilityFormat capFormat(pixelFormat, capResVector);
-              capFormatVector.push_back(capFormat);
-
-          } else if ( !isResolutionInList && isFormatInList ) {
-              //init fps vector
-              std::vector<CapabilityFps> capFpsVector;              
-              if (minFps != maxFps) {
-                  CapabilityFps capMinFps(minFps);
-                  capFpsVector.push_back(capMinFps);
-              }
-              CapabilityFps capMaxFps(maxFps);
-              capFpsVector.push_back(capMaxFps);
-
-              //init capabilityVector
-              CapabilityResolution capRes(width, height, capFpsVector);
-              capFormatVector.at(formatIndexInList).resolutions.push_back(capRes);
+          auto formatMapItem = formatMap.find(pixelFormat);
+          if (formatMapItem == formatMap.end()) {
+              // no such format found, explicitly insert it, since ResolutionMap is not default constuctable (map of a custom type)
+              formatMap[pixelFormat] = ResolutionMap(7, resolutionHash, resolutionEquals);
           }
+          FpsMap& fpsMap = formatMap[pixelFormat][std::pair<int, int>(width, height)];
+          fpsMap[minFps] = true;
+          if (maxFps != minFps) {
+              fpsMap[maxFps] = true;
+          }
+          if (currentFps != minFps && currentFps != maxFps) {
+              fpsMap[currentFps] = true;
+          }
+
         }
-//END OF Filling the Capability info
 
         safeReleaseMediaFoundation(&type);
       }
 
+      capFormatVector.reserve(formatMap.size());
+
+      for (auto formatMapItem : formatMap) {
+          const Format& format               = formatMapItem.first;
+          const ResolutionMap& resolutionMap = formatMapItem.second;
+
+          std::vector<CapabilityResolution> capResolutions;
+          capResolutions.reserve(resolutionMap.size());
+
+          for (auto resolutionMapItem : resolutionMap) {
+              const std::pair<int, int>& resolution = resolutionMapItem.first;
+              const FpsMap& fpsMap                  = resolutionMapItem.second;
+
+              std::vector<CapabilityFps> capFps;
+              capFps.reserve(fpsMap.size());
+
+              for (auto fpsMapItem : fpsMap) {
+                  capFps.push_back(CapabilityFps(fpsMapItem.first));
+              }
+
+              capResolutions.push_back(CapabilityResolution(resolution.first, resolution.second, std::move(capFps)));
+          }
+
+          capFormatVector.push_back(CapabilityFormat(format, std::move(capResolutions)));
+      }
+    }
     done:
       safeReleaseMediaFoundation(&presentation_desc);
       safeReleaseMediaFoundation(&stream_desc);
       safeReleaseMediaFoundation(&media_handler);
-      safeReleaseMediaFoundation(&type);
-      PropVariantClear(&var);
       return result;
     }
 
