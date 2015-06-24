@@ -7,7 +7,11 @@ namespace webcam_capture {
      */
     class VideoPropertyRange {
         public:
-            VideoPropertyRange() {}
+            VideoPropertyRange():
+                minValue(0),
+                maxValue(0),
+                stepValue(0),
+                defaultValue(0) {}
             /**
             * @param min Minimum video property value
             *
