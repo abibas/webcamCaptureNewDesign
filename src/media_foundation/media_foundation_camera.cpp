@@ -50,6 +50,19 @@ namespace webcam_capture {
 
         cb_frame = cb;
 
+///WTF the currentFpsBuf variable int setDeviceFormat and in setReaderFormat shows that
+/// FPS is 3000 1 time and second time 500 - in real time - it doesn't changes
+/// Looks like if you want to change FPS - we need to delete imm_media_source and create it again
+        //"to test just comment this"
+        safeReleaseMediaFoundation(&imf_media_source);
+        // Create the MediaSource
+        if(createVideoDeviceSource(information.getDeviceId(), &imf_media_source) < 0) {
+            DEBUG_PRINT("Error: cannot create the media device source.\n");
+            return NULL;
+        }
+        //End of "to test comment this"
+
+
         // Set the media format, width, height
         std::vector<CapabilityFormat> capabilities;
         if(getVideoCapabilities(imf_media_source, capabilities) < 0) {
@@ -385,6 +398,7 @@ namespace webcam_capture {
         int widthBuf;
         int heightBuf;
         int fpsBuf;
+        int currentFpsBuf;
 
         hr = media_handler->GetMediaTypeByIndex(i, &type);
 
@@ -424,6 +438,12 @@ namespace webcam_capture {
               Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
               widthBuf = (int)high;
               heightBuf = (int)low;
+            }
+            else if (guid == MF_MT_FRAME_RATE ){
+                UINT32 high = 0;
+                UINT32 low =  0;
+                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                currentFpsBuf = fps_from_rational(low, high);
             }
             PropVariantClear(&var);
           }
@@ -540,7 +560,7 @@ namespace webcam_capture {
       DWORD media_type_index = 0;
       int result = -1;        //TODO Err code
       HRESULT hr = S_OK;
-        int fff;
+        int currentFpsBuf;
 
       while(SUCCEEDED(hr)) {
 
@@ -586,7 +606,7 @@ namespace webcam_capture {
               UINT32 high = 0;
               UINT32 low =  0;
               Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-              fff = fps_from_rational(low, high);
+              currentFpsBuf = fps_from_rational(low, high);
             }
           }
           PropVariantClear(&var);

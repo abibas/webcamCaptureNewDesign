@@ -8,6 +8,8 @@ using namespace std;
 std::fstream outfile;
 
 #include <qdebug.h>
+#include <windows.h>
+
 
 VideoForm::VideoForm(CameraInterface* camera, int width, int height, QWidget *parent) :
     QWidget(parent),
@@ -25,6 +27,7 @@ VideoForm::~VideoForm()
 {
 
     camera->stop();
+    Sleep(1000);
     delete ui;
 }
 
