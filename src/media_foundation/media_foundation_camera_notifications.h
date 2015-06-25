@@ -5,6 +5,12 @@
 
 #include <thread>
 
+#include <iostream>
+#include <Windows.h>
+#include <tchar.h>
+#include <dbt.h>
+#include <ks.h>
+
 namespace webcam_capture {
     class MediaFoundation_CameraNotifications
     {
@@ -15,8 +21,15 @@ namespace webcam_capture {
         void Stop();
     private:
         void MessageLoop();
+
+        ///If we using Media Foundation in new stream in have to be inited in those stream.
+        bool InitMediaFoundation();
+        void DeinitMediaFoundation();
+
+        static LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
         bool threadStop;
-        notifications_callback notif_cb;
+        notifications_callback notif_cb;  //TODO to make threads synchronization
         std::thread messageLoopThread;
     };
 }
