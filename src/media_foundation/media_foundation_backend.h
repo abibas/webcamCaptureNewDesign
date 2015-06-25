@@ -25,6 +25,7 @@
 #include <camera_information.h>
 #include "media_foundation_utils.h"
 #include "media_foundation_callback.h"
+#include "media_foundation_camera_notifications.h"
 
 namespace webcam_capture {
 
@@ -37,8 +38,8 @@ namespace webcam_capture {
         CameraInterface* getCamera(const CameraInformation &information) const;
         void setAvaliableCamerasChangedCallback(notifications_callback n_callback); //TODO
     private:
-        notifications_callback cb_notif;
         std::shared_ptr<void> mfDeinitializer;
+        MediaFoundation_CameraNotifications * notificationManager;
     };
 } // namespace webcam_capture
 #endif

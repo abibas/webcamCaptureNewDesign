@@ -29,7 +29,8 @@ SOURCES += main.cpp\
     ../src/backend_factory.cpp \
     mainwindow.cpp \
     videoform.cpp \
-    cameraform.cpp
+    cameraform.cpp \
+    ../src/media_foundation/media_foundation_camera_notifications.cpp
 
 HEADERS  += \
     ../include/backend_interface.h \
@@ -51,7 +52,8 @@ HEADERS  += \
     ../src/media_foundation/media_foundation_callback.h \
     mainwindow.h \
     videoform.h \
-    cameraform.h
+    cameraform.h \
+    ../src/media_foundation/media_foundation_camera_notifications.h
 
 FORMS    += \
     mainwindow.ui \
