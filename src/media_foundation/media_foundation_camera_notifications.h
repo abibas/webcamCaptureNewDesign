@@ -28,8 +28,10 @@ namespace webcam_capture {
 
         static LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-        bool threadStop;
-        notifications_callback notif_cb;  //TODO to make threads synchronization
+        HDEVNOTIFY hDevNotify;
+        HWND messageWindow;                 //TODO to make threads synchronization
+        bool threadStop;                    //TODO to make threads synchronization
+        notifications_callback notif_cb;    //TODO to make threads synchronization
         std::thread messageLoopThread;
     };
 }

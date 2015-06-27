@@ -27,6 +27,7 @@ namespace webcam_capture {
 
     void MediaFoundation_CameraNotifications::Stop(){
         threadStop = true;
+        UnregisterDeviceNotification(hDevNotify);
         if( messageLoopThread.joinable() ) messageLoopThread.join();
         notif_cb = nullptr;
     }
@@ -40,11 +41,12 @@ namespace webcam_capture {
         LPCWSTR windowClassName = L"CameraNotificationsMessageOnlyWindow";
         windowClass.lpszClassName = windowClassName;
 
-        if (!RegisterClass(&windowClass)) {
+        if (!RegisterClassEx(&windowClass)) {
             DEBUG_PRINT("Failed to register window class.\n");
             return;
         }
-        HWND messageWindow = CreateWindow(windowClassName, 0, 0, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0);
+
+        messageWindow = CreateWindowEx(windowClassName, 0, 0, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0);
         if (!messageWindow) {
             DEBUG_PRINT("Failed to create message-only window.\n");
             return;
@@ -58,10 +60,10 @@ namespace webcam_capture {
         NotificationFilter.dbcc_classguid  = KSCATEGORY_CAPTURE;
 
 
-        HDEVNOTIFY hDevNotify = RegisterDeviceNotification(messageWindow, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
+        hDevNotify = RegisterDeviceNotification(messageWindow, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
 
         MSG msg;
-        while ( !threadStop && (GetMessage(&msg, 0, 0, 0) > 0) ) {
+        while ( !threadStop && (GetMessage(&msg, messageWindow, 0, 0) > 0) ) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
