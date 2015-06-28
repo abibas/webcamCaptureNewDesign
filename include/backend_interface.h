@@ -16,10 +16,16 @@
 #include <camera_information.h>
 
 namespace webcam_capture {
+
+    enum class CameraPlugStatus {
+        CAMERA_CONNECTED,
+        CAMERA_DISCONNECTED
+    };
+
     /**
     * notifications_callback Typedef for nnotifications callback
     */
-    typedef std::function<void(CameraInformation& information)> notifications_callback;
+    typedef std::function<void(CameraInformation& information, CameraPlugStatus status)> notifications_callback;
 
     /**
      * Contains Interface for Backend realization
@@ -40,7 +46,7 @@ namespace webcam_capture {
         /**
          * @param n_callback Notifications callback
          */
-        virtual void setAvaliableCamerasChangedCallback(notifications_callback n_callback) = 0; //TODO to realize
+        virtual int setAvaliableCamerasChangedCallback(notifications_callback n_callback) = 0; //TODO to realize
     };
 
 } // namespace webcam_capture

@@ -108,14 +108,15 @@ namespace webcam_capture {
       return MediaFoundation_Camera::createCamera(mfDeinitializer, information);
   }
 
-  void MediaFoundation_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback){
+  int MediaFoundation_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback){
       //IF n_callback is null_ptr or n_callback function is empty
       if ( !n_callback ) {
           notificationManager->Stop();
           DEBUG_PRINT("The callback function is empty. Capturing was stopped.\n");
-          return;      //TODO Err code
+          return -1;      //TODO Err code
       }
       notificationManager->Start(n_callback);
+      return 1; //TODO ERR code (success)
   }
 
 } // namespace webcam_capture

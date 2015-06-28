@@ -55,7 +55,6 @@ void MainWindow::fillFrameworkListCB()
 void MainWindow::fillCameraListCB()
 {
     this->ui->cameraListComboBox->clear();
-    cameraInfoList = backend->getAvailableCameras();
     for(size_t i = 0; i < cameraInfoList.size(); ++i) {
         this->ui->cameraListComboBox->addItem(cameraInfoList[i].getCameraName().c_str());
     }
@@ -66,7 +65,8 @@ void MainWindow::on_createBackendBtn_clicked()
     this->ui->createCameraBtn->setDisabled(false);
     this->ui->deleteBackendBtn->setDisabled(false);
     backend = BackendFactory::getBackend(backendList[this->ui->frameworkListComboBox->currentIndex()]);
-    backend->setAvaliableCamerasChangedCallback(std::bind(&MainWindow::CameraEventCaptureCallback, this, _1));
+    backend->setAvaliableCamerasChangedCallback(std::bind(&MainWindow::CameraEventCaptureCallback, this, _1, _2));
+    cameraInfoList = backend->getAvailableCameras();
     fillCameraListCB();
 }
 
@@ -99,7 +99,18 @@ void MainWindow::on_deleteBackendBtn_clicked()
     this->backend = NULL;
 }
 
-void MainWindow::CameraEventCaptureCallback(CameraInformation &information)
+void MainWindow::CameraEventCaptureCallback(CameraInformation &information, CameraPlugStatus status)
 {
-    int x = 0;
+    if (status == CameraPlugStatus::CAMERA_CONNECTED){
+        cameraInfoList.push_back(information);
+    } else if (status == CameraPlugStatus::CAMERA_DISCONNECTED) {
+        for (int i = 0; i < cameraInfoList.size(); i++)
+        {
+            if (information.getDeviceId() == cameraInfoList.at(i).getDeviceId() &&
+                information.getCameraName() == cameraInfoList.at(i).getCameraName() ) {
+                //cameraInfoList.erase(i);
+            }
+        }
+    }
+    this->fillCameraListCB();
 }

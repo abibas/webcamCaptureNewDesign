@@ -62,7 +62,8 @@ FORMS    += \
 
 win32: LIBS +=  -lMfplat\
                 -lOle32\
-                -lShlwapi
+                -lShlwapi\
+                -lUser32
 
 win32: LIBS += -lMf
 
