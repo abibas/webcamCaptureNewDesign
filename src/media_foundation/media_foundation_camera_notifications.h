@@ -28,14 +28,14 @@ namespace webcam_capture {
 
         static LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-        std::vector<CameraInformation> GetAvailableCamerasWithLinks();
+        std::vector<CameraInformation*> GetAvailableCamerasWithLinks();
         void CameraWasRemoved(DEV_BROADCAST_HDR *pHdr);
         void CameraWasConnected(DEV_BROADCAST_HDR *pHdr);
 
 
         //unordered map of WCHAR* - symbolic link and CameraInformation
         //move WCHAR to std::string
-        std::vector<CameraInformation> devicesVector;
+        std::vector<CameraInformation*> devicesVector;
         HDEVNOTIFY hDevNotify;
         WNDCLASS windowClass;
         HWND messageWindow;

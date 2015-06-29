@@ -133,12 +133,10 @@ namespace webcam_capture {
     void MediaFoundation_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr){
         DEV_BROADCAST_DEVICEINTERFACE *pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
         UniqueIdInterface * uniqId = new MediaFoundation_UniqueId(pDi->dbcc_name);
-        for (std::vector<CameraInformation>::iterator it = devicesVector.begin();
-             it != devicesVector.end();
-             ++it) {
-            if ( (*it).getUniqueId() ==  uniqId) {
-                notif_cb(*it, CameraPlugStatus::CAMERA_DISCONNECTED);
-                devicesVector.erase(it);
+        for ( int i = 0; i < devicesVector.size(); i++) {
+            if ( (devicesVector.at(i))->getUniqueId() == uniqId ) {
+                notif_cb(*devicesVector.at(i), CameraPlugStatus::CAMERA_DISCONNECTED);
+                devicesVector.erase(devicesVector.begin() + i);
                 break;
             }
         }
@@ -149,8 +147,8 @@ namespace webcam_capture {
         ///TODOOOO !!!!!
     }
 
-    std::vector<CameraInformation> MediaFoundation_CameraNotifications::GetAvailableCamerasWithLinks(){
-        std::vector<CameraInformation> result;
+    std::vector<CameraInformation*> MediaFoundation_CameraNotifications::GetAvailableCamerasWithLinks(){
+        std::vector<CameraInformation*> result;
         UINT32 count = 0;
         IMFAttributes* config = NULL;
         IMFActivate** devices = NULL;
@@ -183,7 +181,7 @@ namespace webcam_capture {
             if(SUCCEEDED(hr1) && SUCCEEDED(hr2)) {
                 std::string name = string_cast<std::string>(friendly_name);
                 UniqueIdInterface *uniqueId = new MediaFoundation_UniqueId(symbolic_link);
-                CameraInformation camInfo(uniqueId, name);
+                CameraInformation * camInfo = new CameraInformation(uniqueId, name);
                 result.push_back(camInfo);
             }
 

@@ -39,9 +39,6 @@ namespace webcam_capture {
        */
       std::string getCameraName() const { return cameraName; }
 
-      void operator=(CameraInformation& camInfo) { this->cameraName = camInfo.getCameraName();
-                                                         this->uniqueId = camInfo.getUniqueId(); }
-
     private:
       //const int cameraId;
       std::string cameraName;
