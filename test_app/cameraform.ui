@@ -119,7 +119,7 @@
     <widget class="QPushButton" name="applyImageSettingsButton">
      <property name="geometry">
       <rect>
-       <x>140</x>
+       <x>20</x>
        <y>200</y>
        <width>75</width>
        <height>23</height>
@@ -322,6 +322,19 @@
      </property>
      <property name="text">
       <string>curr</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="setDefaultSettingsButton">
+     <property name="geometry">
+      <rect>
+       <x>230</x>
+       <y>200</y>
+       <width>131</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Set Default (TODO)</string>
      </property>
     </widget>
    </widget>

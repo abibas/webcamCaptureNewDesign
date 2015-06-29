@@ -26,11 +26,12 @@ SOURCES += main.cpp\
     ../src/media_foundation/media_foundation_callback.cpp \
     ../src/media_foundation/media_foundation_camera.cpp \
     ../src/media_foundation/media_foundation_utils.cpp \
+    ../src/media_foundation/media_foundation_unique_id.cpp \
+    ../src/media_foundation/media_foundation_camera_notifications.cpp \
     ../src/backend_factory.cpp \
     mainwindow.cpp \
     videoform.cpp \
     cameraform.cpp \
-    ../src/media_foundation/media_foundation_camera_notifications.cpp
 
 HEADERS  += \
     ../include/backend_interface.h \
@@ -44,16 +45,18 @@ HEADERS  += \
     ../include/capability.h \
     ../include/image_format_converter.h \
     ../include/backend_factory.h \
+    ../include/unique_id_interface.h \
     ../src/utils.h \
     ../src/media_foundation/media foundation_callback.h \
     ../src/media_foundation/media_foundation_backend.h \
     ../src/media_foundation/media_foundation_camera.h \
     ../src/media_foundation/media_foundation_utils.h \
     ../src/media_foundation/media_foundation_callback.h \
+    ../src/media_foundation/media_foundation_camera_notifications.h \
+    ../src/media_foundation/media_foundation_unique_id.h \
     mainwindow.h \
     videoform.h \
-    cameraform.h \
-    ../src/media_foundation/media_foundation_camera_notifications.h
+    cameraform.h
 
 FORMS    += \
     mainwindow.ui \

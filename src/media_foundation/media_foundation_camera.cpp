@@ -1,4 +1,5 @@
 #include "media_foundation_camera.h"
+#include "media_foundation_unique_id.h"
 #include <iostream>
 #include <unordered_map>
 
@@ -10,14 +11,16 @@ namespace webcam_capture {
         ,state(CA_STATE_NONE)
         ,imf_media_source(mediaSource)
         ,mf_callback(NULL)
-        ,imf_source_reader(NULL)
-    {
+        ,imf_source_reader(NULL) {
+
     }
 
-    CameraInterface* MediaFoundation_Camera::createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information) {
+    CameraInterface* MediaFoundation_Camera::createCamera(std::shared_ptr<void> mfDeinitializer, CameraInformation &information) {
         IMFMediaSource * mediaSource = NULL;
         // Create the MediaSource
-        if(MediaFoundation_Camera::createVideoDeviceSource(information.getDeviceId(), &mediaSource) < 0) {
+
+        MediaFoundation_UniqueId * uniqueId = static_cast<MediaFoundation_UniqueId*>(information.getUniqueId());
+        if(MediaFoundation_Camera::createVideoDeviceSource( uniqueId->getId(), &mediaSource) < 0) {
             DEBUG_PRINT("Error: cannot create the media device source.\n");
             return NULL;
         }
@@ -56,7 +59,8 @@ namespace webcam_capture {
         //"to test just comment this"
         safeReleaseMediaFoundation(&imf_media_source);
         // Create the MediaSource
-        if(createVideoDeviceSource(information.getDeviceId(), &imf_media_source) < 0) {
+        MediaFoundation_UniqueId * uniqueId = static_cast<MediaFoundation_UniqueId*>(information.getUniqueId());
+        if(createVideoDeviceSource(uniqueId->getId(), &imf_media_source) < 0) {
             DEBUG_PRINT("Error: cannot create the media device source.\n");
             return NULL;
         }
@@ -75,8 +79,7 @@ namespace webcam_capture {
         bool isFormatValid = false;
         int formatIndex = 0;
         for (int i = 0; i < capabilities.size(); i++){
-            if ( capabilities.at(i).getPixelFormat() == capabilityFormat.getPixelFormat() )
-            {
+            if ( capabilities.at(i).getPixelFormat() == capabilityFormat.getPixelFormat() ) {
                 formatIndex = i;
                 isFormatValid = true;
                 break;
@@ -93,8 +96,7 @@ namespace webcam_capture {
         int resolutionsIndex = 0;
         for (int j = 0; j < resolutionVectorBuf.size(); j++) {
             if (resolutionVectorBuf.at(j).getHeight()  == capabilityResolution.getHeight() &&
-                resolutionVectorBuf.at(j).getWidth() == capabilityResolution.getWidth() )
-            {
+                resolutionVectorBuf.at(j).getWidth() == capabilityResolution.getWidth() ) {
                 resolutionsIndex = j;
                 isResolutionValid = true;
                 break;
@@ -117,7 +119,7 @@ namespace webcam_capture {
             DEBUG_PRINT("Error: cannot found such capabilityFps in capabilities.\n");
             return -7;
         }
-//END OF Check of "capabilities" have inputed params
+//END OF Check that "capabilities" list has inputed params
 
         if(capabilityFormat.getPixelFormat() == Format::UNKNOWN) {
             DEBUG_PRINT("Error: cannot set a pixel format for UNKNOWN.\n");
@@ -158,45 +160,28 @@ namespace webcam_capture {
         // Kick off the capture stream.
         HRESULT hr = imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
         if(FAILED(hr)) {
-          if(hr == MF_E_INVALIDREQUEST) {
-            DEBUG_PRINT("ReadSample returned MF_E_INVALIDREQUEST.\n");
-          }
-          else if(hr == MF_E_INVALIDSTREAMNUMBER) {
-            DEBUG_PRINT("ReadSample returned MF_E_INVALIDSTREAMNUMBER.\n");
-          }
-          else if(hr == MF_E_NOTACCEPTING) {
-            DEBUG_PRINT("ReadSample returned MF_E_NOTACCEPTING.\n");
-          }
-          else if(hr == E_INVALIDARG) {
-            DEBUG_PRINT("ReadSample returned E_INVALIDARG.\n");
-          }
-          else if(hr == E_POINTER) {
-            DEBUG_PRINT("ReadSample returned E_POINTER.\n");
-          }
-          else {
-            DEBUG_PRINT("ReadSample - unhandled result.\n");
-          }
-          DEBUG_PRINT("Error: while trying to ReadSample() on the imf_source_reader. \n");
-          #ifdef DEBUG_VERSION
-            std::cout << "Error: " << std::hex << hr << std::endl;
-          #endif
-          return -4;      //TODO Err code
+            if(hr == MF_E_INVALIDREQUEST)               DEBUG_PRINT("ReadSample returned MF_E_INVALIDREQUEST.\n");
+            else if (hr == MF_E_INVALIDSTREAMNUMBER)    DEBUG_PRINT("ReadSample returned MF_E_INVALIDSTREAMNUMBER.\n");
+            else if(hr == MF_E_NOTACCEPTING)            DEBUG_PRINT("ReadSample returned MF_E_NOTACCEPTING.\n");
+            else if(hr == E_INVALIDARG)                 DEBUG_PRINT("ReadSample returned E_INVALIDARG.\n");
+            else if(hr == E_POINTER)                    DEBUG_PRINT("ReadSample returned E_POINTER.\n");
+            else                                        DEBUG_PRINT("ReadSample - unhandled result.\n");
+            DEBUG_PRINT("Error: while trying to ReadSample() on the imf_source_reader. \n");
+            return -4;      //TODO Err code
         }
-
         state |= CA_STATE_CAPTURING;
-
         return 1;      //TODO Err code
     }
 
     int MediaFoundation_Camera::stop(){
         if(!state & CA_STATE_CAPTURING) {
-          DEBUG_PRINT("Error: Cannot stop capture because we're not capturing yet.\n");
-          return -1;    //TODO Err code
+            DEBUG_PRINT("Error: Cannot stop capture because we're not capturing yet.\n");
+            return -1;    //TODO Err code
         }
 
         if(!imf_source_reader) {
-          DEBUG_PRINT("Error: Cannot stop capture because sourceReader is empty yet.\n");
-          return -2;    //TODO Err code
+            DEBUG_PRINT("Error: Cannot stop capture because sourceReader is empty yet.\n");
+            return -2;    //TODO Err code
         }
 
         state &= ~CA_STATE_CAPTURING;
@@ -355,287 +340,263 @@ namespace webcam_capture {
 
     int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource* source, const int width, const int height, const Format pixelFormat, const int fps) const {
 
-      IMFPresentationDescriptor* pres_desc = NULL;
-      IMFStreamDescriptor* stream_desc = NULL;
-      IMFMediaTypeHandler* media_handler = NULL;
-      IMFMediaType* type = NULL;
-      int result = 1; //TODO Err code
+        IMFPresentationDescriptor* pres_desc = NULL;
+        IMFStreamDescriptor* stream_desc = NULL;
+        IMFMediaTypeHandler* media_handler = NULL;
+        IMFMediaType* type = NULL;
+        int result = 1; //TODO Err code
 
-      HRESULT hr = source->CreatePresentationDescriptor(&pres_desc);
-      if(FAILED(hr)) {
-        DEBUG_PRINT("source->CreatePresentationDescriptor() failed.\n");
-        result = -1;        //TODO Err code
-        goto done;
-      }
-
-      BOOL selected;
-      hr = pres_desc->GetStreamDescriptorByIndex(0, &selected, &stream_desc);
-      if(FAILED(hr)) {
-        DEBUG_PRINT("pres_desc->GetStreamDescriptorByIndex failed.\n");
-        result = -2;        //TODO Err code
-        goto done;
-      }
-
-      hr = stream_desc->GetMediaTypeHandler(&media_handler);
-      if(FAILED(hr)) {
-        DEBUG_PRINT("stream_desc->GetMediaTypehandler() failed.\n");
-        result = -3;        //TODO Err code
-        goto done;
-      }
-
-      DWORD types_count = 0;
-      hr = media_handler->GetMediaTypeCount(&types_count);
-      if(FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot get media type count.\n");
-        result = -4;        //TODO Err code
-        goto done;
-      }
-
-      PROPVARIANT var;
-      for(DWORD i = 0; i < types_count; ++i) {
-
-        Format pixelFormatBuf;
-        int widthBuf;
-        int heightBuf;
-        int fpsBuf;
-        int currentFpsBuf;
-
-        hr = media_handler->GetMediaTypeByIndex(i, &type);
-
+        HRESULT hr = source->CreatePresentationDescriptor(&pres_desc);
         if(FAILED(hr)) {
-          DEBUG_PRINT("Error: cannot get media type by index.\n");
-          result = -5;        //TODO Err code
-          goto done;
+            DEBUG_PRINT("source->CreatePresentationDescriptor() failed.\n");
+            result = -1;        //TODO Err code
+            goto done;
         }
 
-        UINT32 attr_count = 0;
-        hr = type->GetCount(&attr_count);
+        BOOL selected;
+        hr = pres_desc->GetStreamDescriptorByIndex(0, &selected, &stream_desc);
         if(FAILED(hr)) {
-          DEBUG_PRINT("Error: cannot type param count.\n");
-          result = -6;        //TODO Err code
-          goto done;
+            DEBUG_PRINT("pres_desc->GetStreamDescriptorByIndex failed.\n");
+            result = -2;        //TODO Err code
+            goto done;
         }
 
-        if(attr_count > 0) {
-          for(UINT32 j = 0; j < attr_count; ++j) {
+        hr = stream_desc->GetMediaTypeHandler(&media_handler);
+        if(FAILED(hr)) {
+            DEBUG_PRINT("stream_desc->GetMediaTypehandler() failed.\n");
+            result = -3;        //TODO Err code
+            goto done;
+        }
 
-            GUID guid = { 0 };
-            PropVariantInit(&var);
+        DWORD types_count = 0;
+        hr = media_handler->GetMediaTypeCount(&types_count);
+        if(FAILED(hr)) {
+            DEBUG_PRINT("Error: cannot get media type count.\n");
+            result = -4;        //TODO Err code
+            goto done;
+        }
 
-            hr = type->GetItemByIndex(j, &guid, &var);
+        PROPVARIANT var;
+        for(DWORD i = 0; i < types_count; ++i) {
+            Format pixelFormatBuf;
+            int widthBuf;
+            int heightBuf;
+            int fpsBuf;
+            int currentFpsBuf;
+
+            hr = media_handler->GetMediaTypeByIndex(i, &type);
+
             if(FAILED(hr)) {
-              DEBUG_PRINT("Error: cannot get item by index.\n");
-              result = -7;        //TODO Err code
-              goto done;
+                DEBUG_PRINT("Error: cannot get media type by index.\n");
+                result = -5;        //TODO Err code
+                goto done;
             }
 
-            if(guid == MF_MT_SUBTYPE && var.vt == VT_CLSID) {
-              pixelFormatBuf = media_foundation_video_format_to_capture_format(*var.puuid);
+            UINT32 attr_count = 0;
+            hr = type->GetCount(&attr_count);
+            if(FAILED(hr)) {
+                DEBUG_PRINT("Error: cannot type param count.\n");
+                result = -6;        //TODO Err code
+                goto done;
             }
-            else if(guid == MF_MT_FRAME_SIZE) {
-              UINT32 high = 0;
-              UINT32 low =  0;
-              Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-              widthBuf = (int)high;
-              heightBuf = (int)low;
-            }
-            else if (guid == MF_MT_FRAME_RATE ){
-                UINT32 high = 0;
-                UINT32 low =  0;
-                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                currentFpsBuf = fps_from_rational(low, high);
-            }
-            PropVariantClear(&var);
-          }
 
-        // When the output media type of the source reader matches our specs, set it!
-        if( widthBuf == width &&
-            heightBuf == height &&
-            pixelFormatBuf == pixelFormat) {
+            if(attr_count > 0) {
+                for(UINT32 j = 0; j < attr_count; ++j) {
+                    GUID guid = { 0 };
+                    PropVariantInit(&var);
 
-              //Compare input fps with max\min fpses and preset it
-              PropVariantInit(&var);
-              {
-                hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
-                if(SUCCEEDED(hr)) {
-                  UINT32 high = 0;
-                  UINT32 low =  0;
-                  Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                  fpsBuf = fps_from_rational(low, high);
-                  if ( fpsBuf == fps ) {
-                      hr = type->SetItem(MF_MT_FRAME_RATE, var);
-                  }
+                    hr = type->GetItemByIndex(j, &guid, &var);
+                    if(FAILED(hr)) {
+                        DEBUG_PRINT("Error: cannot get item by index.\n");
+                        result = -7;        //TODO Err code
+                        goto done;
+                    }
+
+                    if(guid == MF_MT_SUBTYPE && var.vt == VT_CLSID) {
+                        pixelFormatBuf = media_foundation_video_format_to_capture_format(*var.puuid);
+                    } else if(guid == MF_MT_FRAME_SIZE) {
+                        UINT32 high = 0;
+                        UINT32 low =  0;
+                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                        widthBuf = (int)high;
+                        heightBuf = (int)low;
+                    }
+                    else if (guid == MF_MT_FRAME_RATE ){
+                        UINT32 high = 0;
+                        UINT32 low =  0;
+                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                        currentFpsBuf = fps_from_rational(low, high);
+                    }
+                    PropVariantClear(&var);
                 }
-              }
-              PropVariantClear(&var);
 
-              PropVariantInit(&var);
-              {
-                hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
-                if(SUCCEEDED(hr)) {
-                  UINT32 high = 0;
-                  UINT32 low =  0;
-                  Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                  fpsBuf = fps_from_rational(low, high);
-                  if ( fpsBuf == fps ) {
-                      hr = type->SetItem(MF_MT_FRAME_RATE, var);
-                  }
+                // When the output media type of the source reader matches our specs, set it!
+                if( widthBuf == width &&
+                    heightBuf == height &&
+                    pixelFormatBuf == pixelFormat) {
+
+                    //Compare input fps with max\min fpses and preset it
+                    PropVariantInit(&var);
+                    hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
+                    if(SUCCEEDED(hr)) {
+                        UINT32 high = 0;
+                        UINT32 low =  0;
+                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                        fpsBuf = fps_from_rational(low, high);
+                        if ( fpsBuf == fps ) hr = type->SetItem(MF_MT_FRAME_RATE, var);
+                    }
+                    PropVariantClear(&var);
+
+                    PropVariantInit(&var);
+                    hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
+                    if(SUCCEEDED(hr)) {
+                        UINT32 high = 0;
+                        UINT32 low =  0;
+                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                        fpsBuf = fps_from_rational(low, high);
+                        if ( fpsBuf == fps ) hr = type->SetItem(MF_MT_FRAME_RATE, var);
+                    }
+                    PropVariantClear(&var);
+
+
+                    hr = media_handler->SetCurrentMediaType(type);
+                    if(FAILED(hr)) DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
+                    else break;
                 }
-              }
-              PropVariantClear(&var);
-
-
-              hr = media_handler->SetCurrentMediaType(type);
-              if(FAILED(hr)) {
-                  DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
-              } else { break; }
-           }
+            }
+            safeReleaseMediaFoundation(&type);
         }
-        safeReleaseMediaFoundation(&type);
-      }
 
-    done:
-      safeReleaseMediaFoundation(&pres_desc);
-      safeReleaseMediaFoundation(&stream_desc);
-      safeReleaseMediaFoundation(&media_handler);
-      safeReleaseMediaFoundation(&type);
-      PropVariantClear(&var);
+        done:
+            safeReleaseMediaFoundation(&pres_desc);
+            safeReleaseMediaFoundation(&stream_desc);
+            safeReleaseMediaFoundation(&media_handler);
+            safeReleaseMediaFoundation(&type);
+            PropVariantClear(&var);
 
-      return result;
+        return result;
     }
 
     int MediaFoundation_Camera::createSourceReader(IMFMediaSource* mediaSource,  IMFSourceReaderCallback* callback, IMFSourceReader** sourceReader) const{
 
-      if(mediaSource == NULL) {
-        DEBUG_PRINT("Error: Cannot create a source reader because the IMFMediaSource passed into this function is not valid.\n");
-        return -1;         //TODO Err code
-      }
+        if(mediaSource == NULL) {
+            DEBUG_PRINT("Error: Cannot create a source reader because the IMFMediaSource passed into this function is not valid.\n");
+            return -1;         //TODO Err code
+        }
 
-      if(callback == NULL) {
-        DEBUG_PRINT("Error: Cannot create a source reader because the calls back passed into this function is not valid.\n");
-        return -2;        //TODO Err code
-      }
+        if(callback == NULL) {
+            DEBUG_PRINT("Error: Cannot create a source reader because the calls back passed into this function is not valid.\n");
+            return -2;        //TODO Err code
+        }
 
-      HRESULT hr = S_OK;
-      IMFAttributes* attrs = NULL;
-      int result = 1;        //TODO Err code
+        HRESULT hr = S_OK;
+        IMFAttributes* attrs = NULL;
+        int result = 1;        //TODO Err code
 
-      hr = MFCreateAttributes(&attrs, 2);
-      if(FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot create attributes for the media source reader.\n");
-        result = -3;        //TODO Err code
-        goto done;
-      }
+        hr = MFCreateAttributes(&attrs, 2);
+        if(FAILED(hr)) {
+            DEBUG_PRINT("Error: cannot create attributes for the media source reader.\n");
+            result = -3;        //TODO Err code
+            goto done;
+        }
 
-      hr = attrs->SetUnknown(MF_SOURCE_READER_ASYNC_CALLBACK, callback);
-      if(FAILED(hr)) {
-        DEBUG_PRINT("Error: SetUnknown() failed on the source reader");
-        result = -4;        //TODO Err code
-        goto done;
-      }
+        hr = attrs->SetUnknown(MF_SOURCE_READER_ASYNC_CALLBACK, callback);
+        if(FAILED(hr)) {
+            DEBUG_PRINT("Error: SetUnknown() failed on the source reader");
+            result = -4;        //TODO Err code
+            goto done;
+        }
 
-      /// This attribute gives such result - source reader does not shut down the media source.
-      hr = attrs->SetUINT32(MF_SOURCE_READER_DISCONNECT_MEDIASOURCE_ON_SHUTDOWN, TRUE);
-      if(FAILED(hr)) {
-        DEBUG_PRINT("Error: SetUINT32() failed on the source reader");
-        result = -5;        //TODO Err code
-        goto done;
-      }
+        /// This attribute gives such result - source reader does not shut down the media source.
+        hr = attrs->SetUINT32(MF_SOURCE_READER_DISCONNECT_MEDIASOURCE_ON_SHUTDOWN, TRUE);
+        if(FAILED(hr)) {
+            DEBUG_PRINT("Error: SetUINT32() failed on the source reader");
+            result = -5;        //TODO Err code
+            goto done;
+        }
 
-      // Create a source reader which sets up the pipeline for us so we get access to the pixels
-      hr = MFCreateSourceReaderFromMediaSource(mediaSource, attrs, sourceReader);
-      if(FAILED(hr)) {
-        DEBUG_PRINT("Error: while creating a source reader.\n");
-        result = -6;        //TODO Err code
-        goto done;
-      }
+        // Create a source reader which sets up the pipeline for us so we get access to the pixels
+        hr = MFCreateSourceReaderFromMediaSource(mediaSource, attrs, sourceReader);
+        if(FAILED(hr)) {
+            DEBUG_PRINT("Error: while creating a source reader.\n");
+            result = -6;        //TODO Err code
+            goto done;
+        }
 
-    done:
-      safeReleaseMediaFoundation(&attrs);
-      return result;
+        done:
+            safeReleaseMediaFoundation(&attrs);
+            return result;
     }
 
     int MediaFoundation_Camera::setReaderFormat(IMFSourceReader* reader, const int width, const int height, const Format pixelFormat) const {
 
-      DWORD media_type_index = 0;
-      int result = -1;        //TODO Err code
-      HRESULT hr = S_OK;
+        DWORD media_type_index = 0;
+        int result = -1;        //TODO Err code
+        HRESULT hr = S_OK;
         int currentFpsBuf;
 
-      while(SUCCEEDED(hr)) {
+        while(SUCCEEDED(hr)) {
+            Format pixelFormatBuf;
+            int widthBuf;
+            int heightBuf;
+            IMFMediaType* type = NULL;
 
-        Format pixelFormatBuf;
-        int widthBuf;
-        int heightBuf;
+            hr = reader->GetNativeMediaType(0, media_type_index, &type);
 
-
-        IMFMediaType* type = NULL;
-        hr = reader->GetNativeMediaType(0, media_type_index, &type);
-
-        if(SUCCEEDED(hr)) {
-
-          // PIXELFORMAT
-          PROPVARIANT var;
-          PropVariantInit(&var);
-          {
-            hr = type->GetItem(MF_MT_SUBTYPE, &var);
             if(SUCCEEDED(hr)) {
-              pixelFormatBuf = media_foundation_video_format_to_capture_format(*var.puuid);
-            }
-          }
-          PropVariantClear(&var);
 
-          // SIZE
-          PropVariantInit(&var);
-          {
-            hr = type->GetItem(MF_MT_FRAME_SIZE, &var);
-            if(SUCCEEDED(hr)) {
-              UINT32 high = 0;
-              UINT32 low =  0;
-              Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-              widthBuf = high;
-              heightBuf = low;
-            }
-          }
-          PropVariantClear(&var);
+                // PIXELFORMAT
+                PROPVARIANT var;
+                PropVariantInit(&var);
+                hr = type->GetItem(MF_MT_SUBTYPE, &var);
+                if(SUCCEEDED(hr)) pixelFormatBuf = media_foundation_video_format_to_capture_format(*var.puuid);
+                PropVariantClear(&var);
 
-          PropVariantInit(&var);
-          {
-            hr = type->GetItem(MF_MT_FRAME_RATE, &var);
-            if(SUCCEEDED(hr)) {
-              UINT32 high = 0;
-              UINT32 low =  0;
-              Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-              currentFpsBuf = fps_from_rational(low, high);
-            }
-          }
-          PropVariantClear(&var);
-
-          // When the output media type of the source reader matches our specs, set it!
-          if( widthBuf == width &&
-              heightBuf == height &&
-              pixelFormatBuf == pixelFormat) {
-
-                hr = reader->SetCurrentMediaType(0, NULL, type);
-                if(FAILED(hr)) {
-                    DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
+                // SIZE
+                PropVariantInit(&var);
+                hr = type->GetItem(MF_MT_FRAME_SIZE, &var);
+                if(SUCCEEDED(hr)) {
+                    UINT32 high = 0;
+                    UINT32 low =  0;
+                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                    widthBuf = high;
+                    heightBuf = low;
                 }
-                else {
-                hr = S_OK;
-                result = 1;        //TODO Err code
+                PropVariantClear(&var);
+
+                PropVariantInit(&var);
+                hr = type->GetItem(MF_MT_FRAME_RATE, &var);
+                if(SUCCEEDED(hr)) {
+                    UINT32 high = 0;
+                    UINT32 low =  0;
+                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                    currentFpsBuf = fps_from_rational(low, high);
                 }
+                PropVariantClear(&var);
+
+                // When the output media type of the source reader matches our specs, set it!
+                if( widthBuf == width &&
+                    heightBuf == height &&
+                    pixelFormatBuf == pixelFormat) {
+
+                    hr = reader->SetCurrentMediaType(0, NULL, type);
+                    if(FAILED(hr)) {
+                        DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
+                    } else {
+                        hr = S_OK;
+                        result = 1;        //TODO Err code
+                    }
+                }
+            } else {
+                break;
             }
-        }
-        else {
-          break;
+
+            safeReleaseMediaFoundation(&type);
+
+            ++media_type_index;
         }
 
-        safeReleaseMediaFoundation(&type);
-
-        ++media_type_index;
-      }
-
-      return result;
+        return result;
     }
 
 
@@ -891,8 +852,8 @@ done:
     /**
      * Create and active the given `device`.
      *
-     * @param int device [in]            The device index for which you want to get an
-     *                                   activated IMFMediaSource object. This function
+     * @param WCHAR *pszSymbolicLink[in] The device symbolic Link, which is unique identifier of camera device
+     *                                   for which you want to get an activated IMFMediaSource object. This function
      *                                   allocates this object and increases the reference
      *                                   count. When you're ready with this object, make sure
      *                                   to call `safeReleaseMediaFoundation(&source)`
@@ -900,63 +861,45 @@ done:
      * @param IMFMediaSource** [out]     We allocate and activate the device for the
      *                                   given `device` parameter. When ready, call
      *                                   `safeReleaseMediaFoundation(&source)` to free memory.
-     */
-    int MediaFoundation_Camera::createVideoDeviceSource(const int device, IMFMediaSource** source) {
+     */    
+    int MediaFoundation_Camera::createVideoDeviceSource(WCHAR *pszSymbolicLink, IMFMediaSource** ppSource) {
+        *ppSource = NULL;
+        IMFAttributes *pAttributes = NULL;
 
-      int result = 1;  //TODO Err code
-      IMFAttributes* config = NULL;
-      IMFActivate** devices = NULL;
-      UINT32 count = 0;
+        HRESULT hr = MFCreateAttributes(&pAttributes, 2);
+        if (FAILED(hr)) {
+            DEBUG_PRINT("Error: cannot create MFCreateAttributes.\n");
+            safeReleaseMediaFoundation(&pAttributes);
+            return -1;        //TODO Err code
+        }
 
-      HRESULT hr = MFCreateAttributes(&config, 1);
-      if(FAILED(hr)) {
-        result = -1;        //TODO Err code
-        goto done;
-      }
+        // Set the device type to video.
+        hr = pAttributes->SetGUID(  MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
+                                    MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
+        if (FAILED(hr)) {
+            DEBUG_PRINT("Error: cannot set the device type to video.\n");
+            safeReleaseMediaFoundation(&pAttributes);
+            return -2;        //TODO Err code
+        }
 
-      // Filter on capture devices
-      hr = config->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
-                           MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
-      if(FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot set the GUID on the IMFAttributes*.\n");
-        result = -2;        //TODO Err code
-        goto done;
-      }
+        // Set the symbolic link.
+        hr = pAttributes->SetString( MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
+                                     (LPCWSTR)pszSymbolicLink);
 
-      // Enumerate devices.
-      hr = MFEnumDeviceSources(config, &devices, &count);
-      if(FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot get EnumDeviceSources.\n");
-        result = -3;        //TODO Err code
-        goto done;
-      }
-      if(count == 0 || device > count) { //TODO bug (>= count)becouse devices numerates from 0.
-        result = -4;        //TODO Err code
-        goto done;
-      }
+        if (FAILED(hr)) {
+            DEBUG_PRINT("Error: cannot set the symbolic link.\n");
+            safeReleaseMediaFoundation(&pAttributes);
+            return -3;        //TODO Err code
+        }
 
-      // Make sure the given source is free/released.
-      safeReleaseMediaFoundation(source);
+        hr = MFCreateDeviceSource(pAttributes, ppSource);
+        if (FAILED(hr)) {
+            DEBUG_PRINT("Error: cannot crete MF Device Source.\n");
+            safeReleaseMediaFoundation(&pAttributes);
+            return -4;        //TODO Err code
+        }
 
-      // Activate the capture device.
-      hr = devices[device]->ActivateObject(IID_PPV_ARGS(source));
-      if(FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot activate the object.");
-        result = -5;        //TODO Err code
-        goto done;
-      }
-
-      result = true;
-
-    done:
-
-      safeReleaseMediaFoundation(&config);
-      for(DWORD i = 0; i < count; ++i) {
-        safeReleaseMediaFoundation(&devices[i]);
-      }
-      CoTaskMemFree(devices);
-
-      return result;
+        safeReleaseMediaFoundation(&pAttributes);
+        return 1; //TODO Err code
     }
-
 } // namespace webcam_capture

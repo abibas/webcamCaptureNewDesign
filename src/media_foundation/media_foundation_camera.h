@@ -40,7 +40,7 @@ namespace webcam_capture {
     class MediaFoundation_Camera : public CameraInterface {
     public:        
         ~MediaFoundation_Camera();
-        static CameraInterface* createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
+        static CameraInterface* createCamera(std::shared_ptr<void> mfDeinitializer, CameraInformation &information);
 
         int start(const CapabilityFormat &capabilityFormat, const CapabilityResolution &capabilityResolution, const CapabilityFps &capabilityFps, frame_callback cb);
         int stop();
@@ -56,7 +56,8 @@ namespace webcam_capture {
 
         //// SDK functions
         int createSourceReader(IMFMediaSource* mediaSource, IMFSourceReaderCallback* callback, IMFSourceReader** sourceReader) const;
-        static int createVideoDeviceSource(const int device, IMFMediaSource** source);
+        static int createVideoDeviceSource(const int device, IMFMediaSource** source); //TODO outdated method - to remove
+        static int createVideoDeviceSource(WCHAR *pszSymbolicLink, IMFMediaSource** ppSource);
         int getVideoCapabilities(IMFMediaSource* source, std::vector<CapabilityFormat> &capFormatVector) const;
         int setDeviceFormat(IMFMediaSource* source, const int width, const int height, const Format pixelFormat, const int fps) const;
         int setReaderFormat(IMFSourceReader* reader, const int width, const int height, const Format pixelFormat) const;

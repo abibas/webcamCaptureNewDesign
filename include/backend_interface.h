@@ -42,7 +42,7 @@ namespace webcam_capture {
          * @param information Camera information with Id and Name
          * @return New camera instance
          */
-        virtual CameraInterface* getCamera(const CameraInformation &information) const = 0;
+        virtual CameraInterface* getCamera(CameraInformation &information) const = 0;
         /**
          * @param n_callback Notifications callback
          */

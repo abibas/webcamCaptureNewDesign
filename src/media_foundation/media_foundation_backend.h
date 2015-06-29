@@ -35,7 +35,7 @@ namespace webcam_capture {
         ~MediaFoundation_Backend();
         static void DeinitBackend(void*);
         std::vector<CameraInformation> getAvailableCameras() const;
-        CameraInterface* getCamera(const CameraInformation &information) const;
+        CameraInterface* getCamera(CameraInformation &information) const;
         int setAvaliableCamerasChangedCallback(notifications_callback n_callback); //TODO
     private:
         std::shared_ptr<void> mfDeinitializer;

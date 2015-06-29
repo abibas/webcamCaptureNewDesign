@@ -15,32 +15,32 @@
 
 namespace webcam_capture {
 
-  class MediaFoundation_Camera;
+    class MediaFoundation_Camera;
 
-  class MediaFoundation_Callback : public IMFSourceReaderCallback {
-  public:
-    static bool createInstance(MediaFoundation_Camera* cam, MediaFoundation_Callback** cb);
+    class MediaFoundation_Callback : public IMFSourceReaderCallback {
+    public:
+        static bool createInstance(MediaFoundation_Camera* cam, MediaFoundation_Callback** cb);
 
-    STDMETHODIMP QueryInterface(REFIID iid, void** v);
-    STDMETHODIMP_(ULONG) AddRef();
-    STDMETHODIMP_(ULONG) Release();
-  
-    STDMETHODIMP OnReadSample(HRESULT hr, DWORD streamIndex, DWORD streamFlags, LONGLONG timestamp, IMFSample* sample);
-    STDMETHODIMP OnEvent(DWORD streamIndex, IMFMediaEvent* event);
-    STDMETHODIMP OnFlush(DWORD streamIndex);
+        STDMETHODIMP QueryInterface(REFIID iid, void** v);
+        STDMETHODIMP_(ULONG) AddRef();
+        STDMETHODIMP_(ULONG) Release();
 
-    HRESULT Wait(DWORD* streamFlags, LONGLONG* timestamp, IMFSample* sample) { return S_OK;  }
-    HRESULT Cancel() { return S_OK; } 
+        STDMETHODIMP OnReadSample(HRESULT hr, DWORD streamIndex, DWORD streamFlags, LONGLONG timestamp, IMFSample* sample);
+        STDMETHODIMP OnEvent(DWORD streamIndex, IMFMediaEvent* event);
+        STDMETHODIMP OnFlush(DWORD streamIndex);
 
-  private:
-    MediaFoundation_Callback(MediaFoundation_Camera* cam);
-    virtual ~MediaFoundation_Callback();
+        HRESULT Wait(DWORD* streamFlags, LONGLONG* timestamp, IMFSample* sample) { return S_OK;  }
+        HRESULT Cancel() { return S_OK; }
 
-  private:
-    MediaFoundation_Camera* cam;
-    long ref_count;
-    CRITICAL_SECTION crit_sec;
-  };
+    private:
+        MediaFoundation_Callback(MediaFoundation_Camera* cam);
+        virtual ~MediaFoundation_Callback();
+
+    private:
+        MediaFoundation_Camera* cam;
+        long ref_count;
+        CRITICAL_SECTION crit_sec;
+    };
 } // namespace webcam_capture
 
 
