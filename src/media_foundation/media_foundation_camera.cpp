@@ -15,7 +15,7 @@ namespace webcam_capture {
 
     }
 
-    CameraInterface* MediaFoundation_Camera::createCamera(std::shared_ptr<void> mfDeinitializer, CameraInformation &information) {
+    CameraInterface* MediaFoundation_Camera::createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information) {
         IMFMediaSource * mediaSource = NULL;
         // Create the MediaSource
 

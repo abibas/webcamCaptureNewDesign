@@ -32,6 +32,7 @@ SOURCES += main.cpp\
     mainwindow.cpp \
     videoform.cpp \
     cameraform.cpp \
+    ../src/unique_id.cpp
 
 HEADERS  += \
     ../include/backend_interface.h \
@@ -45,7 +46,6 @@ HEADERS  += \
     ../include/capability.h \
     ../include/image_format_converter.h \
     ../include/backend_factory.h \
-    ../include/unique_id_interface.h \
     ../src/utils.h \
     ../src/media_foundation/media foundation_callback.h \
     ../src/media_foundation/media_foundation_backend.h \
@@ -56,7 +56,8 @@ HEADERS  += \
     ../src/media_foundation/media_foundation_unique_id.h \
     mainwindow.h \
     videoform.h \
-    cameraform.h
+    cameraform.h \
+    ../include/unique_id.h
 
 FORMS    += \
     mainwindow.ui \

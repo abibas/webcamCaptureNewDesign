@@ -40,7 +40,7 @@ namespace webcam_capture {
     class MediaFoundation_Camera : public CameraInterface {
     public:        
         ~MediaFoundation_Camera();
-        static CameraInterface* createCamera(std::shared_ptr<void> mfDeinitializer, CameraInformation &information);
+        static CameraInterface* createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
 
         int start(const CapabilityFormat &capabilityFormat, const CapabilityResolution &capabilityResolution, const CapabilityFps &capabilityFps, frame_callback cb);
         int stop();

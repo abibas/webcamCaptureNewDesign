@@ -28,15 +28,14 @@ namespace webcam_capture {
         hr = MFStartup(MF_VERSION);
         if(FAILED(hr)) {
             DEBUG_PRINT("Error: cannot startup the Media Foundation.\n");
-        }
-        notificationManager = new MediaFoundation_CameraNotifications();
+        }        
     }
 
     MediaFoundation_Backend::~MediaFoundation_Backend() {
         delete notificationManager;
     }
 
-    void MediaFoundation_Backend::DeinitBackend(void*){
+    void MediaFoundation_Backend::DeinitBackend(void *){
         /* Shutdown MediaFoundation */
         HRESULT hr = MFShutdown();
         if(FAILED(hr)) {
@@ -82,7 +81,8 @@ namespace webcam_capture {
 
             if(SUCCEEDED(hr1) && SUCCEEDED(hr2)) {
                 std::string name = string_cast<std::string>(friendly_name);
-                UniqueIdInterface *uniqueId = new MediaFoundation_UniqueId(symbolic_link);
+                //MediaFoundation_UniqueId mfUniqueId(symbolic_link);
+                UniqueId * uniqueId = new MediaFoundation_UniqueId(symbolic_link);
                 CameraInformation camInfo(uniqueId, name);
                 result.push_back(camInfo);
             }
@@ -102,19 +102,79 @@ namespace webcam_capture {
         return result;
     }
 
-    CameraInterface* MediaFoundation_Backend::getCamera(CameraInformation &information) const{
+    CameraInterface* MediaFoundation_Backend::getCamera(const CameraInformation &information) const{
         return MediaFoundation_Camera::createCamera(mfDeinitializer, information);
     }
 
     int MediaFoundation_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback){
+        if (notificationManager == nullptr) {
+            notificationManager = new MediaFoundation_CameraNotifications();
+        }
         //IF n_callback is null_ptr or n_callback function is empty
         if ( !n_callback ) {
             notificationManager->Stop();
-            DEBUG_PRINT("The callback function is empty. Capturing was stopped.\n");
+            DEBUG_PRINT("Notifications capturing was stopped.\n");
             return -1;      //TODO Err code
         }
         notificationManager->Start(n_callback);
+        DEBUG_PRINT("Notifications apturing was started.\n");
         return 1; //TODO ERR code (success)
+    }
+
+    int MediaFoundation_Backend::getCameraNameBySymbolicLink(WCHAR * symbolicLink, std::string cameraName){
+        //TODO WRONG WAY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//        UINT32 count = 0;
+//        IMFAttributes *pAttributes = NULL;
+//        IMFMediaSource **pSource = NULL;
+//        IMFActivate **ppDevices = NULL;
+
+//        HRESULT hr = MFCreateAttributes(&pAttributes, 2);
+
+//        // Set the device type to video.
+//        if (SUCCEEDED(hr))
+//        {
+//            hr = pAttributes->SetGUID(
+//                MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
+//                MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID
+//                );
+//        }
+
+//        // Enumerate the devices,
+//        if (SUCCEEDED(hr))
+//        {
+//            hr = MFEnumDeviceSources(pAttributes, &ppDevices, &count);
+//        }
+
+//        // Set the symbolic link.
+//        if (SUCCEEDED(hr))
+//        {
+//            hr = pAttributes->SetString(
+//                MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
+//                (LPCWSTR)symbolicLink
+//                );
+//        }
+
+//        if (SUCCEEDED(hr))
+//        {
+//            hr = MFCreateDeviceSource(pAttributes, pSource);
+//        }
+
+//        pDevice->ActivateObject(IID_PPV_ARGS(pSource));
+//        if (FAILED(hr)) {
+//            return -5; //TODO err codes
+//        }
+
+//        WCHAR* friendly_name = NULL;
+//        UINT32 friendly_name_len = 0;
+
+//        hr = pDevice->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME,  &friendly_name, &friendly_name_len);
+//        if (FAILED(hr)) {
+//            return -6; //TODO err codes
+//        }
+
+
+//        safeReleaseMediaFoundation(&pAttributes);
+        return 1;
     }
 
 } // namespace webcam_capture

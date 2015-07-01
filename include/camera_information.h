@@ -7,7 +7,7 @@
 #ifndef CAMERA_INFORMATION_H
 #define CAMERA_INFORMATION_H
 #include <string.h>
-#include <unique_id_interface.h>
+#include <unique_id.h>
 
 namespace webcam_capture {
 
@@ -20,19 +20,14 @@ namespace webcam_capture {
        * @param cameraId Camera Id
        * @param cameraName Camera Name
        */
-      CameraInformation(UniqueIdInterface *uniqueId, std::string cameraName) : uniqueId(uniqueId), cameraName (cameraName) {}
+      CameraInformation(UniqueId * uniqueId, std::string cameraName) : uniqueId(uniqueId), cameraName (cameraName) {}
       ~CameraInformation() {}
-
-      /**
-       * @return Camera Id
-       */
-      //int getDeviceId() const { return cameraId; }
 
 
       /**
        * @return Camera unique Id
        */
-      UniqueIdInterface * getUniqueId() { return uniqueId; }
+      UniqueId* getUniqueId() const { return uniqueId; }
 
       /**
        * @return Camera Name
@@ -40,12 +35,9 @@ namespace webcam_capture {
       std::string getCameraName() const { return cameraName; }
 
     private:
-      //const int cameraId;
       std::string cameraName;
-      UniqueIdInterface * uniqueId;
-
+      UniqueId * uniqueId;
     };
-
 } // namespace webcam_capture
 
 #endif // CAMERA_INFORMATION_H

@@ -106,10 +106,11 @@ void MainWindow::CameraEventCaptureCallback(CameraInformation &information, Came
     } else if (status == CameraPlugStatus::CAMERA_DISCONNECTED) {
         for (int i = 0; i < cameraInfoList.size(); i++)
         {
-//            if (information.getDeviceId() == cameraInfoList.at(i).getDeviceId() &&
-//                information.getCameraName() == cameraInfoList.at(i).getCameraName() ) {
-//                //cameraInfoList.erase(i);
-//            }
+            if (*information.getUniqueId() == *cameraInfoList.at(i).getUniqueId() &&
+                information.getCameraName() == cameraInfoList.at(i).getCameraName() ) {
+                //cameraInfoList.erase(i);
+                int x = 0;
+            }
         }
     }
     this->fillCameraListCB();
