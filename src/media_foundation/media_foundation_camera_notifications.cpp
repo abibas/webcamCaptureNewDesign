@@ -120,8 +120,13 @@ namespace webcam_capture {
     void MediaFoundation_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr){
         DEV_BROADCAST_DEVICEINTERFACE *pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
         UniqueId * uniqId = new MediaFoundation_UniqueId(pDi->dbcc_name);
-        CameraInformation * camInf = new CameraInformation(uniqId, "");
-        notif_cb(camInf, CameraPlugStatus::CAMERA_DISCONNECTED);
+        for (int i = 0; i < devicesVector.size(); i++) {
+            if ( *uniqId == *devicesVector.at(i)->getUniqueId() ) {
+                notif_cb(devicesVector.at(i), CameraPlugStatus::CAMERA_DISCONNECTED);
+                devicesVector.erase(devicesVector.begin() + i);
+                break;
+            }
+        }
     }
 
     void MediaFoundation_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHdr){
@@ -132,7 +137,7 @@ namespace webcam_capture {
             if ( *camerasBuf.at(i)->getUniqueId() == *uniqId ) {
                 CameraInformation * camNotifRes = new CameraInformation(*camerasBuf.at(i)); // creates a copy of object
                 notif_cb(camNotifRes, CameraPlugStatus::CAMERA_CONNECTED);
-                this->devicesVector.push_back(camerasBuf.at(i));
+                devicesVector.push_back(camerasBuf.at(i));
             } else {
                 delete camerasBuf.at(i);
             }

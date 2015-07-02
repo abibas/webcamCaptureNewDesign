@@ -108,9 +108,10 @@ void MainWindow::CameraEventCaptureCallback(CameraInformation *information, Came
         {
             if (*information->getUniqueId() == *cameraInfoList.at(i)->getUniqueId() &&
                 information->getCameraName() == cameraInfoList.at(i)->getCameraName() ) {
-                delete cameraInfoList.at(i); ///?????????
-                //cameraInfoList.erase(i); ???????
-                int x = 0;
+                delete cameraInfoList.at(i);
+                cameraInfoList.erase(cameraInfoList.begin() + i);
+                delete information;
+                break;
             }
         }
     }
