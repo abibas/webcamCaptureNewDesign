@@ -47,9 +47,9 @@ namespace webcam_capture {
         DEBUG_PRINT("MediaFoundation_Backend Successfully deinited.\n");
     }
 
-    std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() const{
+    std::vector<CameraInformation*> MediaFoundation_Backend::getAvailableCameras() const{
 
-        std::vector<CameraInformation> result;
+        std::vector<CameraInformation*> result;
         UINT32 count = 0;
         IMFAttributes* config = NULL;
         IMFActivate** devices = NULL;
@@ -83,7 +83,7 @@ namespace webcam_capture {
                 std::string name = string_cast<std::string>(friendly_name);
                 //MediaFoundation_UniqueId mfUniqueId(symbolic_link);
                 UniqueId * uniqueId = new MediaFoundation_UniqueId(symbolic_link);
-                CameraInformation camInfo(uniqueId, name);
+                CameraInformation * camInfo = new CameraInformation(uniqueId, name);
                 result.push_back(camInfo);
             }
 
@@ -119,62 +119,6 @@ namespace webcam_capture {
         notificationManager->Start(n_callback);
         DEBUG_PRINT("Notifications apturing was started.\n");
         return 1; //TODO ERR code (success)
-    }
-
-    int MediaFoundation_Backend::getCameraNameBySymbolicLink(WCHAR * symbolicLink, std::string cameraName){
-        //TODO WRONG WAY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//        UINT32 count = 0;
-//        IMFAttributes *pAttributes = NULL;
-//        IMFMediaSource **pSource = NULL;
-//        IMFActivate **ppDevices = NULL;
-
-//        HRESULT hr = MFCreateAttributes(&pAttributes, 2);
-
-//        // Set the device type to video.
-//        if (SUCCEEDED(hr))
-//        {
-//            hr = pAttributes->SetGUID(
-//                MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,
-//                MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID
-//                );
-//        }
-
-//        // Enumerate the devices,
-//        if (SUCCEEDED(hr))
-//        {
-//            hr = MFEnumDeviceSources(pAttributes, &ppDevices, &count);
-//        }
-
-//        // Set the symbolic link.
-//        if (SUCCEEDED(hr))
-//        {
-//            hr = pAttributes->SetString(
-//                MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
-//                (LPCWSTR)symbolicLink
-//                );
-//        }
-
-//        if (SUCCEEDED(hr))
-//        {
-//            hr = MFCreateDeviceSource(pAttributes, pSource);
-//        }
-
-//        pDevice->ActivateObject(IID_PPV_ARGS(pSource));
-//        if (FAILED(hr)) {
-//            return -5; //TODO err codes
-//        }
-
-//        WCHAR* friendly_name = NULL;
-//        UINT32 friendly_name_len = 0;
-
-//        hr = pDevice->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME,  &friendly_name, &friendly_name_len);
-//        if (FAILED(hr)) {
-//            return -6; //TODO err codes
-//        }
-
-
-//        safeReleaseMediaFoundation(&pAttributes);
-        return 1;
     }
 
 } // namespace webcam_capture

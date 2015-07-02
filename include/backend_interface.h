@@ -25,7 +25,7 @@ namespace webcam_capture {
     /**
     * notifications_callback Typedef for nnotifications callback
     */
-    typedef std::function<void(CameraInformation& information, CameraPlugStatus status)> notifications_callback;
+    typedef std::function<void(CameraInformation* information, CameraPlugStatus status)> notifications_callback;
 
     /**
      * Contains Interface for Backend realization
@@ -37,7 +37,7 @@ namespace webcam_capture {
         /**
          * @return Vectod of avaliable cameras
          */
-        virtual std::vector<CameraInformation> getAvailableCameras() const = 0;
+        virtual std::vector<CameraInformation*> getAvailableCameras() const = 0;
         /**
          * @param information Camera information with Id and Name
          * @return New camera instance

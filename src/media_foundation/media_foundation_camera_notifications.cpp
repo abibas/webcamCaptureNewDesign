@@ -120,17 +120,22 @@ namespace webcam_capture {
     void MediaFoundation_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr){
         DEV_BROADCAST_DEVICEINTERFACE *pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
         UniqueId * uniqId = new MediaFoundation_UniqueId(pDi->dbcc_name);
-        CameraInformation camInf(uniqId, "");
+        CameraInformation * camInf = new CameraInformation(uniqId, "");
         notif_cb(camInf, CameraPlugStatus::CAMERA_DISCONNECTED);
     }
 
     void MediaFoundation_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHdr){
         DEV_BROADCAST_DEVICEINTERFACE *pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
         UniqueId * uniqId = new MediaFoundation_UniqueId(pDi->dbcc_name);
-        std::string cameraName;
-//        this->backend->getCameraNameBySymbolicLink(pDi->dbcc_name, cameraName);
-
-        CameraInformation camInf(uniqId, "");
-        notif_cb(camInf, CameraPlugStatus::CAMERA_CONNECTED);
+        std::vector <CameraInformation*> camerasBuf = backend->getAvailableCameras();
+        for (int i = 0; i < camerasBuf.size(); i++) {
+            if ( *camerasBuf.at(i)->getUniqueId() == *uniqId ) {
+                CameraInformation * camNotifRes = new CameraInformation(*camerasBuf.at(i)); // creates a copy of object
+                notif_cb(camNotifRes, CameraPlugStatus::CAMERA_CONNECTED);
+                this->devicesVector.push_back(camerasBuf.at(i));
+            } else {
+                delete camerasBuf.at(i);
+            }
+        }
     }
 }// namespace webcam_capture

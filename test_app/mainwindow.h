@@ -24,7 +24,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    void CameraEventCaptureCallback(CameraInformation& information, CameraPlugStatus status);
+    void CameraEventCaptureCallback(CameraInformation *information, CameraPlugStatus status);
 
 private slots:
     void on_createBackendBtn_clicked();
@@ -39,7 +39,7 @@ private:
 
 
     std::vector<BackendImplementation> backendList;
-    std::vector<CameraInformation> cameraInfoList;
+    std::vector<CameraInformation*> cameraInfoList;
     BackendInterface* backend;
 
     Ui::MainWindow *ui;
