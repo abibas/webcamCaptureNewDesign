@@ -79,7 +79,12 @@ namespace webcam_capture {
         UnregisterDeviceNotification(hDevNotify);
         DestroyWindow(messageWindow);
         UnregisterClass(windowClass.lpszClassName, NULL);
-        notif_cb = nullptr;
+        notif_cb = nullptr;               
+        //delete all records from cameraInfo vector
+        for (int i = 0; i < devicesVector.size(); i++){
+            delete devicesVector.at(i);
+        }
+
         DEBUG_PRINT("Notifications capturing was stopped.\n");
     }
 
