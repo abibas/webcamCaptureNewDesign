@@ -75,7 +75,7 @@ namespace webcam_capture {
         if( messageLoopThread.joinable() ) messageLoopThread.join();
         UnregisterDeviceNotification(hDevNotify);
         DestroyWindow(messageWindow);
-        UnregisterClassW(windowClass.lpszClassName, NULL);
+        UnregisterClass(windowClass.lpszClassName, NULL);
         notif_cb = nullptr;
     }
 
