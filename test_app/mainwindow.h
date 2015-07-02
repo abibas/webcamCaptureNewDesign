@@ -32,6 +32,10 @@ private slots:
     void on_cameraListComboBox_currentIndexChanged(int index);
     void on_deleteBackendBtn_clicked();
 
+    void on_stopNotificationsButton_clicked();
+
+    void on_startNotificationsButton_clicked();
+
 private:
     void fillFrameworkListCB();
     void fillCameraListCB();

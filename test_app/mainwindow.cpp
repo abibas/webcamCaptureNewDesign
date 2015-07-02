@@ -20,7 +20,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->ui->deleteBackendBtn->setDisabled(true);
     this->ui->createCameraBtn->setDisabled(true);
-
+    this->ui->startNotificationsButton->setDisabled(true);
+    this->ui->stopNotificationsButton->setDisabled(true);
     fillFrameworkListCB();
 }
 
@@ -65,9 +66,10 @@ void MainWindow::on_createBackendBtn_clicked()
     this->ui->createCameraBtn->setDisabled(false);
     this->ui->deleteBackendBtn->setDisabled(false);
     backend = BackendFactory::getBackend(backendList[this->ui->frameworkListComboBox->currentIndex()]);
-    backend->setAvaliableCamerasChangedCallback(std::bind(&MainWindow::CameraEventCaptureCallback, this, _1, _2));
     cameraInfoList = backend->getAvailableCameras();
     fillCameraListCB();
+    this->ui->startNotificationsButton->setDisabled(false);
+    this->ui->stopNotificationsButton->setDisabled(false);
 }
 
 
@@ -94,7 +96,9 @@ void MainWindow::on_deleteBackendBtn_clicked()
     this->ui->createCameraBtn->setDisabled(true);
     this->ui->cameraListComboBox->clear();
 
-    backend->setAvaliableCamerasChangedCallback(nullptr); //deinit notifications callback
+    this->ui->startNotificationsButton->setDisabled(true);
+    this->ui->stopNotificationsButton->setDisabled(true);
+
     delete this->backend;
     this->backend = NULL;
 }
@@ -116,4 +120,14 @@ void MainWindow::CameraEventCaptureCallback(CameraInformation *information, Came
         }
     }
     this->fillCameraListCB();
+}
+
+void MainWindow::on_stopNotificationsButton_clicked()
+{
+    backend->setAvaliableCamerasChangedCallback(nullptr); //deinit notifications callback
+}
+
+void MainWindow::on_startNotificationsButton_clicked()
+{
+    backend->setAvaliableCamerasChangedCallback(std::bind(&MainWindow::CameraEventCaptureCallback, this, _1, _2));
 }

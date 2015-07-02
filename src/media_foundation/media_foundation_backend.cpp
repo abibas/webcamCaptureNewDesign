@@ -113,11 +113,9 @@ namespace webcam_capture {
         //IF n_callback is null_ptr or n_callback function is empty
         if ( !n_callback ) {
             notificationManager->Stop();
-            DEBUG_PRINT("Notifications capturing was stopped.\n");
             return -1;      //TODO Err code
         }
         notificationManager->Start(n_callback);
-        DEBUG_PRINT("Notifications apturing was started.\n");
         return 1; //TODO ERR code (success)
     }
 

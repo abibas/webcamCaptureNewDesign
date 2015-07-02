@@ -58,7 +58,9 @@ namespace webcam_capture {
     }
 
     MediaFoundation_CameraNotifications::~MediaFoundation_CameraNotifications(){
-        this->Stop();
+        if ( !stopMessageThread ) {
+            this->Stop();
+        }
         delete backend;
     }
 
@@ -66,9 +68,10 @@ namespace webcam_capture {
         notif_cb = cb;
         stopMessageThread = false;
         messageLoopThread = std::thread(&MediaFoundation_CameraNotifications::MessageLoop, this);
+        DEBUG_PRINT("Notifications apturing was started.\n");
     }
 
-    void MediaFoundation_CameraNotifications::Stop(){
+    void MediaFoundation_CameraNotifications::Stop(){        
         //TODO executes 2 times - to fix this.
         stopMessageThread = true;
         SendMessageA(messageWindow, WM_USER, 0, QUIT_FROM_NOTIFICATIONS_LOOP);
@@ -77,6 +80,7 @@ namespace webcam_capture {
         DestroyWindow(messageWindow);
         UnregisterClass(windowClass.lpszClassName, NULL);
         notif_cb = nullptr;
+        DEBUG_PRINT("Notifications capturing was stopped.\n");
     }
 
     void MediaFoundation_CameraNotifications::MessageLoop(){
