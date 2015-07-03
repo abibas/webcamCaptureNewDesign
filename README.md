@@ -32,6 +32,9 @@ Library should allow a library user to do the following:
 - Linux
   - V4L/V4L2 backend
 
+##Building
+See [INSTALL.md](INSTALL.md).
+
 ##About
 This is a Google Summer of Code 2015 project for [Project Tox organization](https://www.google-melange.com/gsoc/org2/google/gsoc2015/tox).
 
