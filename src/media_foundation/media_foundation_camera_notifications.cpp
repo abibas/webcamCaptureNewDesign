@@ -3,7 +3,6 @@
 #include "../media_foundation/media_foundation_unique_id.h"
 #include "../utils.h"
 
-
 #include <iostream>
 #include <ks.h>
 #include <Ksmedia.h>
@@ -78,7 +77,7 @@ namespace webcam_capture {
         if( messageLoopThread.joinable() ) messageLoopThread.join();
         UnregisterDeviceNotification(hDevNotify);
         DestroyWindow(messageWindow);
-        UnregisterClass(windowClass.lpszClassName, NULL);
+        UnregisterClassA(windowClass.lpszClassName, NULL);
         notif_cb = nullptr;               
         //delete all records from cameraInfo vector
         for (int i = 0; i < devicesVector.size(); i++){
@@ -92,15 +91,17 @@ namespace webcam_capture {
         //create stream to move to new stream
         windowClass = {};
         windowClass.lpfnWndProc = &MediaFoundation_CameraNotifications::WindowProcedure;
-        LPCWSTR windowClassName = L"CameraNotificationsMessageOnlyWindow";
+        //LPCWSTR windowClassName = L"CameraNotificationsMessageOnlyWindow";
+
+        LPCSTR windowClassName = "CameraNotificationsMessageOnlyWindow";
         windowClass.lpszClassName = windowClassName;
 
-        if (!RegisterClass(&windowClass)) {
+        if (!RegisterClassA(&windowClass)) {
             DEBUG_PRINT("Failed to register window class.\n");
             return;
         }
 
-        messageWindow = CreateWindow(windowClassName,0 ,0 ,0 ,0 ,0 ,0 , HWND_MESSAGE ,0 ,0 ,this);
+        messageWindow = CreateWindowA(windowClassName,0 ,0 ,0 ,0 ,0 ,0 , HWND_MESSAGE ,0 ,0 ,this);
         if (!messageWindow) {
             DEBUG_PRINT("Failed to create message-only window.\n");
             return;
@@ -127,7 +128,7 @@ namespace webcam_capture {
     }
 
     void MediaFoundation_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr){
-        DEV_BROADCAST_DEVICEINTERFACE *pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
+        DEV_BROADCAST_DEVICEINTERFACE_W *pDi = (DEV_BROADCAST_DEVICEINTERFACE_W*)pHdr;
         UniqueId * uniqId = new MediaFoundation_UniqueId(pDi->dbcc_name);
         for (int i = 0; i < devicesVector.size(); i++) {
             if ( *uniqId == *devicesVector.at(i)->getUniqueId() ) {
@@ -139,7 +140,7 @@ namespace webcam_capture {
     }
 
     void MediaFoundation_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHdr){
-        DEV_BROADCAST_DEVICEINTERFACE *pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
+        DEV_BROADCAST_DEVICEINTERFACE_W *pDi = (DEV_BROADCAST_DEVICEINTERFACE_W*)pHdr;
         UniqueId * uniqId = new MediaFoundation_UniqueId(pDi->dbcc_name);
         std::vector <CameraInformation*> camerasBuf = backend->getAvailableCameras();
         for (int i = 0; i < camerasBuf.size(); i++) {
