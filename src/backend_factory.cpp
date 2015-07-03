@@ -1,6 +1,6 @@
 #include <backend_factory.h>
 
-#ifdef MEDIA_FOUNDATION
+#ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
     #include "../src/media_foundation/media_foundation_backend.h"
 #endif
 #ifdef V4L
@@ -17,7 +17,7 @@ namespace webcam_capture {
 
     BackendInterface* BackendFactory::getBackend(BackendImplementation implementation) {
         switch (implementation) {
-            #ifdef MEDIA_FOUNDATION
+            #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
             case BackendImplementation::MediaFoundation: {
                 return new MediaFoundation_Backend();
             }
@@ -38,7 +38,7 @@ namespace webcam_capture {
 
     std::vector<BackendImplementation> BackendFactory::getAvailableBackends(){
         std::vector<BackendImplementation> result;
-        #ifdef MEDIA_FOUNDATION
+        #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
             result.push_back(BackendImplementation::MediaFoundation);
         #endif
 
