@@ -38,9 +38,9 @@ namespace webcam_capture  {
          */
         const int fps;
 
-        friend class MediaFoundation_Camera;  //to move to ifdef. TODO
-
-
+        #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
+            friend class MediaFoundation_Camera;  //to move to ifdef. TODO
+        #endif
     };
 
 
@@ -91,8 +91,9 @@ namespace webcam_capture  {
          * @brief Resolution fps vector
          */
         const std::vector<CapabilityFps> fpses;
-
-        friend class MediaFoundation_Camera;  //to move to ifdef. TODO
+        #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
+            friend class MediaFoundation_Camera;  //to move to ifdef. TODO
+        #endif
     };
 
 
@@ -133,7 +134,9 @@ namespace webcam_capture  {
          */
         const std::vector<CapabilityResolution> resolutions;
 
-        friend class MediaFoundation_Camera;  //to move to ifdef. TODO
+        #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
+            friend class MediaFoundation_Camera;  //to move to ifdef. TODO
+        #endif
     };
 } // namespace webcam_capture
 

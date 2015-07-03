@@ -57,10 +57,10 @@ void VideoForm::setCapturingStatus(bool isCapturing){
 QImage VideoForm::YUV422toRGBA32(PixelBuffer& buffer)
 {
     const unsigned char *frame = buffer.plane[0];
-    unsigned int frameSize = buffer.nbytes;
+    size_t frameSize = buffer.nbytes;
 
-    int height = buffer.height[0];
-    int width = buffer.width[0];
+    size_t height = buffer.height[0];
+    size_t width = buffer.width[0];
 
     std::vector<int> redContainer;
     std::vector<int> greenContainer;
@@ -107,7 +107,7 @@ QImage VideoForm::YUV422toRGBA32(PixelBuffer& buffer)
        greenContainer.push_back(g2);
        blueContainer.push_back(b2);
     }
-    QImage rgbImage = QImage(width, height, QImage::Format_RGBA8888);
+    QImage rgbImage = QImage((int)width, (int)height, QImage::Format_RGBA8888);
     int pixelCounter = -1;
     for ( int i = 0; i < height; ++i ) {
         for ( int j = 0; j < width; ++j ) {

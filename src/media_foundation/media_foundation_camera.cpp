@@ -378,11 +378,11 @@ namespace webcam_capture {
 
         PROPVARIANT var;
         for(DWORD i = 0; i < types_count; ++i) {
-            Format pixelFormatBuf;
-            int widthBuf;
-            int heightBuf;
-            int fpsBuf;
-            int currentFpsBuf;
+            Format pixelFormatBuf = Format::UNKNOWN;
+            int widthBuf = 0;
+            int heightBuf = 0;
+            int fpsBuf = 0;
+            int currentFpsBuf = 0;
 
             hr = media_handler->GetMediaTypeByIndex(i, &type);
 
@@ -536,9 +536,9 @@ namespace webcam_capture {
         int currentFpsBuf;
 
         while(SUCCEEDED(hr)) {
-            Format pixelFormatBuf;
-            int widthBuf;
-            int heightBuf;
+            Format pixelFormatBuf = Format::UNKNOWN;
+            int widthBuf = 0;
+            int heightBuf = 0;
             IMFMediaType* type = NULL;
 
             hr = reader->GetNativeMediaType(0, media_type_index, &type);

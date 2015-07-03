@@ -7,7 +7,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#ifdef DEBUG_VERSION
+#ifdef WEBCAM_CAPTURE_DEBUG
     #define DEBUG_PRINT(x) std::cerr << x << std::endl
 #else
     #define DEBUG_PRINT(x)
@@ -18,7 +18,7 @@
 
 namespace webcam_capture {
   
-    int fps_from_rational(uint64_t num, uint64_t den); // TODO to research what this method is doing
+    int fps_from_rational(uint64_t num, uint64_t den); // convert fps from UINT32 high, low - to 1 int value.
   
 } // namespace webcam_capture
 
