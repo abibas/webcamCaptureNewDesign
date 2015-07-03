@@ -41,7 +41,11 @@ endif()
 
 aux_source_directory(. SRC_LIST)
 
-add_library(${TARGET} ${SRC_LIST} ${BACKEND_SRC_LIST})
+# get a list of public headers for them to appear in Qt Creator
+# also used for installation
+file(GLOB INCLUDE_LIST ${CMAKE_SOURCE_DIR}/include/*.h)
+
+add_library(${TARGET} ${SRC_LIST} ${INCLUDE_LIST} ${BACKEND_SRC_LIST})
 target_link_libraries(${TARGET} ${LIBS})
 
 # make public headers globally available
@@ -116,9 +120,7 @@ if (WIN32)
   )
 endif()
 
-
 # set a list of public headers for the further installation of them
-file(GLOB INCLUDE_LIST ${CMAKE_SOURCE_DIR}/include/*.h)
 set_target_properties(${TARGET} PROPERTIES PUBLIC_HEADER "${INCLUDE_LIST}")
 
 INSTALL(TARGETS ${TARGET}
