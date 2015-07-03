@@ -12,7 +12,9 @@
 
 namespace webcam_capture  {
 
-    class MediaFoundation_Camera;   //to move to ifdef. TODO
+    #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
+        class MediaFoundation_Camera;   //to move to ifdef. TODO
+    #endif
 
     /**
     * Contains valid values of a FPS
