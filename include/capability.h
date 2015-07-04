@@ -8,7 +8,9 @@
 #define CAPABILITY_H
 
 #include <vector>
+
 #include <format.h>
+#include <webcam_capture_export.h>
 
 namespace webcam_capture  {
 
@@ -19,7 +21,7 @@ namespace webcam_capture  {
     /**
     * Contains valid values of a FPS
     */
-    class CapabilityFps {
+    class WEBCAM_CAPTURE_EXPORT CapabilityFps {
     public:
         ~CapabilityFps() {}
 
@@ -50,7 +52,7 @@ namespace webcam_capture  {
     /**
     * Contains valid values of a width, height and fpses vector
     */
-    class CapabilityResolution {
+    class WEBCAM_CAPTURE_EXPORT CapabilityResolution {
     public:
         ~CapabilityResolution() {}
 
@@ -102,7 +104,7 @@ namespace webcam_capture  {
     /**
     * Contains valid values of a PixelFormat and Resolutions vector
     */
-    class CapabilityFormat{
+    class WEBCAM_CAPTURE_EXPORT CapabilityFormat{
     public:
         ~CapabilityFormat() {}
         /**

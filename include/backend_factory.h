@@ -1,14 +1,16 @@
 #ifndef BACKEND_FACTORY
 #define BACKEND_FACTORY
-#include <backend_interface.h>
+
 #include <backend_implementation.h>
+#include <backend_interface.h>
+#include <webcam_capture_export.h>
 
 namespace webcam_capture {
 
     /**
      *  The class representing the factory for BackendInterface entities creating.
      */
-    class BackendFactory {
+    class WEBCAM_CAPTURE_EXPORT BackendFactory {
     public:
         /**
          * @param Specifies a backend you want to use

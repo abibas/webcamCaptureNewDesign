@@ -12,11 +12,13 @@
 #ifndef FORMAT_H
 #define FORMAT_H
 
+#include <webcam_capture_export.h>
+
 namespace webcam_capture {
     /**
      * Enum of supported video capture formats
      */
-    enum class Format { //Uncompressed RGB Formats
+    enum class WEBCAM_CAPTURE_EXPORT Format { //Uncompressed RGB Formats
                         RGB8,           /* RGB, 8 bits per pixel (bpp)*/
                         RGB555,         /* RGB 555, 16 bpp*/
                         RGB565,         /* RGB 565, 16 bpp*/
