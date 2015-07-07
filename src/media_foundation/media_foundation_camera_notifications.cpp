@@ -91,12 +91,11 @@ namespace webcam_capture {
         //create stream to move to new stream
         windowClass = {};
         windowClass.lpfnWndProc = &MediaFoundation_CameraNotifications::WindowProcedure;
-        //LPCWSTR windowClassName = L"CameraNotificationsMessageOnlyWindow";
 
         LPCSTR windowClassName = "CameraNotificationsMessageOnlyWindow";
         windowClass.lpszClassName = windowClassName;
 
-        if (!RegisterClassA(&windowClass)) {
+        if (!RegisterClass(&windowClass)) {
             DEBUG_PRINT("Failed to register window class.\n");
             return;
         }
@@ -116,7 +115,7 @@ namespace webcam_capture {
         NotificationFilter.dbcc_classguid  = KSCATEGORY_VIDEO;
 
 
-        hDevNotify = RegisterDeviceNotification(messageWindow, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
+        hDevNotify = RegisterDeviceNotificationW(messageWindow, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
 
         MSG msg;
         GetMessage(&msg, messageWindow, 0, 0);

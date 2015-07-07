@@ -31,7 +31,7 @@ namespace webcam_capture {
         MediaFoundation_Backend * backend;
         std::vector<CameraInformation*> devicesVector;
         HDEVNOTIFY hDevNotify;
-        WNDCLASSA windowClass;
+        WNDCLASS windowClass;
         HWND messageWindow;
 
         bool stopMessageThread;
