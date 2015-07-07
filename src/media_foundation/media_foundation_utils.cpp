@@ -45,7 +45,9 @@ namespace webcam_capture {
         else if(IsEqualGUID(guid, MFVideoFormat_DVHD)) { return Format::DVHD; }
         else if(IsEqualGUID(guid, MFVideoFormat_DVSD)) { return Format::DVSD; }
         else if(IsEqualGUID(guid, MFVideoFormat_DVSL)) { return Format::DVSL; }
+#if (WINVER >= _WIN32_WINNT_WIN8)
         else if(IsEqualGUID(guid, MFVideoFormat_H263)) { return Format::H263; }
+#endif
         else if(IsEqualGUID(guid, MFVideoFormat_H264)) { return Format::H264; }
         else if(IsEqualGUID(guid, MFVideoFormat_H264_ES)) { return Format::H264_ES; }
         else if(IsEqualGUID(guid, MFVideoFormat_HEVC)) { return Format::HEVC; }
