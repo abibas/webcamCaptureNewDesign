@@ -12,15 +12,17 @@
 
 namespace webcam_capture  {
 
-    #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
-        class MediaFoundation_Camera;   //to move to ifdef. TODO
-    #endif
-
     /**
     * Contains valid values of a FPS
     */
     class CapabilityFps {
     public:
+        /**
+         * @param fps Capability FPS
+         */
+        CapabilityFps(int fps) :
+            fps(fps) {}
+
         ~CapabilityFps() {}
 
         /**
@@ -28,21 +30,10 @@ namespace webcam_capture  {
          */
         int getFps() const { return fps; }
     private:
-
-        /**
-         * @param fps Capability FPS
-         */
-        CapabilityFps(int fps) :
-            fps(fps) {}
-
         /**
          * @brief fps Fps value
          */
         const int fps;
-
-        #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
-            friend class MediaFoundation_Camera;  //to move to ifdef. TODO
-        #endif
     };
 
 
@@ -52,6 +43,16 @@ namespace webcam_capture  {
     */
     class CapabilityResolution {
     public:
+        /**
+         * @param width CapbilityResolution width
+         * @param height CapabilityResolution height
+         * @param fpses CapabilityResolution fpses vector
+         */
+        CapabilityResolution (int width, int height, std::vector<CapabilityFps> fpses) :
+            width(width),
+            height(height),
+            fpses(fpses) {}
+
         ~CapabilityResolution() {}
 
         /**
@@ -69,17 +70,6 @@ namespace webcam_capture  {
          */
         const  std::vector<CapabilityFps>& getFpses() const { return fpses; }
     private:
-
-        /**
-         * @param width CapbilityResolution width
-         * @param height CapabilityResolution height
-         * @param fpses CapabilityResolution fpses vector
-         */
-        CapabilityResolution (int width, int height, std::vector<CapabilityFps> fpses) :
-            width(width),
-            height(height),
-            fpses(fpses) {}
-
         /**
          * @brief width Resolution width
          */
@@ -93,9 +83,6 @@ namespace webcam_capture  {
          * @brief Resolution fps vector
          */
         const std::vector<CapabilityFps> fpses;
-        #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
-            friend class MediaFoundation_Camera;  //to move to ifdef. TODO
-        #endif
     };
 
 
@@ -104,7 +91,17 @@ namespace webcam_capture  {
     */
     class CapabilityFormat{
     public:
+        /**
+         * @param pixelFormat Capability pixel format
+         * @param pixelFormatIndex The pixel format one of the Format enum.
+         * @param resolutions
+         */
+        CapabilityFormat (Format pixelFormat, std::vector<CapabilityResolution> resolutions):
+            pixelFormat(pixelFormat),
+            resolutions(resolutions) {}
+
         ~CapabilityFormat() {}
+
         /**
          * @return Capability pixel format
          */
@@ -116,16 +113,6 @@ namespace webcam_capture  {
         const std::vector<CapabilityResolution>& getResolutions() const { return resolutions; }
 
     private:
-
-        /**
-         * @param pixelFormat Capability pixel format
-         * @param pixelFormatIndex The pixel format one of the Format enum.
-         * @param resolutions
-         */
-        CapabilityFormat (Format pixelFormat, std::vector<CapabilityResolution> resolutions):
-            pixelFormat(pixelFormat),
-            resolutions(resolutions) {}
-
         /**
          * pixelFormat The pixel format one of the Format enum
          */
@@ -135,10 +122,6 @@ namespace webcam_capture  {
          * @brief resolutions CapabilityResolutions vector
          */
         const std::vector<CapabilityResolution> resolutions;
-
-        #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
-            friend class MediaFoundation_Camera;  //to move to ifdef. TODO
-        #endif
     };
 } // namespace webcam_capture
 
