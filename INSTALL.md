@@ -30,6 +30,7 @@ Name | Description | Default
 |BACKEND_MEDIA_FOUNDATION | Build with Media Foundation backend support. | OFF
 |WINDOWS_TARGET_OS | Target OS: WindowsXP, WindowsVista, Windows7 or Windows8. | "NONE"
 |WINDOWS_TARGET_ARCH | Target architecture: x86, x64 or ARM. ARM is available for WINDOWS_TARGET_OS=Windows8 only. | "NONE"
+|BUILD_STATIC | Build the library as a static library. | OFF
 |TEST_APP | Build the test application. | OFF
 |TEST_APP_WINDOWS_QT5_PATH | Path to Qt5 directory in which bin, lib and include subdirs reside. | "NONE"
 |CMAKE_BUILD_TYPE | Build type of the produced binaries: Release or Debug. | "Release"
@@ -41,7 +42,7 @@ Note that options are cached in CMakeCache.txt.
 
 #####Build Instructions
 
-We will show you how to build a 64-bit static version of the library, together with the test application, targeting Windows 8 system. You can easily adjust these instructions for anything you'd like.
+We will show you how to build a 64-bit shared version of the library, together with the test application, targeting Windows 8 system. You can easily adjust these instructions for anything you'd like.
 
 Start `cmd.exe` and navigate the the root directory of the project in it.
 
@@ -75,7 +76,7 @@ set LIB=%ProgramFiles(x86)%\Microsoft SDKs\Windows\v7.1A\Lib\x64;%LIB%
 
 Now that the compiler-related enviroment variables are set up, we can call CMake.
 ```cmd
-cmake -G"NMake Makefiles" -DCMAKE_BUILD_TYPE="Release" -DWINDOWS_TARGET_OS="Windows8" -DWINDOWS_TARGET_ARCH="x64" -DBACKEND_MEDIA_FOUNDATION=ON -DTEST_APP=ON -DTEST_APP_WINDOWS_QT5_PATH="C:/Qt/5.4/msvc2013_64_opengl" -DCMAKE_INSTALL_PREFIX:PATH=prefix ..
+cmake -G"NMake Makefiles" -DCMAKE_BUILD_TYPE="Release" -DBUILD_STATIC=OFF -DWINDOWS_TARGET_OS="Windows8" -DWINDOWS_TARGET_ARCH="x64" -DBACKEND_MEDIA_FOUNDATION=ON -DTEST_APP=ON -DTEST_APP_WINDOWS_QT5_PATH="C:/Qt/5.4/msvc2013_64_opengl" -DCMAKE_INSTALL_PREFIX:PATH=prefix ..
 ```
 
 Read the output of the cmake command to see if there are any errors or warnings, even if the command exited successfully, and check that its output doesn't contradict with the options you set (i.e. you set "Release" build type, but cmake printed out "Debug"). Fix any issue there is. You might want to delete the `CMakeCache.txt` file for new option to work, if you are re-running cmake with different options.
