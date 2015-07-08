@@ -1,20 +1,20 @@
-#include "direct_show_unique_id.h"
+#include "winapi_shared_unique_id.h"
 
 namespace webcam_capture {
 
-DirectShow_UniqueId::DirectShow_UniqueId(WCHAR *uniqueId)
-    :   UniqueId(BackendImplementation::DirectShow),
+WinapiShared_UniqueId::WinapiShared_UniqueId(WCHAR *uniqueId, BackendImplementation implementation)
+    :   UniqueId(implementation),
         uniqueId(uniqueId)
 {
 }
 
-DirectShow_UniqueId::~DirectShow_UniqueId()
+WinapiShared_UniqueId::~WinapiShared_UniqueId()
 {
 }
 
-bool DirectShow_UniqueId::operator==(const UniqueId &other)
+bool WinapiShared_UniqueId::operator==(const UniqueId &other)
 {
-    DirectShow_UniqueId otherUniqueId = static_cast<const DirectShow_UniqueId &>(other);
+    WinapiShared_UniqueId otherUniqueId = static_cast<const WinapiShared_UniqueId &>(other);
     bool result = false;
     size_t localStrLen = wcslen(uniqueId);
     size_t otherStrLen = wcslen(otherUniqueId.getId());
@@ -35,12 +35,12 @@ bool DirectShow_UniqueId::operator==(const UniqueId &other)
     return result;
 }
 
-bool DirectShow_UniqueId::operator!=(const UniqueId &other)
+bool WinapiShared_UniqueId::operator!=(const UniqueId &other)
 {
     return !(*this == other);
 }
 
-WCHAR *DirectShow_UniqueId::getId()
+WCHAR *WinapiShared_UniqueId::getId()
 {
     return uniqueId;
 }

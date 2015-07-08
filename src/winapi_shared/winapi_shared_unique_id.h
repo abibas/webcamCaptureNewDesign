@@ -5,11 +5,11 @@
 
 namespace webcam_capture {
 
-class DirectShow_UniqueId : public UniqueId
+class WinapiShared_UniqueId : public UniqueId
 {
 public:
-    DirectShow_UniqueId(WCHAR *uniqueId);
-    ~DirectShow_UniqueId();
+    WinapiShared_UniqueId(WCHAR *uniqueId, BackendImplementation implementation);
+    ~WinapiShared_UniqueId();
 
     WCHAR *getId();
     bool operator==(const UniqueId &other) override;

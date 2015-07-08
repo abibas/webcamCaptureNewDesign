@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "direct_show_backend.h"
-#include "direct_show_unique_id.h"
+#include "../winapi_shared/winapi_shared_unique_id.h"
 //#include "media_foundation_camera.h"
 
 namespace webcam_capture {
@@ -82,7 +82,7 @@ std::vector<CameraInformation *> DirectShow_Backend::getAvailableCameras() const
         hr = pPropBag->Read(L"DevicePath", &var, 0);
         if (SUCCEEDED(hr)) {
             // The device path is not intended for display.
-            UniqueId *uniqueId = new DirectShow_UniqueId(var.bstrVal);
+            UniqueId *uniqueId = new WinapiShared_UniqueId(var.bstrVal, BackendImplementation::DirectShow);
             std::string name( wname.begin(), wname.end());
             CameraInformation *camInfo = new CameraInformation(uniqueId, name);
             result.push_back(camInfo);

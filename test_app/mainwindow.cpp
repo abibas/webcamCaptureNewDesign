@@ -43,7 +43,7 @@ void MainWindow::fillFrameworkListCB()
             }
 
             case BackendImplementation::DirectShow: {
-                this->ui->frameworkListComboBox->addItem("Direct show");
+                this->ui->frameworkListComboBox->addItem("Direct Show");
                 break;
             }
 
