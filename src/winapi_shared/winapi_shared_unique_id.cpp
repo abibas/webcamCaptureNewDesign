@@ -2,7 +2,7 @@
 
 namespace webcam_capture {
 
-WinapiShared_UniqueId::WinapiShared_UniqueId(WCHAR *uniqueId, BackendImplementation implementation)
+WinapiShared_UniqueId::WinapiShared_UniqueId(WCHAR* uniqueId, BackendImplementation implementation)
     :   UniqueId(implementation),
         uniqueId(uniqueId)
 {
@@ -40,7 +40,7 @@ bool WinapiShared_UniqueId::operator!=(const UniqueId &other)
     return !(*this == other);
 }
 
-WCHAR *WinapiShared_UniqueId::getId()
+WCHAR* WinapiShared_UniqueId::getId()
 {
     return uniqueId;
 }

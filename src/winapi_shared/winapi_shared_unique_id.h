@@ -14,8 +14,8 @@ public:
     WCHAR *getId();
     bool operator==(const UniqueId &other) override;
     bool operator!=(const UniqueId &other) override;
-private:
-    WCHAR *uniqueId;
+private:    
+    WCHAR *uniqueId; //TODO To consider do we need to save links in WCHAR* - we just could use std::wstring.
 };
 }
 
