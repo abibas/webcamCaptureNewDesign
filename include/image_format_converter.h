@@ -6,28 +6,29 @@
 
 namespace webcam_capture {
 
+/**
+ * @brief Class of frames converting
+ */
+class WEBCAM_CAPTURE_EXPORT ImageFormatConverter
+{
+public:
     /**
-     * @brief Class of frames converting
+     * @param ConvertToRGB input frame
+     * @return Converted frame
      */
-    class WEBCAM_CAPTURE_EXPORT ImageFormatConverter{
-    public:
-        /**
-         * @param ConvertToRGB input frame
-         * @return Converted frame
-         */
-        static PixelBuffer convertToRGB(const PixelBuffer&);
+    static PixelBuffer convertToRGB(const PixelBuffer &);
 
-        /**
-         * @param ConvertToRGB input frame
-         * @return Converted frame
-         */
-        static PixelBuffer convertToYUV(const PixelBuffer&);
-    private:
-        /**
-         * Static class (Java-ism)
-         */
-        ImageFormatConverter();
-    };
+    /**
+     * @param ConvertToRGB input frame
+     * @return Converted frame
+     */
+    static PixelBuffer convertToYUV(const PixelBuffer &);
+private:
+    /**
+     * Static class (Java-ism)
+     */
+    ImageFormatConverter();
+};
 
 } // namespace webcam_capture
 

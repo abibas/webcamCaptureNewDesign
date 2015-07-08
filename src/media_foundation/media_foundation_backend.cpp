@@ -14,109 +14,130 @@
 
 namespace webcam_capture {
 
-    MediaFoundation_Backend::MediaFoundation_Backend()
-        :mfDeinitializer(this, MediaFoundation_Backend::DeinitBackend),
-         notificationManager(NULL)
-    {
-        // Initialize COM
-        HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-        if(FAILED(hr)) {
-            DEBUG_PRINT("Error: cannot intialize COM.\n");  //or The COM is already initialized.
-        }
+MediaFoundation_Backend::MediaFoundation_Backend()
+    : mfDeinitializer(this, MediaFoundation_Backend::DeinitBackend),
+      notificationManager(NULL)
+{
+    // Initialize COM
+    HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
-        // Initialize MediaFoundation
-        hr = MFStartup(MF_VERSION);
-        if(FAILED(hr)) {
-            DEBUG_PRINT("Error: cannot startup the Media Foundation.\n");
-        }        
+    if (FAILED(hr)) {
+        DEBUG_PRINT("Error: cannot intialize COM.\n");  //or The COM is already initialized.
     }
 
-    MediaFoundation_Backend::~MediaFoundation_Backend() {
-        delete notificationManager;
+    // Initialize MediaFoundation
+    hr = MFStartup(MF_VERSION);
+
+    if (FAILED(hr)) {
+        DEBUG_PRINT("Error: cannot startup the Media Foundation.\n");
+    }
+}
+
+MediaFoundation_Backend::~MediaFoundation_Backend()
+{
+    delete notificationManager;
+}
+
+void MediaFoundation_Backend::DeinitBackend(void *)
+{
+    /* Shutdown MediaFoundation */
+    HRESULT hr = MFShutdown();
+
+    if (FAILED(hr)) {
+        DEBUG_PRINT("Error: failed to shutdown the MediaFoundation.\n");
     }
 
-    void MediaFoundation_Backend::DeinitBackend(void *){
-        /* Shutdown MediaFoundation */
-        HRESULT hr = MFShutdown();
-        if(FAILED(hr)) {
-            DEBUG_PRINT("Error: failed to shutdown the MediaFoundation.\n");
-        }
+    /* Shutdown COM */
+    CoUninitialize();
+    DEBUG_PRINT("MediaFoundation_Backend Successfully deinited.\n");
+}
 
-        /* Shutdown COM */
-        CoUninitialize();
-        DEBUG_PRINT("MediaFoundation_Backend Successfully deinited.\n");
+std::vector<CameraInformation *> MediaFoundation_Backend::getAvailableCameras() const
+{
+
+    std::vector<CameraInformation *> result;
+    UINT32 count = 0;
+    IMFAttributes *config = NULL;
+    IMFActivate **devices = NULL;
+
+    HRESULT hr = MFCreateAttributes(&config, 1);
+
+    if (FAILED(hr)) {
+        goto done;
     }
 
-    std::vector<CameraInformation*> MediaFoundation_Backend::getAvailableCameras() const{
+    // Filter capture devices.
+    hr = config->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,  MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
 
-        std::vector<CameraInformation*> result;
-        UINT32 count = 0;
-        IMFAttributes* config = NULL;
-        IMFActivate** devices = NULL;
-
-        HRESULT hr = MFCreateAttributes(&config, 1);
-        if(FAILED(hr)) goto done;
-
-        // Filter capture devices.
-        hr = config->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,  MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
-        if(FAILED(hr)) goto done;
-
-        // Enumerate devices
-        hr = MFEnumDeviceSources(config, &devices, &count);
-        if(FAILED(hr)) goto done;
-
-        if(count == 0) goto done;
-
-        for(DWORD i = 0; i < count; ++i) {
-            HRESULT hr1 = S_OK;
-            HRESULT hr2 = S_OK;
-            WCHAR* friendly_name = NULL;
-            WCHAR* symbolic_link = NULL;
-            UINT32 friendly_name_len = 0;
-            UINT32 symbolic_link_len = 0;
-
-            hr1 = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME,  &friendly_name, &friendly_name_len);
-            hr2 = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
-                                                &symbolic_link, &symbolic_link_len);
-
-            if(SUCCEEDED(hr1) && SUCCEEDED(hr2)) {
-                std::string name = string_cast<std::string>(friendly_name);
-                //MediaFoundation_UniqueId mfUniqueId(symbolic_link);
-                UniqueId * uniqueId = new MediaFoundation_UniqueId(symbolic_link);
-                CameraInformation * camInfo = new CameraInformation(uniqueId, name);
-                result.push_back(camInfo);
-            }
-
-            CoTaskMemFree(friendly_name);
-        }
-
-        done:
-        safeReleaseMediaFoundation(&config);
-
-        for(DWORD i = 0; i < count; ++i) {
-            safeReleaseMediaFoundation(&devices[i]);
-        }
-
-        CoTaskMemFree(devices);
-
-        return result;
+    if (FAILED(hr)) {
+        goto done;
     }
 
-    CameraInterface* MediaFoundation_Backend::getCamera(const CameraInformation &information) const{
-        return MediaFoundation_Camera::createCamera(mfDeinitializer, information);
+    // Enumerate devices
+    hr = MFEnumDeviceSources(config, &devices, &count);
+
+    if (FAILED(hr)) {
+        goto done;
     }
 
-    int MediaFoundation_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback){
-        if (notificationManager == nullptr) {
-            notificationManager = new MediaFoundation_CameraNotifications();
-        }
-        //IF n_callback is null_ptr or n_callback function is empty
-        if ( !n_callback ) {
-            notificationManager->Stop();
-            return -1;      //TODO Err code
-        }
-        notificationManager->Start(n_callback);
-        return 1; //TODO ERR code (success)
+    if (count == 0) {
+        goto done;
     }
+
+    for (DWORD i = 0; i < count; ++i) {
+        HRESULT hr1 = S_OK;
+        HRESULT hr2 = S_OK;
+        WCHAR *friendly_name = NULL;
+        WCHAR *symbolic_link = NULL;
+        UINT32 friendly_name_len = 0;
+        UINT32 symbolic_link_len = 0;
+
+        hr1 = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME,  &friendly_name, &friendly_name_len);
+        hr2 = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
+                                             &symbolic_link, &symbolic_link_len);
+
+        if (SUCCEEDED(hr1) && SUCCEEDED(hr2)) {
+            std::string name = string_cast<std::string>(friendly_name);
+            //MediaFoundation_UniqueId mfUniqueId(symbolic_link);
+            UniqueId *uniqueId = new MediaFoundation_UniqueId(symbolic_link);
+            CameraInformation *camInfo = new CameraInformation(uniqueId, name);
+            result.push_back(camInfo);
+        }
+
+        CoTaskMemFree(friendly_name);
+    }
+
+done:
+    safeReleaseMediaFoundation(&config);
+
+    for (DWORD i = 0; i < count; ++i) {
+        safeReleaseMediaFoundation(&devices[i]);
+    }
+
+    CoTaskMemFree(devices);
+
+    return result;
+}
+
+CameraInterface *MediaFoundation_Backend::getCamera(const CameraInformation &information) const
+{
+    return MediaFoundation_Camera::createCamera(mfDeinitializer, information);
+}
+
+int MediaFoundation_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback)
+{
+    if (notificationManager == nullptr) {
+        notificationManager = new MediaFoundation_CameraNotifications();
+    }
+
+    //IF n_callback is null_ptr or n_callback function is empty
+    if (!n_callback) {
+        notificationManager->Stop();
+        return -1;      //TODO Err code
+    }
+
+    notificationManager->Start(n_callback);
+    return 1; //TODO ERR code (success)
+}
 
 } // namespace webcam_capture

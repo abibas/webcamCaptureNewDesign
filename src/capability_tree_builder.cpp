@@ -31,12 +31,14 @@ void CapabilityTreeBuilder::addCapability(Format pixelFormat, int width, int hei
     // since the value (ResolutionMap) is not default constuctable (because it's map of a custom type),
     // we can't just use [] and have it constructed for us, as we do below for fpsMap.
     auto formatMapItem = formatMap.find(pixelFormat);
+
     if (formatMapItem == formatMap.end()) {
         // no such format found, explicitly insert it.
         formatMap[pixelFormat] = ResolutionMap(RESOLUTION_MAP_INITIAL_BUCKET_COUNT, resolutionHash, resolutionEquals);
     }
 
-    FpsMap& fpsMap = formatMap[pixelFormat][std::pair<int, int>(width, height)];
+    FpsMap &fpsMap = formatMap[pixelFormat][std::pair<int, int>(width, height)];
+
     for (const int &f : fps) {
         fpsMap[f] = true;
     }

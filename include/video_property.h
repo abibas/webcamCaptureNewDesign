@@ -4,10 +4,10 @@
 #include <webcam_capture_export.h>
 
 namespace webcam_capture  {
-    /**
-     *  Enum of supported capabilities
-     */
-    enum class WEBCAM_CAPTURE_EXPORT VideoProperty { Brightness, Contrast, Saturation};
+/**
+ *  Enum of supported capabilities
+ */
+enum class WEBCAM_CAPTURE_EXPORT VideoProperty { Brightness, Contrast, Saturation};
 
 } // namespace webcam_capture
 

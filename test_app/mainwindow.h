@@ -43,8 +43,8 @@ private:
 
 
     std::vector<BackendImplementation> backendList;
-    std::vector<CameraInformation*> cameraInfoList;
-    BackendInterface* backend;
+    std::vector<CameraInformation *> cameraInfoList;
+    BackendInterface *backend;
 
     Ui::MainWindow *ui;
 };

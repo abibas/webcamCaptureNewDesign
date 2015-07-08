@@ -40,7 +40,7 @@ private:
     static bool resolutionEquals(const std::pair<int, int> &p, const std::pair<int, int> &q);
 
     typedef std::unordered_map<int, bool>
-            FpsMap;
+    FpsMap;
 
     typedef std::unordered_map<std::pair<int, int>,
             FpsMap,
@@ -49,7 +49,7 @@ private:
             ResolutionMap;
 
     typedef std::unordered_map<Format, ResolutionMap,
-            std::function<std::size_t(const Format&)>>
+            std::function<std::size_t(const Format &)>>
             FormatMap;
 
     FormatMap formatMap;

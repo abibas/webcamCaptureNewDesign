@@ -14,33 +14,40 @@
 
 namespace webcam_capture {
 
+/**
+ * Contains informationa about single camera
+ */
+class WEBCAM_CAPTURE_EXPORT CameraInformation
+{
+public:
     /**
-     * Contains informationa about single camera
+    * @param cameraId Camera Id
+    * @param cameraName Camera Name
+    */
+    CameraInformation(UniqueId *uniqueId, std::string cameraName) : uniqueId(uniqueId), cameraName(cameraName) {}
+    ~CameraInformation() {}
+
+
+    /**
+     * @return Camera unique Id
      */
-    class WEBCAM_CAPTURE_EXPORT CameraInformation {
-    public:
-       /**
-       * @param cameraId Camera Id
-       * @param cameraName Camera Name
-       */
-      CameraInformation(UniqueId * uniqueId, std::string cameraName) : uniqueId(uniqueId), cameraName (cameraName) {}
-      ~CameraInformation() {}
+    UniqueId *getUniqueId() const
+    {
+        return uniqueId;
+    }
 
+    /**
+     * @return Camera Name
+     */
+    std::string getCameraName() const
+    {
+        return cameraName;
+    }
 
-      /**
-       * @return Camera unique Id
-       */
-      UniqueId* getUniqueId() const { return uniqueId; }
-
-      /**
-       * @return Camera Name
-       */
-      std::string getCameraName() const { return cameraName; }
-
-    private:
-      std::string cameraName;
-      UniqueId * uniqueId;
-    };
+private:
+    std::string cameraName;
+    UniqueId *uniqueId;
+};
 } // namespace webcam_capture
 
 #endif // CAMERA_INFORMATION_H

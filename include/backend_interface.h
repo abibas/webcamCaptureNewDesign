@@ -18,37 +18,38 @@
 
 namespace webcam_capture {
 
-    enum class WEBCAM_CAPTURE_EXPORT CameraPlugStatus {
-        CAMERA_CONNECTED,
-        CAMERA_DISCONNECTED
-    };
+enum class WEBCAM_CAPTURE_EXPORT CameraPlugStatus {
+    CAMERA_CONNECTED,
+    CAMERA_DISCONNECTED
+};
 
-    /**
-    * notifications_callback Typedef for nnotifications callback
-    */
-    typedef std::function<void(CameraInformation* information, CameraPlugStatus status)> notifications_callback;
+/**
+* notifications_callback Typedef for nnotifications callback
+*/
+typedef std::function<void(CameraInformation *information, CameraPlugStatus status)> notifications_callback;
 
+/**
+ * Contains Interface for Backend realization
+ */
+class WEBCAM_CAPTURE_EXPORT BackendInterface
+{
+public:
+    BackendInterface() {}
+    virtual ~BackendInterface() {}
     /**
-     * Contains Interface for Backend realization
+     * @return Vectod of avaliable cameras
      */
-    class WEBCAM_CAPTURE_EXPORT BackendInterface {
-    public:
-        BackendInterface() {}
-        virtual ~BackendInterface() {}
-        /**
-         * @return Vectod of avaliable cameras
-         */
-        virtual std::vector<CameraInformation*> getAvailableCameras() const = 0;
-        /**
-         * @param information Camera information with Id and Name
-         * @return New camera instance
-         */
-        virtual CameraInterface* getCamera(const CameraInformation &information) const = 0;
-        /**
-         * @param n_callback Notifications callback
-         */
-        virtual int setAvaliableCamerasChangedCallback(notifications_callback n_callback) = 0; //TODO to realize
-    };
+    virtual std::vector<CameraInformation *> getAvailableCameras() const = 0;
+    /**
+     * @param information Camera information with Id and Name
+     * @return New camera instance
+     */
+    virtual CameraInterface *getCamera(const CameraInformation &information) const = 0;
+    /**
+     * @param n_callback Notifications callback
+     */
+    virtual int setAvaliableCamerasChangedCallback(notifications_callback n_callback) = 0; //TODO to realize
+};
 
 } // namespace webcam_capture
 

@@ -14,117 +14,138 @@
 
 namespace webcam_capture  {
 
+/**
+* Contains valid values of a FPS
+*/
+class WEBCAM_CAPTURE_EXPORT CapabilityFps
+{
+public:
     /**
-    * Contains valid values of a FPS
-    */
-    class WEBCAM_CAPTURE_EXPORT CapabilityFps {
-    public:
-        /**
-         * @param fps Capability FPS
-         */
-        CapabilityFps(int fps) :
-            fps(fps) {}
+     * @param fps Capability FPS
+     */
+    CapabilityFps(int fps) :
+        fps(fps) {}
 
-        ~CapabilityFps() {}
-
-        /**
-         * @return Capability FPS
-         */
-        int getFps() const { return fps; }
-    private:
-        /**
-         * @brief fps Fps value
-         */
-        const int fps;
-    };
-
-
+    ~CapabilityFps() {}
 
     /**
-    * Contains valid values of a width, height and fpses vector
-    */
-    class WEBCAM_CAPTURE_EXPORT CapabilityResolution {
-    public:
-        /**
-         * @param width CapbilityResolution width
-         * @param height CapabilityResolution height
-         * @param fpses CapabilityResolution fpses vector
-         */
-        CapabilityResolution (int width, int height, std::vector<CapabilityFps> fpses) :
-            width(width),
-            height(height),
-            fpses(fpses) {}
+     * @return Capability FPS
+     */
+    int getFps() const
+    {
+        return fps;
+    }
+private:
+    /**
+     * @brief fps Fps value
+     */
+    const int fps;
+};
 
-        ~CapabilityResolution() {}
 
-        /**
-         * @return CapabilityResolution width
-         */
-        int getWidth() const { return width; }
 
-        /**
-         * @return CapabilityResolution height
-         */
-        int getHeight() const { return height; }
+/**
+* Contains valid values of a width, height and fpses vector
+*/
+class WEBCAM_CAPTURE_EXPORT CapabilityResolution
+{
+public:
+    /**
+     * @param width CapbilityResolution width
+     * @param height CapabilityResolution height
+     * @param fpses CapabilityResolution fpses vector
+     */
+    CapabilityResolution(int width, int height, std::vector<CapabilityFps> fpses) :
+        width(width),
+        height(height),
+        fpses(fpses) {}
 
-        /**
-         * @return CapabilityResolution FPS vector
-         */
-        const  std::vector<CapabilityFps>& getFpses() const { return fpses; }
-    private:
-        /**
-         * @brief width Resolution width
-         */
-        const int width;
-        /**
-         * @brief height Resolution height
-         */
-        const int height;
-
-        /**
-         * @brief Resolution fps vector
-         */
-        const std::vector<CapabilityFps> fpses;
-    };
-
+    ~CapabilityResolution() {}
 
     /**
-    * Contains valid values of a PixelFormat and Resolutions vector
-    */
-    class WEBCAM_CAPTURE_EXPORT CapabilityFormat{
-    public:
-        /**
-         * @param pixelFormat Capability pixel format
-         * @param pixelFormatIndex The pixel format one of the Format enum.
-         * @param resolutions
-         */
-        CapabilityFormat (Format pixelFormat, std::vector<CapabilityResolution> resolutions):
-            pixelFormat(pixelFormat),
-            resolutions(resolutions) {}
+     * @return CapabilityResolution width
+     */
+    int getWidth() const
+    {
+        return width;
+    }
 
-        ~CapabilityFormat() {}
+    /**
+     * @return CapabilityResolution height
+     */
+    int getHeight() const
+    {
+        return height;
+    }
 
-        /**
-         * @return Capability pixel format
-         */
-        Format getPixelFormat() const { return pixelFormat; }
+    /**
+     * @return CapabilityResolution FPS vector
+     */
+    const  std::vector<CapabilityFps> &getFpses() const
+    {
+        return fpses;
+    }
+private:
+    /**
+     * @brief width Resolution width
+     */
+    const int width;
+    /**
+     * @brief height Resolution height
+     */
+    const int height;
 
-        /**
-         * @return Capability Resolutions vector
-         */
-        const std::vector<CapabilityResolution>& getResolutions() const { return resolutions; }
+    /**
+     * @brief Resolution fps vector
+     */
+    const std::vector<CapabilityFps> fpses;
+};
 
-    private:
-        /**
-         * pixelFormat The pixel format one of the Format enum
-         */
-        const Format pixelFormat;
 
-        /**
-         * @brief resolutions CapabilityResolutions vector
-         */
-        const std::vector<CapabilityResolution> resolutions;
-    };
+/**
+* Contains valid values of a PixelFormat and Resolutions vector
+*/
+class WEBCAM_CAPTURE_EXPORT CapabilityFormat
+{
+public:
+    /**
+     * @param pixelFormat Capability pixel format
+     * @param pixelFormatIndex The pixel format one of the Format enum.
+     * @param resolutions
+     */
+    CapabilityFormat(Format pixelFormat, std::vector<CapabilityResolution> resolutions):
+        pixelFormat(pixelFormat),
+        resolutions(resolutions) {}
+
+    ~CapabilityFormat() {}
+
+    /**
+     * @return Capability pixel format
+     */
+    Format getPixelFormat() const
+    {
+        return pixelFormat;
+    }
+
+    /**
+     * @return Capability Resolutions vector
+     */
+    const std::vector<CapabilityResolution> &getResolutions() const
+    {
+        return resolutions;
+    }
+
+private:
+    /**
+     * pixelFormat The pixel format one of the Format enum
+     */
+    const Format pixelFormat;
+
+    /**
+     * @brief resolutions CapabilityResolutions vector
+     */
+    const std::vector<CapabilityResolution> resolutions;
+};
 } // namespace webcam_capture
 
 #endif // CAPABILITY_H

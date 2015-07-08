@@ -16,7 +16,7 @@ class CameraForm : public QWidget
     Q_OBJECT
 
 public:
-    explicit CameraForm(CameraInterface* camera, QWidget *parent = 0);
+    explicit CameraForm(CameraInterface *camera, QWidget *parent = 0);
     ~CameraForm();
 
 private slots:
@@ -37,7 +37,7 @@ private slots:
 
 private:
     Ui::CameraForm *ui;
-    CameraInterface* camera;
+    CameraInterface *camera;
     std::vector<CapabilityFormat> capabilityList;
     VideoForm *videoForm;
 };
