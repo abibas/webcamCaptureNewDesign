@@ -1,9 +1,8 @@
 --style=1tbs
 --attach-namespaces
---attach-classes
 --indent-switches
 --pad-oper
---pad-header 
+--pad-header
 --unpad-paren
 --align-pointer=name
 --align-reference=name
