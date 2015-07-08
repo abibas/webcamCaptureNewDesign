@@ -1,7 +1,8 @@
+#include "../capability_tree_builder.h"
 #include "media_foundation_camera.h"
 #include "media_foundation_unique_id.h"
+
 #include <iostream>
-#include <unordered_map>
 
 namespace webcam_capture {
 
@@ -682,35 +683,7 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource* source, std::ve
     safeReleaseMediaFoundation(&test_type);
 #endif
     {
-        auto resolutionHash = [](const std::pair<int, int>& p) -> std::size_t
-            {
-                return std::hash<int>()(p.first + p.second);
-            };
-
-        auto resolutionEquals = [](const std::pair<int, int>& p, const std::pair<int, int>& q) -> bool
-            {
-                return p.first == q.first && p.second == q.second;
-            };
-
-        auto formatHash = [](const Format& f) -> std::size_t
-            {
-                return static_cast<std::size_t>(f);
-            };
-
-        typedef std::unordered_map<int, bool>
-                FpsMap;
-
-        typedef std::unordered_map<std::pair<int, int>,
-                FpsMap,
-                std::function<std::size_t(const std::pair<int, int>&)>,
-                std::function<bool(const std::pair<int, int>&, const std::pair<int, int>&)>>
-                ResolutionMap;
-
-        typedef std::unordered_map<Format, ResolutionMap,
-                std::function<std::size_t(const Format&)>>
-                FormatMap;
-
-        FormatMap formatMap(5, formatHash);
+        CapabilityTreeBuilder capabilityBuilder;
 
         // Loop over all the types
         PROPVARIANT var;
@@ -791,54 +764,14 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource* source, std::ve
                     continue;
                 }
 
-                // create keys for format, resolution and fps we got
-                auto formatMapItem = formatMap.find(pixelFormat);
-                if (formatMapItem == formatMap.end()) {
-                    // no such format found, explicitly insert it, since ResolutionMap is not default constuctable (map of a custom type)
-                    formatMap[pixelFormat] = ResolutionMap(7, resolutionHash, resolutionEquals);
-                }
-                FpsMap& fpsMap = formatMap[pixelFormat][std::pair<int, int>(width, height)];
-                fpsMap[minFps] = true;
-                if (maxFps != minFps) {
-                    fpsMap[maxFps] = true;
-                }
-                if (currentFps != minFps && currentFps != maxFps) {
-                    fpsMap[currentFps] = true;
-                }
-
+                capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
             }
 
             safeReleaseMediaFoundation(&type);
         }
 
 
-        // convert the map into std::vector<CapabilityFormat>
-        capFormatVector.reserve(formatMap.size());
-
-        for (auto formatMapItem : formatMap) {
-            const Format& format               = formatMapItem.first;
-            const ResolutionMap& resolutionMap = formatMapItem.second;
-
-            std::vector<CapabilityResolution> capResolutions;
-            capResolutions.reserve(resolutionMap.size());
-
-            for (auto resolutionMapItem : resolutionMap) {
-                const std::pair<int, int>& resolution = resolutionMapItem.first;
-                const FpsMap& fpsMap                  = resolutionMapItem.second;
-
-                std::vector<CapabilityFps> capFps;
-                capFps.reserve(fpsMap.size());
-
-                for (auto fpsMapItem : fpsMap) {
-                    capFps.push_back(CapabilityFps(fpsMapItem.first));
-                }
-
-                capResolutions.push_back(CapabilityResolution(resolution.first, resolution.second, std::move(capFps)));
-            }
-
-            capFormatVector.push_back(CapabilityFormat(format, std::move(capResolutions)));
-        }
-
+        capFormatVector = capabilityBuilder.build();
     }
 
 done:

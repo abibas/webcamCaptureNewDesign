@@ -91,12 +91,11 @@ namespace webcam_capture {
         //create stream to move to new stream
         windowClass = {};
         windowClass.lpfnWndProc = &MediaFoundation_CameraNotifications::WindowProcedure;
-        //LPCWSTR windowClassName = L"CameraNotificationsMessageOnlyWindow";
 
         LPCSTR windowClassName = "CameraNotificationsMessageOnlyWindow";
         windowClass.lpszClassName = windowClassName;
 
-        if (!RegisterClassA(&windowClass)) {
+        if (!RegisterClass(&windowClass)) {
             DEBUG_PRINT("Failed to register window class.\n");
             return;
         }
@@ -116,7 +115,7 @@ namespace webcam_capture {
         NotificationFilter.dbcc_classguid  = KSCATEGORY_VIDEO;
 
 
-        hDevNotify = RegisterDeviceNotification(messageWindow, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
+        hDevNotify = RegisterDeviceNotificationW(messageWindow, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
 
         MSG msg;
         GetMessage(&msg, messageWindow, 0, 0);
@@ -128,8 +127,11 @@ namespace webcam_capture {
     }
 
     void MediaFoundation_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr){
-        DEV_BROADCAST_DEVICEINTERFACE_W *pDi = (DEV_BROADCAST_DEVICEINTERFACE_W*)pHdr;
-        UniqueId * uniqId = new MediaFoundation_UniqueId(pDi->dbcc_name);
+        DEV_BROADCAST_DEVICEINTERFACE *pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
+        int nameLen = strlen(pDi->dbcc_name);
+        WCHAR * name = new WCHAR[nameLen];
+        mbstowcs(name, pDi->dbcc_name, nameLen);
+        UniqueId * uniqId = new MediaFoundation_UniqueId(name);
         for (int i = 0; i < devicesVector.size(); i++) {
             if ( *uniqId == *devicesVector.at(i)->getUniqueId() ) {
                 notif_cb(devicesVector.at(i), CameraPlugStatus::CAMERA_DISCONNECTED);
@@ -140,8 +142,11 @@ namespace webcam_capture {
     }
 
     void MediaFoundation_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHdr){
-        DEV_BROADCAST_DEVICEINTERFACE_W *pDi = (DEV_BROADCAST_DEVICEINTERFACE_W*)pHdr;
-        UniqueId * uniqId = new MediaFoundation_UniqueId(pDi->dbcc_name);
+        DEV_BROADCAST_DEVICEINTERFACE *pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
+        int nameLen = strlen(pDi->dbcc_name);
+        WCHAR * name = new WCHAR[nameLen];
+        mbstowcs(name, pDi->dbcc_name, nameLen);
+        UniqueId * uniqId = new MediaFoundation_UniqueId(name);
         std::vector <CameraInformation*> camerasBuf = backend->getAvailableCameras();
         for (int i = 0; i < camerasBuf.size(); i++) {
             if ( *camerasBuf.at(i)->getUniqueId() == *uniqId ) {

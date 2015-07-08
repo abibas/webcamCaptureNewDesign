@@ -5,6 +5,15 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
   add_definitions(-DWEBCAM_CAPTURE_DEBUG)
 endif()
 
+option(BUILD_STATIC "Build the library as static library" OFF)
+if (BUILD_STATIC)
+  set(LIBRARY_TYPE "STATIC")
+  message(STATUS "Building static library")
+else()
+  set(LIBRARY_TYPE "SHARED")
+  message(STATUS "Building shared library")
+endif()
+
 # backend options
 
 if (WIN32)
@@ -38,6 +47,8 @@ if (NOT LIBS)
   message(FATAL_ERROR "You are building the library with no backends enabled, which doesn't make sense. Please enable at least one backend. Use cmake -LH to get a list of backends.")
 endif()
 
+include (GenerateExportHeader)
+add_compiler_export_flags()
 
 aux_source_directory(. SRC_LIST)
 
@@ -45,11 +56,14 @@ aux_source_directory(. SRC_LIST)
 # also used for installation
 file(GLOB INCLUDE_LIST ${CMAKE_SOURCE_DIR}/include/*.h)
 
-add_library(${TARGET} ${SRC_LIST} ${INCLUDE_LIST} ${BACKEND_SRC_LIST})
+add_library(${TARGET} ${LIBRARY_TYPE} ${SRC_LIST} ${INCLUDE_LIST} ${BACKEND_SRC_LIST})
 target_link_libraries(${TARGET} ${LIBS})
 
+generate_export_header(${TARGET})
+set(INCLUDE_LIST ${INCLUDE_LIST} ${PROJECT_BINARY_DIR}/src/${TARGET}_export.h)
+
 # make public headers globally available
-target_include_directories(${TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(${TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/include ${PROJECT_BINARY_DIR}/src)
 
 
 if (WIN32)

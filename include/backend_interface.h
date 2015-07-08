@@ -7,17 +7,18 @@
 #ifndef BACKEND_INTERFACE_H
 #define BACKEND_INTERFACE_H
 
+#include <functional>
 #include <stdio.h>
 #include <string>
 #include <vector>
-#include <functional>
 
-#include <camera_interface.h>
 #include <camera_information.h>
+#include <camera_interface.h>
+#include <webcam_capture_export.h>
 
 namespace webcam_capture {
 
-    enum class CameraPlugStatus {
+    enum class WEBCAM_CAPTURE_EXPORT CameraPlugStatus {
         CAMERA_CONNECTED,
         CAMERA_DISCONNECTED
     };
@@ -30,7 +31,7 @@ namespace webcam_capture {
     /**
      * Contains Interface for Backend realization
      */
-    class BackendInterface {
+    class WEBCAM_CAPTURE_EXPORT BackendInterface {
     public:
         BackendInterface() {}
         virtual ~BackendInterface() {}

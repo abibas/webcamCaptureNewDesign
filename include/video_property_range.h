@@ -1,11 +1,13 @@
 #ifndef VIDEO_PROPERTY_RANGE_H
 #define VIDEO_PROPERTY_RANGE_H
 
+#include <webcam_capture_export.h>
+
 namespace webcam_capture {
     /**
      *  Contains valid values of a VideoProperty
      */
-    class VideoPropertyRange {
+    class WEBCAM_CAPTURE_EXPORT VideoPropertyRange {
         public:
             VideoPropertyRange():
                 minValue(0),

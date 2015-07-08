@@ -6,16 +6,11 @@ project(webcam_capture)
 set(CMAKE_BUILD_TYPE Debug CACHE STRING "")
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-
   message(STATUS "Build type: Debug")
 elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
   message(STATUS "Build type: Release")
 else()
     message(STATUS "Build type: Unknown")
-endif()
-
-if (WIN32)
-    add_definitions(-DWEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION)
 endif()
 
 # enable warnings, C++11

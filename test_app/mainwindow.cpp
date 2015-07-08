@@ -84,9 +84,9 @@ void MainWindow::on_createCameraBtn_clicked()
 void MainWindow::on_cameraListComboBox_currentIndexChanged(int index)
 {
     if (index >= 0) {
-        this->ui->createCameraBtn->setVisible(true);
+        this->ui->createCameraBtn->setDisabled(false);
     } else {
-        this->ui->createCameraBtn->setVisible(false);
+        this->ui->createCameraBtn->setDisabled(true);
     }
 }
 

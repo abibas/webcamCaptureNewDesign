@@ -8,14 +8,15 @@
 #define CAMERA_INTERFACE_H
 
 #include <functional>
-#include <vector>
 #include <memory>
+#include <vector>
 
+#include <camera_information.h>
 #include <capability.h>
 #include <pixel_buffer.h>
-#include <camera_information.h>
-#include <video_property_range.h>
 #include <video_property.h>
+#include <video_property_range.h>
+#include <webcam_capture_export.h>
 
 namespace webcam_capture {
     /**
@@ -26,7 +27,7 @@ namespace webcam_capture {
     /**
      * Contains Interface for Camera realization
      */
-    class CameraInterface {
+    class WEBCAM_CAPTURE_EXPORT CameraInterface {
     public:
         CameraInterface() {}
         virtual ~CameraInterface() {}

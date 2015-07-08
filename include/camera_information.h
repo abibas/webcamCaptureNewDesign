@@ -6,15 +6,18 @@
 
 #ifndef CAMERA_INFORMATION_H
 #define CAMERA_INFORMATION_H
+
 #include <string.h>
+
 #include <unique_id.h>
+#include <webcam_capture_export.h>
 
 namespace webcam_capture {
 
     /**
      * Contains informationa about single camera
      */
-    class CameraInformation {
+    class WEBCAM_CAPTURE_EXPORT CameraInformation {
     public:
        /**
        * @param cameraId Camera Id
