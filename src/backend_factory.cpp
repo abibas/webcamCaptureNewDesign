@@ -3,6 +3,9 @@
 #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
 #include "../src/media_foundation/media_foundation_backend.h"
 #endif
+#ifdef WEBCAM_CAPTURE_BACKEND_DIRECT_SHOW
+#include "../src/direct_show/direct_show_backend.h"
+#endif
 #ifdef V4L
 #endif
 #ifdef AV_FOUNDATION
@@ -23,6 +26,13 @@ BackendInterface *BackendFactory::getBackend(BackendImplementation implementatio
 
         case BackendImplementation::MediaFoundation: {
             return new MediaFoundation_Backend();
+        }
+
+#endif
+#ifdef WEBCAM_CAPTURE_BACKEND_DIRECT_SHOW
+
+        case BackendImplementation::DirectShow: {
+            return new DirectShow_Backend();
         }
 
 #endif
@@ -52,7 +62,9 @@ std::vector<BackendImplementation> BackendFactory::getAvailableBackends()
 #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
     result.push_back(BackendImplementation::MediaFoundation);
 #endif
-
+#ifdef WEBCAM_CAPTURE_BACKEND_DIRECT_SHOW
+    result.push_back(BackendImplementation::DirectShow);
+#endif
 #ifdef V4L
     result.push_back(BackendImplementation::v4l);
 #endif

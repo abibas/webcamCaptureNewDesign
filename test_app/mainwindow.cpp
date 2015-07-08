@@ -42,6 +42,11 @@ void MainWindow::fillFrameworkListCB()
                 break;
             }
 
+            case BackendImplementation::DirectShow: {
+                this->ui->frameworkListComboBox->addItem("Direct show");
+                break;
+            }
+
             case BackendImplementation::v4l: {
                 this->ui->frameworkListComboBox->addItem("v4l");
                 break;

@@ -17,26 +17,52 @@ endif()
 # backend options
 
 if (WIN32)
-  message(STATUS "Media Foundation backend...")
-  option(BACKEND_MEDIA_FOUNDATION "Build with Media Foundation backend support" OFF)
+  #shared winapi functional
+  aux_source_directory(winapi_shared WINAPI_SHARED_SRC_LIST)
+  file(GLOB WINAPI_SHARED_INCLUDE_LIST winapi_shared/*.h)
+  set(BACKEND_SRC_LIST ${BACKEND_SRC_LIST} ${WINAPI_SHARED_SRC_LIST} ${WINAPI_SHARED_INCLUDE_LIST})
+
+  if (BACKEND_DIRECT_SHOW)
+    message(STATUS "Direct Show backend...")
+    option(BACKEND_DIRECT_SHOW "Build with Direct Show backend support" OFF)
+    if (BACKEND_DIRECT_SHOW)
+      set(LIBS ${LIBS}
+        strmiids
+      )
+      add_definitions(-DWEBCAM_CAPTURE_BACKEND_DIRECT_SHOW)
+
+      aux_source_directory(direct_show DIRECT_SHOW_SRC_LIST)
+      file(GLOB DIRECT_SHOW_INCLUDE_LIST direct_show/*.h)
+      set(BACKEND_SRC_LIST ${BACKEND_SRC_LIST} ${DIRECT_SHOW_SRC_LIST} ${DIRECT_SHOW_INCLUDE_LIST})
+
+      message(STATUS "...ENABLED")
+    else()
+      message(STATUS "...DISABLED")
+    endif()
+  endif()
+
   if (BACKEND_MEDIA_FOUNDATION)
-    set(LIBS ${LIBS}
-      mf
-      mfplat
-      mfreadwrite
-      mfuuid
-      shlwapi
-    )
+    message(STATUS "Media Foundation backend...")
+    option(BACKEND_MEDIA_FOUNDATION "Build with Media Foundation backend support" OFF)
+    if (BACKEND_MEDIA_FOUNDATION)
+      set(LIBS ${LIBS}
+        mf
+        mfplat
+        mfreadwrite
+        mfuuid
+        shlwapi
+      )
 
-    add_definitions(-DWEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION)
+      add_definitions(-DWEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION)
 
-    aux_source_directory(media_foundation MEDIA_FOUNDATION_SRC_LIST)
-    file(GLOB MEDIA_FOUNDATION_INCLUDE_LIST media_foundation/*.h)
-    set(BACKEND_SRC_LIST ${BACKEND_SRC_LIST} ${MEDIA_FOUNDATION_SRC_LIST} ${MEDIA_FOUNDATION_INCLUDE_LIST})
+      aux_source_directory(media_foundation MEDIA_FOUNDATION_SRC_LIST)
+      file(GLOB MEDIA_FOUNDATION_INCLUDE_LIST media_foundation/*.h)
+      set(BACKEND_SRC_LIST ${BACKEND_SRC_LIST} ${MEDIA_FOUNDATION_SRC_LIST} ${MEDIA_FOUNDATION_INCLUDE_LIST})
 
-    message(STATUS "...ENABLED")
-  else()
-    message(STATUS "...DISABLED")
+      message(STATUS "...ENABLED")
+    else()
+      message(STATUS "...DISABLED")
+    endif()
   endif()
 endif()
 
