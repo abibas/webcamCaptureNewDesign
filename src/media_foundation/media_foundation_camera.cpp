@@ -1,6 +1,6 @@
 #include "../capability_tree_builder.h"
 #include "media_foundation_camera.h"
-#include "media_foundation_unique_id.h"
+#include "../winapi_shared/winapi_shared_unique_id.h"
 
 #include <iostream>
 
@@ -24,7 +24,7 @@ CameraInterface *MediaFoundation_Camera::createCamera(std::shared_ptr<void> mfDe
     IMFMediaSource *mediaSource = NULL;
     // Create the MediaSource
 
-    MediaFoundation_UniqueId *uniqueId = static_cast<MediaFoundation_UniqueId *>(information.getUniqueId());
+    WinapiShared_UniqueId *uniqueId = static_cast<WinapiShared_UniqueId *>(information.getUniqueId());
 
     if (MediaFoundation_Camera::createVideoDeviceSource(uniqueId->getId(), &mediaSource) < 0) {
         DEBUG_PRINT("Error: cannot create the media device source.\n");
@@ -68,7 +68,7 @@ int MediaFoundation_Camera::start(const CapabilityFormat &capabilityFormat,
     //"to test just comment this"
     safeReleaseMediaFoundation(&imf_media_source);
     // Create the MediaSource
-    MediaFoundation_UniqueId *uniqueId = static_cast<MediaFoundation_UniqueId *>(information.getUniqueId());
+    WinapiShared_UniqueId *uniqueId = static_cast<WinapiShared_UniqueId *>(information.getUniqueId());
 
     if (createVideoDeviceSource(uniqueId->getId(), &imf_media_source) < 0) {
         DEBUG_PRINT("Error: cannot create the media device source.\n");

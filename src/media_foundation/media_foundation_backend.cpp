@@ -8,7 +8,7 @@
 
 #include "media_foundation_camera.h"
 #include "media_foundation_backend.h"
-#include "media_foundation_unique_id.h"
+#include "../winapi_shared/winapi_shared_unique_id.h"
 
 #include <functional>
 
@@ -98,8 +98,8 @@ std::vector<CameraInformation *> MediaFoundation_Backend::getAvailableCameras() 
 
         if (SUCCEEDED(hr1) && SUCCEEDED(hr2)) {
             std::string name = string_cast<std::string>(friendly_name);
-            //MediaFoundation_UniqueId mfUniqueId(symbolic_link);
-            UniqueId *uniqueId = new MediaFoundation_UniqueId(symbolic_link);
+            //WinapiShared_UniqueId mfUniqueId(symbolic_link, BackendImplementation::MediaFoundation);
+            UniqueId *uniqueId = new WinapiShared_UniqueId(symbolic_link, BackendImplementation::MediaFoundation);
             CameraInformation *camInfo = new CameraInformation(uniqueId, name);
             result.push_back(camInfo);
         }

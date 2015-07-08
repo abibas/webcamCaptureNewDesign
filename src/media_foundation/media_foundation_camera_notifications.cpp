@@ -1,6 +1,6 @@
 #include "media_foundation_camera_notifications.h"
 #include "../media_foundation/media_foundation_backend.h"
-#include "../media_foundation/media_foundation_unique_id.h"
+#include "../winapi_shared/winapi_shared_unique_id.h"
 #include "../utils.h"
 
 #include <iostream>
@@ -155,7 +155,7 @@ void MediaFoundation_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pH
     int nameLen = strlen(pDi->dbcc_name);
     WCHAR *name = new WCHAR[nameLen];
     mbstowcs(name, pDi->dbcc_name, nameLen);
-    UniqueId *uniqId = new MediaFoundation_UniqueId(name);
+    UniqueId *uniqId = new WinapiShared_UniqueId(name, BackendImplementation::MediaFoundation);
 
     for (int i = 0; i < devicesVector.size(); i++) {
         if (*uniqId == *devicesVector.at(i)->getUniqueId()) {
@@ -171,8 +171,8 @@ void MediaFoundation_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *
     DEV_BROADCAST_DEVICEINTERFACE *pDi = (DEV_BROADCAST_DEVICEINTERFACE *)pHdr;
     int nameLen = strlen(pDi->dbcc_name);
     WCHAR *name = new WCHAR[nameLen];
-    mbstowcs(name, pDi->dbcc_name, nameLen);
-    UniqueId *uniqId = new MediaFoundation_UniqueId(name);
+    mbstowcs(name, pDi->dbcc_name, nameLen);    
+    UniqueId *uniqId = new WinapiShared_UniqueId(name, BackendImplementation::MediaFoundation);
     std::vector <CameraInformation *> camerasBuf = backend->getAvailableCameras();
 
     for (int i = 0; i < camerasBuf.size(); i++) {
