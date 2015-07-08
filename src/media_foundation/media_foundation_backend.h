@@ -25,7 +25,7 @@
 #include <camera_information.h>
 #include "media_foundation_utils.h"
 #include "media_foundation_callback.h"
-#include "media_foundation_camera_notifications.h"
+#include "../winapi_shared/winapi_shared_camera_notifications.h"
 
 namespace webcam_capture {
 
@@ -40,7 +40,7 @@ public:
     int setAvaliableCamerasChangedCallback(notifications_callback n_callback);
 private:
     std::shared_ptr<void> mfDeinitializer;
-    MediaFoundation_CameraNotifications *notificationManager;
+    WinapiShared_CameraNotifications *notificationManager;
 };
 } // namespace webcam_capture
 

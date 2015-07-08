@@ -1,5 +1,5 @@
-#ifndef DIRECT_SHOW_UNIQUE_ID_H
-#define DIRECT_SHOW_UNIQUE_ID_H
+#ifndef WINAPI_SHARED_UNIQUE_ID_H
+#define WINAPI_SHARED_UNIQUE_ID_H
 #include <unique_id.h>
 #include <windows.h>
 

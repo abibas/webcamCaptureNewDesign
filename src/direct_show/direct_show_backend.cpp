@@ -5,13 +5,14 @@
 
 #include "direct_show_backend.h"
 #include "../winapi_shared/winapi_shared_unique_id.h"
+
 //#include "media_foundation_camera.h"
 
 namespace webcam_capture {
 
 DirectShow_Backend::DirectShow_Backend()
-    : mfDeinitializer(this, DirectShow_Backend::DeinitBackend)/*,
-      notificationManager(NULL)*/
+    : mfDeinitializer(this, DirectShow_Backend::DeinitBackend),
+      notificationManager(NULL)
 {
     // Initialize COM
     HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
@@ -81,8 +82,13 @@ std::vector<CameraInformation *> DirectShow_Backend::getAvailableCameras() const
         }
         hr = pPropBag->Read(L"DevicePath", &var, 0);
         if (SUCCEEDED(hr)) {
-            // The device path is not intended for display.
-            UniqueId *uniqueId = new WinapiShared_UniqueId(var.bstrVal, BackendImplementation::DirectShow);
+            /// The device path is not intended for display.
+            // need to cope var.bstrVal
+            size_t linkLen = wcslen(var.bstrVal);
+            WCHAR *linkStr = new WCHAR[linkLen];
+            wcsncpy(linkStr, var.bstrVal, linkLen);
+
+            UniqueId *uniqueId = new WinapiShared_UniqueId(linkStr, BackendImplementation::DirectShow);
             std::string name( wname.begin(), wname.end());
             CameraInformation *camInfo = new CameraInformation(uniqueId, name);
             result.push_back(camInfo);
@@ -105,17 +111,17 @@ CameraInterface *DirectShow_Backend::getCamera(const CameraInformation &informat
 
 int DirectShow_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback)
 {
-//    if (notificationManager == nullptr) {
-//        notificationManager = new MediaFoundation_CameraNotifications();
-//    }
+    if (notificationManager == nullptr) {
+        notificationManager = new WinapiShared_CameraNotifications(BackendImplementation::DirectShow);
+    }
 
-//    //IF n_callback is null_ptr or n_callback function is empty
-//    if (!n_callback) {
-//        notificationManager->Stop();
-//        return -1;      //TODO Err code
-//    }
+    //IF n_callback is null_ptr or n_callback function is empty
+    if (!n_callback) {
+        notificationManager->Stop();
+        return -1;      //TODO Err code
+    }
 
-//    notificationManager->Start(n_callback);
+    notificationManager->Start(n_callback);
     return 1; //TODO ERR code (success)
 }
 

@@ -1,5 +1,5 @@
-#ifndef MEDIA_FONDATION_CAMERA_NOTIFICATIONS_H
-#define MEDIA_FONDATION_CAMERA_NOTIFICATIONS_H
+#ifndef WINAPI_SHARED_CAMERA_NOTIFICATIONS_H
+#define WINAPI_SHARED_CAMERA_NOTIFICATIONS_H
 
 #include <backend_interface.h>
 
@@ -11,24 +11,28 @@ namespace webcam_capture {
 
 class MediaFoundation_Backend;
 
-class MediaFoundation_CameraNotifications
+class WinapiShared_CameraNotifications
 {
 public:
-    MediaFoundation_CameraNotifications();
-    ~MediaFoundation_CameraNotifications();
+    WinapiShared_CameraNotifications(BackendImplementation implementation);
+    ~WinapiShared_CameraNotifications();
     void Start(notifications_callback cb);
     void Stop();
+    BackendInterface* getBackend();
+    void setBackend(BackendInterface *backendInterface);
+    BackendImplementation getBackendImplementation();
+
 private:
     void MessageLoop();
 
     static LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-    //std::vector<CameraInformation*> GetAvailableCamerasWithLinks();
     void CameraWasRemoved(DEV_BROADCAST_HDR *pHdr);
     void CameraWasConnected(DEV_BROADCAST_HDR *pHdr);
 
 
-    MediaFoundation_Backend *backend;
+    BackendInterface *backend;
+    BackendImplementation backendImplementation;
     std::vector<CameraInformation *> devicesVector;
     HDEVNOTIFY hDevNotify;
     WNDCLASS windowClass;

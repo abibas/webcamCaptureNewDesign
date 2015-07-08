@@ -127,7 +127,7 @@ CameraInterface *MediaFoundation_Backend::getCamera(const CameraInformation &inf
 int MediaFoundation_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback)
 {
     if (notificationManager == nullptr) {
-        notificationManager = new MediaFoundation_CameraNotifications();
+        notificationManager = new WinapiShared_CameraNotifications(BackendImplementation::MediaFoundation);
     }
 
     //IF n_callback is null_ptr or n_callback function is empty

@@ -10,6 +10,8 @@
 #include <backend_interface.h>
 #include <camera_interface.h>
 #include <camera_information.h>
+
+#include "../winapi_shared/winapi_shared_camera_notifications.h"
 //#include "media_foundation_utils.h"
 //#include "media_foundation_callback.h"
 //#include "media_foundation_camera_notifications.h"
@@ -27,7 +29,7 @@ public:
     int setAvaliableCamerasChangedCallback(notifications_callback n_callback);
 private:
     std::shared_ptr<void> mfDeinitializer;
-//    DirectShow_CameraNotifications *notificationManager;
+    WinapiShared_CameraNotifications *notificationManager;
 };
 } // namespace webcam_capture
 

@@ -1,5 +1,6 @@
-#include "media_foundation_camera_notifications.h"
+#include "winapi_shared_camera_notifications.h"
 #include "../media_foundation/media_foundation_backend.h"
+#include "../direct_show/direct_show_backend.h"
 #include "../winapi_shared/winapi_shared_unique_id.h"
 #include "../utils.h"
 
@@ -14,22 +15,33 @@
 
 namespace webcam_capture {
 
-LRESULT CALLBACK MediaFoundation_CameraNotifications::WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam,
+LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam,
         LPARAM lParam)
 {
-    MediaFoundation_CameraNotifications *pParent;
+    WinapiShared_CameraNotifications *pParent;
 
     switch (uMsg) {
         case WM_CREATE: {
-            pParent = (MediaFoundation_CameraNotifications *)((LPCREATESTRUCT)lParam)->lpCreateParams;
+            pParent = (WinapiShared_CameraNotifications *)((LPCREATESTRUCT)lParam)->lpCreateParams;
             SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pParent);
             //If we are using Media Foundation in new stream it have to be inited in those stream.
+            switch (pParent->getBackendImplementation()) {
+            case BackendImplementation::MediaFoundation:
+                pParent->setBackend(new MediaFoundation_Backend());
+                break;
+            case BackendImplementation::DirectShow:
+                pParent->setBackend(new DirectShow_Backend());
+                break;
+            default:
+                break;
+            }
+
             pParent->devicesVector = pParent->backend->getAvailableCameras();
             break;
         }
 
         case WM_DEVICECHANGE: {
-            pParent = (MediaFoundation_CameraNotifications *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+            pParent = (WinapiShared_CameraNotifications *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 
             if (!pParent) {
                 break;
@@ -59,33 +71,31 @@ LRESULT CALLBACK MediaFoundation_CameraNotifications::WindowProcedure(HWND hWnd,
     return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-MediaFoundation_CameraNotifications::MediaFoundation_CameraNotifications()
+WinapiShared_CameraNotifications::WinapiShared_CameraNotifications(BackendImplementation implementation)
     :   backend(nullptr),
+        backendImplementation(implementation),
         notif_cb(nullptr),
         stopMessageThread(false),
         messageLoopThread()
-{
-    backend = new MediaFoundation_Backend();
+{    
 }
 
-MediaFoundation_CameraNotifications::~MediaFoundation_CameraNotifications()
+WinapiShared_CameraNotifications::~WinapiShared_CameraNotifications()
 {
     if (!stopMessageThread) {
         this->Stop();
     }
-
-    delete backend;
 }
 
-void MediaFoundation_CameraNotifications::Start(notifications_callback cb)
+void WinapiShared_CameraNotifications::Start(notifications_callback cb)
 {
     notif_cb = cb;
     stopMessageThread = false;
-    messageLoopThread = std::thread(&MediaFoundation_CameraNotifications::MessageLoop, this);
-    DEBUG_PRINT("Notifications apturing was started.\n");
+    messageLoopThread = std::thread(&WinapiShared_CameraNotifications::MessageLoop, this);
+    DEBUG_PRINT("Notifications capturing was started.\n");
 }
 
-void MediaFoundation_CameraNotifications::Stop()
+void WinapiShared_CameraNotifications::Stop()
 {
     //TODO executes 2 times - to fix this.
     stopMessageThread = true;
@@ -104,15 +114,15 @@ void MediaFoundation_CameraNotifications::Stop()
     for (int i = 0; i < devicesVector.size(); i++) {
         delete devicesVector.at(i);
     }
-
     DEBUG_PRINT("Notifications capturing was stopped.\n");
+    delete getBackend();
 }
 
-void MediaFoundation_CameraNotifications::MessageLoop()
+void WinapiShared_CameraNotifications::MessageLoop()
 {
     //create stream to move to new stream
     windowClass = {};
-    windowClass.lpfnWndProc = &MediaFoundation_CameraNotifications::WindowProcedure;
+    windowClass.lpfnWndProc = &WinapiShared_CameraNotifications::WindowProcedure;
 
     LPCSTR windowClassName = "CameraNotificationsMessageOnlyWindow";
     windowClass.lpszClassName = windowClassName;
@@ -149,13 +159,13 @@ void MediaFoundation_CameraNotifications::MessageLoop()
     }
 }
 
-void MediaFoundation_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr)
+void WinapiShared_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr)
 {
     DEV_BROADCAST_DEVICEINTERFACE *pDi = (DEV_BROADCAST_DEVICEINTERFACE *)pHdr;
     int nameLen = strlen(pDi->dbcc_name);
     WCHAR *name = new WCHAR[nameLen];
     mbstowcs(name, pDi->dbcc_name, nameLen);
-    UniqueId *uniqId = new WinapiShared_UniqueId(name, BackendImplementation::MediaFoundation);
+    UniqueId *uniqId = new WinapiShared_UniqueId(name, BackendImplementation::DirectShow);
 
     for (int i = 0; i < devicesVector.size(); i++) {
         if (*uniqId == *devicesVector.at(i)->getUniqueId()) {
@@ -166,13 +176,13 @@ void MediaFoundation_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pH
     }
 }
 
-void MediaFoundation_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHdr)
+void WinapiShared_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHdr)
 {
     DEV_BROADCAST_DEVICEINTERFACE *pDi = (DEV_BROADCAST_DEVICEINTERFACE *)pHdr;
     int nameLen = strlen(pDi->dbcc_name);
     WCHAR *name = new WCHAR[nameLen];
     mbstowcs(name, pDi->dbcc_name, nameLen);    
-    UniqueId *uniqId = new WinapiShared_UniqueId(name, BackendImplementation::MediaFoundation);
+    UniqueId *uniqId = new WinapiShared_UniqueId(name, BackendImplementation::DirectShow);
     std::vector <CameraInformation *> camerasBuf = backend->getAvailableCameras();
 
     for (int i = 0; i < camerasBuf.size(); i++) {
@@ -185,4 +195,18 @@ void MediaFoundation_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *
         }
     }
 }
+
+BackendImplementation WinapiShared_CameraNotifications::getBackendImplementation(){
+    return this->backendImplementation;
+}
+
+BackendInterface* WinapiShared_CameraNotifications::getBackend(){
+    return this->backend;
+}
+
+void WinapiShared_CameraNotifications::setBackend(BackendInterface * backendInterface) {
+    this->backend = backendInterface;
+}
+
 }// namespace webcam_capture
+
