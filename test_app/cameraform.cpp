@@ -155,16 +155,25 @@ void CameraForm::changeContrastLabel(int value)
 
 void CameraForm::on_captureVideoBtb_clicked()
 {
-    CapabilityFormat capFormat = capabilityList.at(this->ui->formatComboBox->currentIndex());
-    CapabilityResolution capResolution = capabilityList.at(this->ui->formatComboBox->currentIndex()).
-                                         getResolutions().at(this->ui->resolutionComboBox->currentIndex());
-    CapabilityFps capFps = capabilityList.at(this->ui->formatComboBox->currentIndex()).
-                           getResolutions().at(this->ui->resolutionComboBox->currentIndex()).
-                           getFpses().at(this->ui->fpsComboBox->currentIndex());
 
-    videoForm = new VideoForm(camera, capResolution.getWidth(), capResolution.getHeight());
+
+//    CapabilityFormat capFormat = capabilityList.at(this->ui->formatComboBox->currentIndex());
+//    CapabilityResolution capResolution = capabilityList.at(this->ui->formatComboBox->currentIndex()).
+//                                         getResolutions().at(this->ui->resolutionComboBox->currentIndex());
+//    CapabilityFps capFps = capabilityList.at(this->ui->formatComboBox->currentIndex()).
+//                           getResolutions().at(this->ui->resolutionComboBox->currentIndex()).
+//                           getFpses().at(this->ui->fpsComboBox->currentIndex());
+    videoForm = new VideoForm(camera, 400, 300);     //TODO remove his - for testing
+//    videoForm = new VideoForm(camera, capResolution.getWidth(), capResolution.getHeight());
     videoForm->setAttribute(Qt::WA_DeleteOnClose);
     videoForm->show();
+
+    //TODO remove his - for testing
+    CapabilityFps capFps(0);
+    std::vector<CapabilityFps> cf;
+    CapabilityResolution capResolution(100,100, cf);
+    std::vector<CapabilityResolution> cr;
+    CapabilityFormat capFormat(Format::ARGB32, cr);
 
     if (camera->start(capFormat, capResolution, capFps, videoForm->getFrameCallback()) < 0) {
         delete videoForm;

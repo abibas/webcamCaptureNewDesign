@@ -4,9 +4,8 @@
 #include <iostream>
 
 #include "direct_show_backend.h"
+#include "direct_show_camera.h"
 #include "../winapi_shared/winapi_shared_unique_id.h"
-
-//#include "media_foundation_camera.h"
 
 namespace webcam_capture {
 
@@ -24,7 +23,7 @@ DirectShow_Backend::DirectShow_Backend()
 
 DirectShow_Backend::~DirectShow_Backend()
 {
-//    delete notificationManager;
+    delete notificationManager;
 }
 
 void DirectShow_Backend::DeinitBackend(void *)
@@ -104,9 +103,8 @@ std::vector<CameraInformation *> DirectShow_Backend::getAvailableCameras() const
 }
 
 CameraInterface *DirectShow_Backend::getCamera(const CameraInformation &information) const
-{
-    return NULL;
-    //return DirectShow_Camera::createCamera(mfDeinitializer, information);
+{    
+    return DirectShow_Camera::createCamera(mfDeinitializer, information);
 }
 
 int DirectShow_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback)
