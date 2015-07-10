@@ -55,78 +55,107 @@ int DirectShow_Camera::start(const CapabilityFormat &capabilityFormat,
 
     cb_frame = cb;
 
-    IGraphBuilder *pGraph = NULL;
-    IMediaControl *pControl = NULL;
-    IMediaEventEx *pEvent = NULL;
-    HRESULT hr = CoCreateInstance(CLSID_FilterGraph, NULL,
-            CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&pGraph));
+    pixel_buffer.height[0] = 480;
+    pixel_buffer.width[0] = 640;
+    pixel_buffer.pixel_format = Format::YUY2;
+
+    /// 1 step get IMoniker.
+    IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
+    /// 2 step Create the Capture Graph Builder.
+    ICaptureGraphBuilder2   *pBuild;
+    HRESULT hr;
+    hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL, CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&pBuild );
     if (FAILED(hr)) {
-        return -123;
+        return -99;
     }
 
-    hr = pGraph->QueryInterface(IID_PPV_ARGS(&pControl));
+    /// 3 step Create the Filter Graph Manager.
+    IGraphBuilder           *pGraph;
+    hr = CoCreateInstance(CLSID_FilterGraph, 0, CLSCTX_INPROC, IID_IGraphBuilder, (void**)&pGraph);
     if (FAILED(hr)) {
-        return -3123;
+        return -99;
     }
 
-    hr = pGraph->QueryInterface(IID_PPV_ARGS(&pEvent));
+    /// 4 step Initialize the Filter Graph  for the Capture Graph Builder to use.
+    pBuild->SetFiltergraph(pGraph);
+
+    /// 5 step Attach the graph control
+    IMediaControl           *pControl;
+    hr = pGraph->QueryInterface(IID_IMediaControl, (void **)&pControl);
     if (FAILED(hr)) {
-        return -324;
+        return -99;
     }
 
-    // Create SampleGrabber
-    IBaseFilter *pGrabberF = NULL;
-    ISampleGrabber *pGrabber = NULL;
-
-    hr = CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pGrabberF));
+    /// 6 step  Attach the graph events
+    IMediaEvent             *pEvent;
+    hr = pGraph->QueryInterface(IID_IMediaEvent, (void **)&pEvent);
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot create CoCreateInstance.\n");
-        return -3;
+        return -99;
     }
 
-    hr = pGraph->AddFilter(pGrabberF, L"Sample Grabber");
+    /// 7 step Device binding with connection
+    IBaseFilter             *pVCap;
+    hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot pGrabberF->QueryInterface.\n");
-        return -4;
+        return -99;
+    }
+    /// 8 Add the Device Filter to the Graph
+    hr = pGraph->AddFilter(pVCap, L"Video Capture");
+    if (FAILED(hr)) {
+        return -99;
+    }
+    /// 9 Creates Grabber Filter and adds it to the Filter Graph
+    /// Once connected, Grabber Filter will capture still images
+    IBaseFilter             *pGrabberFilter;
+    hr = CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pGrabberFilter));
+    if (FAILED(hr)) {
+        return -99;
     }
 
-    hr = pGrabberF->QueryInterface(IID_PPV_ARGS(&pGrabber));
+    /// 10 Create Sample grabber
+    hr = pGraph->AddFilter(pGrabberFilter, L"Sample Grabber");
+    ISampleGrabber          *pSampleGrabber;
+    hr = pGrabberFilter->QueryInterface(IID_ISampleGrabber, (void**)&pSampleGrabber);
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot pGrabberF->QueryInterface.\n");
-        return -5;
+        return -99;
     }
+
+    /// 11 set callback
+    ISampleGrabberCB* pGrabberCB = new DirectShow_Callback(this);
+
+    /// 12 set callback to the ISampleGrabber
+    pSampleGrabber->SetCallback(pGrabberCB, 0);
 
     AM_MEDIA_TYPE mt;
     ZeroMemory(&mt, sizeof(mt));
     mt.majortype = MEDIATYPE_Video;
     mt.subtype = MEDIASUBTYPE_YUY2;
-
-
-    hr = pGrabber->SetMediaType(&mt);
-    if (FAILED(hr))  {
-       return -123;
-    }
-
-////////Run the Graph
-    ds_callback = new DirectShow_Callback(this);
-    hr = pGrabber->SetCallback(ds_callback, 0);
+    hr = pSampleGrabber->SetMediaType(&mt);
     if (FAILED(hr)) {
-       return -123;
+        return -99;
     }
-
-    hr = pGrabber->SetBufferSamples(TRUE);
+    hr = pSampleGrabber->SetOneShot(FALSE);
     if (FAILED(hr)) {
-       return -123;
+        return -99;
     }
-
-    hr = pControl->Run();
+    hr = pSampleGrabber->SetBufferSamples(TRUE); // To comment and check
     if (FAILED(hr)) {
-       return -123;
+        return -99;
     }
 
-    long evCode;
-    hr = pEvent->WaitForCompletion(INFINITE, &evCode);
+//    hr = pSampleGrabber->GetConnectedMediaType(&mt);
+//    if (FAILED(hr)) {
+//        return -99;
+//    }
+//    VIDEOINFOHEADER *pVih = (VIDEOINFOHEADER *)mt.pbFormat;
+//    int gChannels = pVih->bmiHeader.biBitCount / 8;
+//    int gWidth = pVih->bmiHeader.biWidth;
+//    int gHeight = pVih->bmiHeader.biHeight;
 
+    hr = pBuild->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, pVCap, pGrabberFilter, NULL);
+
+    pControl->Run();
+/////////////////
 
     return 1;      //TODO Err code
 }
@@ -174,4 +203,77 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
 
     return true;
 }
+
+
+/******** SDK FUNCTIONS ******/
+IMoniker* DirectShow_Camera::getIMonikerByUniqueId(UniqueId *uniqueId)
+{
+    IEnumMoniker *pEnum;
+    ICreateDevEnum *pDevEnum;
+    HRESULT hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL,
+                                  CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pDevEnum));
+
+    if (FAILED(hr)) {
+        DEBUG_PRINT("Error during CoCreateInstance.\n");
+        return NULL;
+    }
+
+    // Create an enumerator for the category Video capture devices.
+    hr = pDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, &pEnum, 0);
+    if (hr == S_FALSE) {
+        DEBUG_PRINT("There is no available devices.\n");
+        hr = VFW_E_NOT_FOUND;  // The category is empty. Treat as an error.
+    }
+    pDevEnum->Release();
+
+    IMoniker *pResult = NULL;
+    IMoniker *pMoniker = NULL;
+    while (pEnum->Next(1, &pMoniker, NULL) == S_OK) {
+        IPropertyBag *pPropBag;
+        HRESULT hr = pMoniker->BindToStorage(0, 0, IID_PPV_ARGS(&pPropBag));
+        if (FAILED(hr)) {
+            pMoniker->Release();
+            continue;
+        }
+        VARIANT var;
+        VariantInit(&var);
+
+        hr = pPropBag->Read(L"DevicePath", &var, 0);
+        if (SUCCEEDED(hr)) {
+            size_t linkLen = wcslen(var.bstrVal);
+            WCHAR *linkStr = new WCHAR[linkLen];
+            wcsncpy(linkStr, var.bstrVal, linkLen);
+
+            UniqueId *ud = new WinapiShared_UniqueId(linkStr, BackendImplementation::DirectShow);
+            if (*uniqueId == *ud) {
+                pResult = pMoniker;
+                VariantClear(&var);
+                pPropBag->Release();
+                continue;
+            }
+            VariantClear(&var);
+        }
+
+        pPropBag->Release();
+        pMoniker->Release();
+    }
+    pEnum->Release();
+    return pResult;
+}
+
+HRESULT DirectShow_Camera::ConnectFilters(ICaptureGraphBuilder2 *pBuild, IGraphBuilder *pGraph, IBaseFilter *pFirst, IBaseFilter *pSecond) {
+    HRESULT hr = S_OK;
+//    IPin *pOut = NULL;
+//    IPin *pIn  = NULL;
+
+//    pBuild->FindPin(pFirst,  PINDIR_OUTPUT, NULL, NULL, TRUE, 0, &pOut);
+//    pBuild->FindPin(pSecond, PINDIR_INPUT, NULL, NULL, TRUE, 0, &pIn);
+
+//    if(pOut && pIn) hr = pGraph->Connect(pOut, pIn);
+//    if(pIn) pIn->Release();
+//    if(pOut) pOut->Release();
+
+    return hr;
+}
+
 } // namespace webcam_capture

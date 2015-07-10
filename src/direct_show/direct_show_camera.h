@@ -50,6 +50,9 @@ public:
 private:
     DirectShow_Camera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
 
+    /***** SDK FUNCTIONS *****/
+    IMoniker* getIMonikerByUniqueId(UniqueId *uniqueId);
+    HRESULT ConnectFilters(ICaptureGraphBuilder2 *pBuild, IGraphBuilder *pGraph, IBaseFilter *pFirst, IBaseFilter *pSecond);
 public:
     std::shared_ptr<void> mfDeinitializer;
     PixelBuffer pixel_buffer;
