@@ -22,48 +22,46 @@ if (WIN32)
   file(GLOB WINAPI_SHARED_INCLUDE_LIST winapi_shared/*.h)
   set(BACKEND_SRC_LIST ${BACKEND_SRC_LIST} ${WINAPI_SHARED_SRC_LIST} ${WINAPI_SHARED_INCLUDE_LIST})
 
+  message(STATUS "Direct Show backend...")
+  option(BACKEND_DIRECT_SHOW "Build with Direct Show backend support" OFF)
   if (BACKEND_DIRECT_SHOW)
-    message(STATUS "Direct Show backend...")
-    option(BACKEND_DIRECT_SHOW "Build with Direct Show backend support" OFF)
-    if (BACKEND_DIRECT_SHOW)
-      set(LIBS ${LIBS}
-        strmiids
-      )
-      add_definitions(-DWEBCAM_CAPTURE_BACKEND_DIRECT_SHOW)
+    set(LIBS ${LIBS}
+      strmiids
+    )
 
-      aux_source_directory(direct_show DIRECT_SHOW_SRC_LIST)
-      file(GLOB DIRECT_SHOW_INCLUDE_LIST direct_show/*.h)
-      set(BACKEND_SRC_LIST ${BACKEND_SRC_LIST} ${DIRECT_SHOW_SRC_LIST} ${DIRECT_SHOW_INCLUDE_LIST})
+    add_definitions(-DWEBCAM_CAPTURE_BACKEND_DIRECT_SHOW)
 
-      message(STATUS "...ENABLED")
-    else()
-      message(STATUS "...DISABLED")
-    endif()
+    aux_source_directory(direct_show DIRECT_SHOW_SRC_LIST)
+    file(GLOB DIRECT_SHOW_INCLUDE_LIST direct_show/*.h)
+    set(BACKEND_SRC_LIST ${BACKEND_SRC_LIST} ${DIRECT_SHOW_SRC_LIST} ${DIRECT_SHOW_INCLUDE_LIST})
+
+    message(STATUS "...ENABLED")
+  else()
+    message(STATUS "...DISABLED")
   endif()
 
+  message(STATUS "Media Foundation backend...")
+  option(BACKEND_MEDIA_FOUNDATION "Build with Media Foundation backend support" OFF)
   if (BACKEND_MEDIA_FOUNDATION)
-    message(STATUS "Media Foundation backend...")
-    option(BACKEND_MEDIA_FOUNDATION "Build with Media Foundation backend support" OFF)
-    if (BACKEND_MEDIA_FOUNDATION)
-      set(LIBS ${LIBS}
-        mf
-        mfplat
-        mfreadwrite
-        mfuuid
-        shlwapi
-      )
+    set(LIBS ${LIBS}
+      mf
+      mfplat
+      mfreadwrite
+      mfuuid
+      shlwapi
+    )
 
-      add_definitions(-DWEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION)
+    add_definitions(-DWEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION)
 
-      aux_source_directory(media_foundation MEDIA_FOUNDATION_SRC_LIST)
-      file(GLOB MEDIA_FOUNDATION_INCLUDE_LIST media_foundation/*.h)
-      set(BACKEND_SRC_LIST ${BACKEND_SRC_LIST} ${MEDIA_FOUNDATION_SRC_LIST} ${MEDIA_FOUNDATION_INCLUDE_LIST})
+    aux_source_directory(media_foundation MEDIA_FOUNDATION_SRC_LIST)
+    file(GLOB MEDIA_FOUNDATION_INCLUDE_LIST media_foundation/*.h)
+    set(BACKEND_SRC_LIST ${BACKEND_SRC_LIST} ${MEDIA_FOUNDATION_SRC_LIST} ${MEDIA_FOUNDATION_INCLUDE_LIST})
 
-      message(STATUS "...ENABLED")
-    else()
-      message(STATUS "...DISABLED")
-    endif()
+    message(STATUS "...ENABLED")
+  else()
+    message(STATUS "...DISABLED")
   endif()
+
 endif()
 
 # add new backends here
