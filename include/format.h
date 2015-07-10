@@ -1,24 +1,20 @@
-/** License
-    This header is using code from the https://github.com/roxlu/video_capture
-    distributed under the Apache 2.0 license
-    http://www.apache.org/licenses/LICENSE-2.0
-  */
-
-/** Information about formats
- *      windows formats: - https://msdn.microsoft.com/en-us/library/windows/desktop/aa370819(v=vs.85).aspx
- *      description about the formats: https://msdn.microsoft.com/en-us/library/windows/desktop/dd206750(v=vs.85).aspx
-  */
-
 #ifndef FORMAT_H
 #define FORMAT_H
 
 #include <webcam_capture_export.h>
 
-namespace webcam_capture {
-/**
- * Enum of supported video capture formats
+/* Media Foundation
+ *   - Formats: https://msdn.microsoft.com/en-us/library/windows/desktop/aa370819(v=vs.85).aspx
+ *   - Description: https://msdn.microsoft.com/en-us/library/windows/desktop/dd206750(v=vs.85).aspx
  */
-enum class WEBCAM_CAPTURE_EXPORT Format { //Uncompressed RGB Formats
+
+namespace webcam_capture {
+
+/**
+ * Supported pixel formats.
+ */
+enum class WEBCAM_CAPTURE_EXPORT Format {
+    //Uncompressed RGB Formats
     RGB8,           /* RGB, 8 bits per pixel (bpp)*/
     RGB555,         /* RGB 555, 16 bpp*/
     RGB565,         /* RGB 565, 16 bpp*/
@@ -80,23 +76,8 @@ enum class WEBCAM_CAPTURE_EXPORT Format { //Uncompressed RGB Formats
     O420,           /* "420O" 8-bit per channel planar YUV 4:2:0 video*/
 
     UNKNOWN         /* Unknown format*/
-//OLD TYPES
-//                        UYVY422,        /* Cb Y0 Cr Y1 */
-//                        YUYV422,        /* Y0 Cb Y1 Cr */
-//                        YUV422P,        /* YUV422 Planar */
-//                        YUV420P,        /* YUV420 Planar */
-//                        YUV420BP,       /* YUV420 Bi Planar */
-//                        YUVJ420P,       /* YUV420 Planar Full Range (JPEG), J comes from the JPEG. (values 0-255 used) */
-//                        YUVJ420BP,      /* YUV420 Bi-Planer Full Range (JPEG), J comes fro the JPEG. (values: luma = [16,235], chroma=[16,240]) */
-//                        ARGB32,         /* ARGB 8:8:8:8 32bpp, ARGBARGBARGB... */
-//                        BGRA32,         /* BGRA 8:8:8:8 32bpp, BGRABGRABGRA... */
-//                        RGBA32,         /* RGBA 8:8:8:8 32bpp. */
-//                        RGB24,          /* RGB 8:8:8 24bit */
-//                        JPEG_OPENDML,   /* JPEG with Open-DML extensions */
-//                        H264,           /* H264 */
-//                        MJPEG,          /* MJPEG 2*/
-//
 };
+
 } // namespace webcam_capture
 
 #endif // FORMAT_H

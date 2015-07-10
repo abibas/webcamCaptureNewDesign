@@ -5,7 +5,7 @@
 
 namespace webcam_capture {
 /**
- *  Contains valid values of a VideoProperty
+ * Provides range information of a property.
  */
 class WEBCAM_CAPTURE_EXPORT VideoPropertyRange
 {
@@ -15,44 +15,47 @@ public:
         maxValue(0),
         stepValue(0),
         defaultValue(0) {}
+
     /**
-    * @param min Minimum video property value
-    *
-    * @param max Maximum video property value
-    *
-    * @param step Delta stepping value
-    *
-    * @param defaultValue Default video property value
-    */
+     * @param min Minimum video property value.
+     * @param max Maximum video property value.
+     * @param step Step size.
+     * @param defaultValue Default video property value.
+     */
     VideoPropertyRange(int min, int max, int step, int defaultValue) :
         minValue(min),
         maxValue(max),
         stepValue(step),
         defaultValue(defaultValue) {}
+
     ~VideoPropertyRange() {}
+
     /**
-     * @return Minimum video property value
+     * @return Minimum video property value.
      */
     int getMinValue() const
     {
         return minValue;
     }
+
     /**
-     * @return Maximum  video property value
+     * @return Maximum video property value.
      */
     int getMaxValue() const
     {
         return maxValue;
     }
+
     /**
-     * @return Delta video property stepping value
+     * @return Step size value.
      */
     int getStepValue() const
     {
         return stepValue;
     }
+
     /**
-     * @return Default video property value
+     * @return Default video property value.
      */
     int getDefaultValue() const
     {
@@ -60,7 +63,7 @@ public:
     }
 
     /**
-     * @param minVal Set minimum video property value
+     * @param minVal Set minimum video property value.
      */
     void setMinValue(const int minVal)
     {
@@ -68,7 +71,7 @@ public:
     }
 
     /**
-     * @param maxVal Set maximum video property value
+     * @param maxVal Set maximum video property value.
      */
     void setMaxValue(const int maxVal)
     {
@@ -76,7 +79,7 @@ public:
     }
 
     /**
-     * @param stepVal Set video property stepping value
+     * @param stepVal Set step size value.
      */
     void setStepValue(const int stepVal)
     {
@@ -84,7 +87,7 @@ public:
     }
 
     /**
-     * @param defaultVal Set defuaut video property value
+     * @param defaultVal Set defuaut video property value.
      */
     void setDefaultValue(const int defaultVal)
     {
@@ -96,7 +99,7 @@ private:
     int maxValue;
     int stepValue;
     int defaultValue;
-};
+}; //FIXME(nurupo): make immutable, remove "Value" endings in methods.
 
 } // namespace webcam_capture
 
