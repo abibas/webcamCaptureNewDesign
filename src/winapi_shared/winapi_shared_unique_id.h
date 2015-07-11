@@ -1,6 +1,8 @@
 #ifndef WINAPI_SHARED_UNIQUE_ID_H
 #define WINAPI_SHARED_UNIQUE_ID_H
+
 #include <unique_id.h>
+
 #include <windows.h>
 
 namespace webcam_capture {
@@ -14,9 +16,11 @@ public:
     WCHAR *getId();
     bool operator==(const UniqueId &other) override;
     bool operator!=(const UniqueId &other) override;
+
 private:    
     WCHAR *uniqueId; //TODO To consider do we need to save links in WCHAR* - we just could use std::wstring.
 };
-}
 
-#endif // MEDIA_FOUNDATION_UNIQUE_ID_H
+} // namespace webcam_capture
+
+#endif // WINAPI_SHARED_UNIQUE_ID_H

@@ -14,6 +14,11 @@ WinapiShared_UniqueId::~WinapiShared_UniqueId()
 
 bool WinapiShared_UniqueId::operator==(const UniqueId &other)
 {
+    // "other" must be a UniqueId of the same backend implementation in order to proceed
+    if (!UniqueId::operator==(other)) {
+        return false;
+    }
+
     WinapiShared_UniqueId otherUniqueId = static_cast<const WinapiShared_UniqueId &>(other);
     bool result = false;
     size_t localStrLen = wcslen(uniqueId);
@@ -44,5 +49,6 @@ WCHAR* WinapiShared_UniqueId::getId()
 {
     return uniqueId;
 }
+
 }// namespace webcam_capture
 
