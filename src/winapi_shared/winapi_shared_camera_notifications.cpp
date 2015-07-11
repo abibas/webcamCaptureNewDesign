@@ -1,8 +1,6 @@
-#include "../direct_show/direct_show_backend.h"
-#include "../media_foundation/media_foundation_backend.h"
 #include "../utils.h"
-#include "../winapi_shared/winapi_shared_unique_id.h"
 #include "winapi_shared_camera_notifications.h"
+#include "winapi_shared_unique_id.h"
 
 #include <backend_factory.h>
 
@@ -181,7 +179,7 @@ void WinapiShared_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr)
     int nameLen = strlen(pDi->dbcc_name);
     WCHAR *name = new WCHAR[nameLen];
     mbstowcs(name, pDi->dbcc_name, nameLen);
-    UniqueId *uniqId = new WinapiShared_UniqueId(name, BackendImplementation::DirectShow);
+    UniqueId *uniqId = new WinapiShared_UniqueId(name, implementation);
 
     for (int i = 0; i < devicesVector.size(); i++) {
         if (*uniqId == *devicesVector.at(i)->getUniqueId()) {
@@ -209,7 +207,8 @@ void WinapiShared_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHd
     int nameLen = strlen(pDi->dbcc_name);
     WCHAR *name = new WCHAR[nameLen];
     mbstowcs(name, pDi->dbcc_name, nameLen);    
-    UniqueId *uniqId = new WinapiShared_UniqueId(name, BackendImplementation::DirectShow);
+    UniqueId *uniqId = new WinapiShared_UniqueId(name, implementation);
+
     std::vector <CameraInformation *> camerasBuf = backend->getAvailableCameras();
 
     for (int i = 0; i < camerasBuf.size(); i++) {
