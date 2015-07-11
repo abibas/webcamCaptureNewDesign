@@ -21,7 +21,7 @@ LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UI
     WinapiShared_CameraNotifications *pThis;
 
     switch (uMsg) {
-        // WM_CREATE is guaranteed to be called only once, at the startup
+        // guaranteed to be called only once, at the startup
         case WM_CREATE: {
             pThis = static_cast<WinapiShared_CameraNotifications *>(reinterpret_cast<CREATESTRUCT *>(lParam)->lpCreateParams);
             SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pThis);
@@ -37,6 +37,8 @@ LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UI
             break;
         }
 
+        // called whenever a device that belongs to a group we have previously
+        // registered to receive notifications of changes its state
         case WM_DEVICECHANGE: {
             pThis = reinterpret_cast<WinapiShared_CameraNotifications *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
@@ -63,12 +65,28 @@ LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UI
             break;
         }
 
+        // called by us when WinapiShared_CameraNotifications::stop is called,
+        // the rest of void WinapiShared_CameraNotifications::MessageLoop is being executed after we PostQuitMessage.
         case WM_USER: {
             if (lParam == QUIT_FROM_NOTIFICATIONS_LOOP) {
                 DEBUG_PRINT("Received request to stop the loop.\n");
                 PostQuitMessage(0);
                 break;
             }
+        }
+
+        // guaranteed to be called only once, at the end of lifecycle when we call DestroyWindow on the window
+        case WM_DESTROY: {
+            pThis = reinterpret_cast<WinapiShared_CameraNotifications *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+
+            if (pThis->backend) {
+                delete pThis->backend;
+                pThis->backend = nullptr;
+            }
+
+            DEBUG_PRINT("Received destroy message.\n");
+
+            break;
         }
     }
 
@@ -85,21 +103,29 @@ WinapiShared_CameraNotifications::WinapiShared_CameraNotifications(BackendImplem
 
 WinapiShared_CameraNotifications::~WinapiShared_CameraNotifications()
 {
-    if (threadIsRunning) {
-        stop();
-    }
+    stop();
 }
 
-void WinapiShared_CameraNotifications::start(notifications_callback cb)
+bool WinapiShared_CameraNotifications::start(notifications_callback cb)
 {
+    if (threadIsRunning) {
+        return false;
+    }
+
     notif_cb = cb;
     messageLoopThread = std::thread(&WinapiShared_CameraNotifications::MessageLoop, this);
     threadIsRunning = true;
     DEBUG_PRINT("Notifications capturing was started.\n");
+
+    return true;
 }
 
-void WinapiShared_CameraNotifications::stop()
+bool WinapiShared_CameraNotifications::stop()
 {
+    if (!threadIsRunning) {
+        return false;
+    }
+
     //TODO executes 2 times - to fix this.
     SendMessage(messageWindow, WM_USER, 0, QUIT_FROM_NOTIFICATIONS_LOOP);
 
@@ -114,6 +140,8 @@ void WinapiShared_CameraNotifications::stop()
         delete devicesVector.at(i);
     }
     DEBUG_PRINT("Notifications capturing was stopped.\n");
+
+    return true;
 }
 
 void WinapiShared_CameraNotifications::MessageLoop()
@@ -126,14 +154,14 @@ void WinapiShared_CameraNotifications::MessageLoop()
 
     if (!RegisterClass(&windowClass)) {
         DEBUG_PRINT("Failed to register window class.\n");
-        return;
+        goto done;
     }
 
     messageWindow = CreateWindow(windowClassName, 0, 0, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, this);
 
     if (!messageWindow) {
         DEBUG_PRINT("Failed to create message-only window.\n");
-        return;
+        goto unregister_window_class;
     }
 
     DEV_BROADCAST_DEVICEINTERFACE NotificationFilter;
@@ -147,6 +175,11 @@ void WinapiShared_CameraNotifications::MessageLoop()
 
     hDevNotify = RegisterDeviceNotificationW(messageWindow, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
 
+    if (!hDevNotify) {
+        DEBUG_PRINT("Failed to register for device notifications.\n");
+        goto destroy_window;
+    }
+
     MSG msg;
 
     while (GetMessage(&msg, messageWindow, 0, 0) > 0) {
@@ -154,9 +187,16 @@ void WinapiShared_CameraNotifications::MessageLoop()
         DispatchMessage(&msg);
     }
 
+unregister_notifications:
     UnregisterDeviceNotification(hDevNotify);
+
+destroy_window:
     DestroyWindow(messageWindow);
+
+unregister_window_class:
     UnregisterClass(windowClass.lpszClassName, NULL);
+
+done:
     notif_cb = nullptr;
 
     DEBUG_PRINT("MessageLoop exited.\n");
