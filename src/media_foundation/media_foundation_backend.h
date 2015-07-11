@@ -38,9 +38,10 @@ public:
     std::vector<CameraInformation *> getAvailableCameras() const;
     CameraInterface *getCamera(const CameraInformation &information) const;
     int setAvaliableCamerasChangedCallback(notifications_callback n_callback);
+
 private:
     std::shared_ptr<void> mfDeinitializer;
-    WinapiShared_CameraNotifications *notificationManager;
+    WinapiShared_CameraNotifications notificationManager;
 };
 } // namespace webcam_capture
 

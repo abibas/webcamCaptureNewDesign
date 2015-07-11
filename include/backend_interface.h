@@ -34,8 +34,13 @@ typedef std::function<void(CameraInformation *information, CameraPlugStatus stat
 class WEBCAM_CAPTURE_EXPORT BackendInterface
 {
 public:
-    BackendInterface() {}
+    BackendInterface(BackendImplementation implementation) : implementation(implementation) {}
     virtual ~BackendInterface() {}
+
+    /**
+     * @return Underlying implementation this backend uses.
+     */
+    BackendImplementation getImplementation() const {return implementation;}
 
     /**
      * @return Short information about available cameras.
@@ -60,6 +65,9 @@ public:
      * @return FIXME(nurupo): the return value should be wither an enum or bool.
      */
     virtual int setAvaliableCamerasChangedCallback(notifications_callback n_callback) = 0;
+
+protected:
+    const BackendImplementation implementation;
 };
 
 } // namespace webcam_capture

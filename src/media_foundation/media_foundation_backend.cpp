@@ -15,8 +15,9 @@
 namespace webcam_capture {
 
 MediaFoundation_Backend::MediaFoundation_Backend()
-    : mfDeinitializer(this, MediaFoundation_Backend::DeinitBackend),
-      notificationManager(NULL)
+    : BackendInterface(BackendImplementation::MediaFoundation),
+      mfDeinitializer(this, MediaFoundation_Backend::DeinitBackend),
+      notificationManager(BackendImplementation::MediaFoundation)
 {
     // Initialize COM
     HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
@@ -35,7 +36,6 @@ MediaFoundation_Backend::MediaFoundation_Backend()
 
 MediaFoundation_Backend::~MediaFoundation_Backend()
 {
-    delete notificationManager;
 }
 
 void MediaFoundation_Backend::DeinitBackend(void *)
@@ -126,17 +126,13 @@ CameraInterface *MediaFoundation_Backend::getCamera(const CameraInformation &inf
 
 int MediaFoundation_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback)
 {
-    if (notificationManager == nullptr) {
-        notificationManager = new WinapiShared_CameraNotifications(BackendImplementation::MediaFoundation);
-    }
-
     //IF n_callback is null_ptr or n_callback function is empty
     if (!n_callback) {
-        notificationManager->Stop();
+        notificationManager.stop();
         return -1;      //TODO Err code
     }
 
-    notificationManager->Start(n_callback);
+    notificationManager.start(n_callback);
     return 1; //TODO ERR code (success)
 }
 

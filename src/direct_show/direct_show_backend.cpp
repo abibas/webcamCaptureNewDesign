@@ -10,8 +10,9 @@
 namespace webcam_capture {
 
 DirectShow_Backend::DirectShow_Backend()
-    : mfDeinitializer(this, DirectShow_Backend::DeinitBackend),
-      notificationManager(NULL)
+    : BackendInterface(BackendImplementation::DirectShow),
+      mfDeinitializer(this, DirectShow_Backend::DeinitBackend),
+      notificationManager(BackendImplementation::DirectShow)
 {
     // Initialize COM
     HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
@@ -23,7 +24,6 @@ DirectShow_Backend::DirectShow_Backend()
 
 DirectShow_Backend::~DirectShow_Backend()
 {
-    delete notificationManager;
 }
 
 void DirectShow_Backend::DeinitBackend(void *)
@@ -109,17 +109,13 @@ CameraInterface *DirectShow_Backend::getCamera(const CameraInformation &informat
 
 int DirectShow_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback)
 {
-    if (notificationManager == nullptr) {
-        notificationManager = new WinapiShared_CameraNotifications(BackendImplementation::DirectShow);
-    }
-
     //IF n_callback is null_ptr or n_callback function is empty
     if (!n_callback) {
-        notificationManager->Stop();
+        notificationManager.stop();
         return -1;      //TODO Err code
     }
 
-    notificationManager->Start(n_callback);
+    notificationManager.start(n_callback);
     return 1; //TODO ERR code (success)
 }
 

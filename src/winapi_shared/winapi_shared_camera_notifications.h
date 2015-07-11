@@ -4,6 +4,7 @@
 #include <backend_interface.h>
 
 #include <thread>
+
 #include <Windows.h>
 #include <dbt.h>
 
@@ -16,11 +17,8 @@ class WinapiShared_CameraNotifications
 public:
     WinapiShared_CameraNotifications(BackendImplementation implementation);
     ~WinapiShared_CameraNotifications();
-    void Start(notifications_callback cb);
-    void Stop();
-    BackendInterface* getBackend();
-    void setBackend(BackendInterface *backendInterface);
-    BackendImplementation getBackendImplementation();
+    void start(notifications_callback cb);
+    void stop();
 
 private:
     void MessageLoop();
@@ -31,14 +29,14 @@ private:
     void CameraWasConnected(DEV_BROADCAST_HDR *pHdr);
 
 
+    BackendImplementation implementation;
     BackendInterface *backend;
-    BackendImplementation backendImplementation;
     std::vector<CameraInformation *> devicesVector;
     HDEVNOTIFY hDevNotify;
     WNDCLASS windowClass;
     HWND messageWindow;
 
-    bool stopMessageThread;
+    bool threadIsRunning;
     notifications_callback notif_cb;    //TODO to make threads synchronization
     std::thread messageLoopThread;
 };
