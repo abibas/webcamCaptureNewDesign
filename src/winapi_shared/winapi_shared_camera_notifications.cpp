@@ -32,8 +32,8 @@ LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UI
                 DEBUG_PRINT("Couldn't initialize backend.\n");
                 break;
             }
-
-            pThis->devicesVector = pThis->backend->getAvailableCameras();
+            // FIXME(nurupo): CameraInformation*
+            //pThis->devicesVector = pThis->backend->getAvailableCameras();
             break;
         }
 
@@ -135,10 +135,8 @@ bool WinapiShared_CameraNotifications::stop()
 
     threadIsRunning = false;
 
-    //delete all records from cameraInfo vector
-    for (int i = 0; i < devicesVector.size(); i++) {
-        delete devicesVector.at(i);
-    }
+    devicesVector.clear();
+
     DEBUG_PRINT("Notifications capturing was stopped.\n");
 
     return true;
@@ -222,7 +220,7 @@ void WinapiShared_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr)
     UniqueId *uniqId = new WinapiShared_UniqueId(name, implementation);
 
     for (int i = 0; i < devicesVector.size(); i++) {
-        if (*uniqId == *devicesVector.at(i)->getUniqueId()) {
+        if (*uniqId == *devicesVector.at(i).getUniqueId()) {
             notif_cb(devicesVector.at(i), CameraPlugStatus::CAMERA_DISCONNECTED);
             devicesVector.erase(devicesVector.begin() + i);
             break;
@@ -248,7 +246,7 @@ void WinapiShared_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHd
     WCHAR *name = new WCHAR[nameLen];
     mbstowcs(name, pDi->dbcc_name, nameLen);    
     UniqueId *uniqId = new WinapiShared_UniqueId(name, implementation);
-
+/* FIXME(nurupo): CameraInformation*
     std::vector <CameraInformation *> camerasBuf = backend->getAvailableCameras();
 
     for (int i = 0; i < camerasBuf.size(); i++) {
@@ -259,7 +257,7 @@ void WinapiShared_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHd
         } else {
             delete camerasBuf.at(i);
         }
-    }
+    }*/
 }
 
 } // namespace webcam_capture

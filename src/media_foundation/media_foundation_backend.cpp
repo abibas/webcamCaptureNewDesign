@@ -52,10 +52,10 @@ void MediaFoundation_Backend::DeinitBackend(void *)
     DEBUG_PRINT("MediaFoundation_Backend Successfully deinited.\n");
 }
 
-std::vector<CameraInformation *> MediaFoundation_Backend::getAvailableCameras() const
+std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() const
 {
 
-    std::vector<CameraInformation *> result;
+    std::vector<CameraInformation> result;
     UINT32 count = 0;
     IMFAttributes *config = NULL;
     IMFActivate **devices = NULL;
@@ -100,8 +100,7 @@ std::vector<CameraInformation *> MediaFoundation_Backend::getAvailableCameras() 
             std::string name = string_cast<std::string>(friendly_name);
             //WinapiShared_UniqueId mfUniqueId(symbolic_link, BackendImplementation::MediaFoundation);
             UniqueId *uniqueId = new WinapiShared_UniqueId(symbolic_link, BackendImplementation::MediaFoundation);
-            CameraInformation *camInfo = new CameraInformation(uniqueId, name);
-            result.push_back(camInfo);
+            result.push_back({uniqueId, name});
         }
 
         CoTaskMemFree(friendly_name);

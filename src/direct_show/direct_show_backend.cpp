@@ -33,10 +33,10 @@ void DirectShow_Backend::DeinitBackend(void *)
     DEBUG_PRINT("DirectShow_Backend Successfully deinited.\n");
 }
 
-std::vector<CameraInformation *> DirectShow_Backend::getAvailableCameras() const
+std::vector<CameraInformation> DirectShow_Backend::getAvailableCameras() const
 {
 
-    std::vector<CameraInformation *> result;
+    std::vector<CameraInformation> result;
 
     IEnumMoniker *pEnum;
     ICreateDevEnum *pDevEnum;
@@ -89,8 +89,7 @@ std::vector<CameraInformation *> DirectShow_Backend::getAvailableCameras() const
 
             UniqueId *uniqueId = new WinapiShared_UniqueId(linkStr, BackendImplementation::DirectShow);
             std::string name( wname.begin(), wname.end());
-            CameraInformation *camInfo = new CameraInformation(uniqueId, name);
-            result.push_back(camInfo);
+            result.push_back({uniqueId, name});
             VariantClear(&var);
         }
 

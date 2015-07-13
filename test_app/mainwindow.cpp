@@ -65,7 +65,7 @@ void MainWindow::fillCameraListCB()
     this->ui->cameraListComboBox->clear();
 
     for (size_t i = 0; i < cameraInfoList.size(); ++i) {
-        this->ui->cameraListComboBox->addItem(cameraInfoList[i]->getCameraName().c_str());
+        this->ui->cameraListComboBox->addItem(cameraInfoList[i].getCameraName().c_str());
     }
 }
 
@@ -83,7 +83,7 @@ void MainWindow::on_createBackendBtn_clicked()
 
 void MainWindow::on_createCameraBtn_clicked()
 {
-    CameraForm *camForm = new CameraForm(backend->getCamera(*cameraInfoList[this->ui->cameraListComboBox->currentIndex()]));
+    CameraForm *camForm = new CameraForm(backend->getCamera(cameraInfoList[this->ui->cameraListComboBox->currentIndex()]));
 
     camForm->setAttribute(Qt::WA_DeleteOnClose);
     camForm->show();
@@ -111,17 +111,15 @@ void MainWindow::on_deleteBackendBtn_clicked()
     this->backend = NULL;
 }
 
-void MainWindow::CameraEventCaptureCallback(CameraInformation *information, CameraPlugStatus status)
+void MainWindow::CameraEventCaptureCallback(CameraInformation information, CameraPlugStatus status)
 {
     if (status == CameraPlugStatus::CAMERA_CONNECTED) {
         cameraInfoList.push_back(information);
     } else if (status == CameraPlugStatus::CAMERA_DISCONNECTED) {
         for (int i = 0; i < cameraInfoList.size(); i++) {
-            if (*information->getUniqueId() == *cameraInfoList.at(i)->getUniqueId() &&
-                    information->getCameraName() == cameraInfoList.at(i)->getCameraName()) {
-                delete cameraInfoList.at(i);
+            if (*information.getUniqueId() == *cameraInfoList.at(i).getUniqueId() &&
+                    information.getCameraName() == cameraInfoList.at(i).getCameraName()) {
                 cameraInfoList.erase(cameraInfoList.begin() + i);
-                delete information;
                 break;
             }
         }

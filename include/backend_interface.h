@@ -25,7 +25,7 @@ enum class WEBCAM_CAPTURE_EXPORT CameraPlugStatus {
 };
 
 // FIXME(nurupo): rename
-typedef std::function<void(CameraInformation *information, CameraPlugStatus status)> notifications_callback;
+typedef std::function<void(CameraInformation information, CameraPlugStatus status)> notifications_callback;
 
 /**
  * Common interface of backend implementations.
@@ -45,7 +45,7 @@ public:
     /**
      * @return Short information about available cameras.
      */
-    virtual std::vector<CameraInformation *> getAvailableCameras() const = 0;
+    virtual std::vector<CameraInformation> getAvailableCameras() const = 0;
 
     /**
      * Creates a camera instance representing a specific camera.
