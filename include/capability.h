@@ -1,6 +1,9 @@
 #ifndef CAPABILITY_H
 #define CAPABILITY_H
 
+// VC complains that it can't create assignment operator with data being const, but data being const is intended.
+#pragma warning(disable : 4512)
+
 #include <vector>
 
 #include <format.h>
