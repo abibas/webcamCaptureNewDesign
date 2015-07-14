@@ -44,7 +44,7 @@ private:
 
 
     BackendImplementation implementation;
-    BackendInterface *backend;
+    std::unique_ptr<BackendInterface> backend;
     std::vector<CameraInformation> devicesVector;
     HDEVNOTIFY hDevNotify;
     WNDCLASS windowClass;

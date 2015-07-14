@@ -35,12 +35,12 @@ class DirectShow_Camera : public CameraInterface
 {
 public:
     ~DirectShow_Camera();
-    static CameraInterface *createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
+    static std::unique_ptr<CameraInterface> createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
 
     int start(const CapabilityFormat &capabilityFormat, const CapabilityResolution &capabilityResolution,
               const CapabilityFps &capabilityFps, frame_callback cb);
     int stop();
-    PixelBuffer *CaptureFrame();
+    std::unique_ptr<PixelBuffer> CaptureFrame();
     // ---- Capabilities ----
     bool getPropertyRange(VideoProperty property, VideoPropertyRange *videoPropRange);
     int getProperty(VideoProperty property);

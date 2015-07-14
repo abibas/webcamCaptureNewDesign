@@ -18,7 +18,7 @@ MediaFoundation_Camera::MediaFoundation_Camera(std::shared_ptr<void> mfDeinitial
 
 }
 
-CameraInterface *MediaFoundation_Camera::createCamera(std::shared_ptr<void> mfDeinitializer,
+std::unique_ptr<CameraInterface> MediaFoundation_Camera::createCamera(std::shared_ptr<void> mfDeinitializer,
         const CameraInformation &information)
 {
     IMFMediaSource *mediaSource = NULL;
@@ -28,10 +28,11 @@ CameraInterface *MediaFoundation_Camera::createCamera(std::shared_ptr<void> mfDe
 
     if (MediaFoundation_Camera::createVideoDeviceSource(symbolicLink, &mediaSource) < 0) {
         DEBUG_PRINT("Error: cannot create the media device source.\n");
-        return NULL;
+        return nullptr;
     }
 
-    return new MediaFoundation_Camera(mfDeinitializer, information, mediaSource);
+    // TODO(nurupo): get std::make_unique to work without makeing code uglier
+    return std::unique_ptr<MediaFoundation_Camera>(new MediaFoundation_Camera(mfDeinitializer, information, mediaSource));
 }
 
 MediaFoundation_Camera::~MediaFoundation_Camera()
@@ -223,10 +224,10 @@ int MediaFoundation_Camera::stop()
     return 1;   //TODO Err code
 }
 
-PixelBuffer *MediaFoundation_Camera::CaptureFrame()
+std::unique_ptr<PixelBuffer> MediaFoundation_Camera::CaptureFrame()
 {
     //TODO to realise method
-    return NULL;
+    return nullptr;
 }
 
 // ---- Capabilities ----

@@ -17,7 +17,7 @@ class VideoForm : public QWidget
     Q_OBJECT
 
 public:
-    explicit VideoForm(CameraInterface *camera, int width, int height, QWidget *parent = 0);
+    explicit VideoForm(CameraInterface &camera, int width, int height, QWidget *parent = 0);
     ~VideoForm();
 
     void FrameCaptureCallback(PixelBuffer &buffer);
@@ -28,7 +28,7 @@ public:
 
 private:
     Ui::VideoForm *ui;
-    CameraInterface *camera;
+    CameraInterface &camera;
     bool isCapturing;
 };
 

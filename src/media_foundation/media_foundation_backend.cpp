@@ -117,7 +117,7 @@ done:
     return result;
 }
 
-CameraInterface *MediaFoundation_Backend::getCamera(const CameraInformation &information) const
+std::unique_ptr<webcam_capture::CameraInterface> MediaFoundation_Backend::getCamera(const CameraInformation &information) const
 {
     return MediaFoundation_Camera::createCamera(mfDeinitializer, information);
 }

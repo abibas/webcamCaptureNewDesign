@@ -25,7 +25,7 @@ public:
     ~DirectShow_Backend();
     static void DeinitBackend(void *);
     std::vector<CameraInformation> getAvailableCameras() const;
-    CameraInterface *getCamera(const CameraInformation &information) const;
+    std::unique_ptr<CameraInterface> getCamera(const CameraInformation &information) const;
     int setAvaliableCamerasChangedCallback(notifications_callback n_callback);
 private:
     std::shared_ptr<void> mfDeinitializer;

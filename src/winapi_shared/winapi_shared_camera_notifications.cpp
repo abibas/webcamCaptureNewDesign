@@ -79,10 +79,7 @@ LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UI
         case WM_DESTROY: {
             pThis = reinterpret_cast<WinapiShared_CameraNotifications *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
-            if (pThis->backend) {
-                delete pThis->backend;
-                pThis->backend = nullptr;
-            }
+            pThis->backend.release();
 
             DEBUG_PRINT("Received destroy message.\n");
 

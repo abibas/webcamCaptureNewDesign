@@ -55,7 +55,7 @@ public:
      * Takes a still photo.
      * @return Photo image data.
      */
-    virtual PixelBuffer *CaptureFrame() = 0;  //TODO
+    virtual std::unique_ptr<PixelBuffer> CaptureFrame() = 0;  //TODO
 
     /**
      * Gets information about a video property range.

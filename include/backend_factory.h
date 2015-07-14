@@ -5,6 +5,8 @@
 #include <backend_interface.h>
 #include <webcam_capture_export.h>
 
+#include <memory>
+
 namespace webcam_capture {
 
 /**
@@ -15,18 +17,17 @@ class WEBCAM_CAPTURE_EXPORT BackendFactory
 public:
     /**
      * Creates a backend instance backed by a certain backend implementation.
-     * You are responsible for deleting the returned object.
      * @param Implementation backing the backend.
      * @return BackentInterface instance backed by specified backend implementation on success, null on failure.
      */
-    static BackendInterface *getBackend(BackendImplementation implementation);
+    static std::unique_ptr<BackendInterface> getBackend(BackendImplementation implementation);
 
     /**
      * @return List of backends the library was built with support of.
      */
     static std::vector<BackendImplementation> getAvailableBackends();
 private:
-    BackendFactory();
+    BackendFactory() = delete;
 };
 
 } // namespace webcam_capture

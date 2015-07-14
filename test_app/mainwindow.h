@@ -2,14 +2,15 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+
+#include <memory>
 #include <vector>
 
 #include <backend_implementation.h>
-#include <camera_information.h>
-#include <capability.h>
-
 #include <backend_interface.h>
+#include <camera_information.h>
 #include <camera_interface.h>
+#include <capability.h>
 
 using namespace webcam_capture;
 
@@ -44,7 +45,7 @@ private:
 
     std::vector<BackendImplementation> backendList;
     std::vector<CameraInformation> cameraInfoList;
-    BackendInterface *backend;
+    std::unique_ptr<BackendInterface> backend;
 
     Ui::MainWindow *ui;
 };

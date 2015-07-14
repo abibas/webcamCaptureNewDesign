@@ -14,7 +14,7 @@ typedef std::function<void(PixelBuffer &buffer)> frame_callback;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    backend(NULL)
+    backend(nullptr)
 {
     ui->setupUi(this);
 
@@ -27,7 +27,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    delete backend;
     delete ui;
 }
 
@@ -107,8 +106,7 @@ void MainWindow::on_deleteBackendBtn_clicked()
     this->ui->startNotificationsButton->setDisabled(true);
     this->ui->stopNotificationsButton->setDisabled(true);
 
-    delete this->backend;
-    this->backend = NULL;
+    backend.release();
 }
 
 void MainWindow::CameraEventCaptureCallback(CameraInformation information, CameraPlugStatus status)

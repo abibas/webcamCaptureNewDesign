@@ -24,10 +24,11 @@ DirectShow_Camera::DirectShow_Camera(std::shared_ptr<void> mfDeinitializer,
 
 }
 
-CameraInterface *DirectShow_Camera::createCamera(std::shared_ptr<void> mfDeinitializer,
+std::unique_ptr<CameraInterface> DirectShow_Camera::createCamera(std::shared_ptr<void> mfDeinitializer,
         const CameraInformation &information)
 {
-    return new DirectShow_Camera(mfDeinitializer, information);
+    // TODO(nurupo): get std::make_unique to work without makeing code uglier
+    return std::unique_ptr<DirectShow_Camera>(new DirectShow_Camera(mfDeinitializer, information));
 }
 
 DirectShow_Camera::~DirectShow_Camera()
@@ -165,10 +166,10 @@ int DirectShow_Camera::stop()
     return 1;   //TODO Err code
 }
 
-PixelBuffer *DirectShow_Camera::CaptureFrame()
+std::unique_ptr<PixelBuffer> DirectShow_Camera::CaptureFrame()
 {
     //TODO to realise method
-    return NULL;
+    return nullptr;
 }
 
 // ---- Capabilities ----

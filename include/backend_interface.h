@@ -8,9 +8,11 @@
 #define BACKEND_INTERFACE_H
 
 #include <functional>
-#include <stdio.h>
 #include <string>
 #include <vector>
+#include <memory>
+
+#include <stdio.h>
 
 #include <camera_information.h>
 #include <camera_interface.h>
@@ -49,13 +51,12 @@ public:
 
     /**
      * Creates a camera instance representing a specific camera.
-     * You are responsible for deleting the returned object.
      * Camera instance will function properly with its backend instance deleted.
      * Backend and camera instances should be created in the same thread and can be used only within the thread.
      * @param Previously received camera information for the camera you want to access.
      * @return CameraInterface instance representing a specific camera on success, null on failure.
      */
-    virtual CameraInterface *getCamera(const CameraInformation &information) const = 0;
+    virtual std::unique_ptr<CameraInterface> getCamera(const CameraInformation &information) const = 0;
 
     /**
      * Sets a callback function that is be called when a camera is connected/disconencted to/from the system.

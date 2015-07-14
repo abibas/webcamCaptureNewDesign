@@ -2,8 +2,8 @@
 #include "ui_cameraform.h"
 
 
-CameraForm::CameraForm(CameraInterface *camera, QWidget *parent) :
-    camera(camera),
+CameraForm::CameraForm(std::unique_ptr<CameraInterface> camera, QWidget *parent) :
+    camera(std::move(camera)),
     QWidget(parent),
     ui(new Ui::CameraForm)
 {
@@ -19,7 +19,6 @@ CameraForm::CameraForm(CameraInterface *camera, QWidget *parent) :
 
 CameraForm::~CameraForm()
 {
-    delete camera;
     delete ui;
 }
 
@@ -163,7 +162,7 @@ void CameraForm::on_captureVideoBtb_clicked()
 //    CapabilityFps capFps = capabilityList.at(this->ui->formatComboBox->currentIndex()).
 //                           getResolutions().at(this->ui->resolutionComboBox->currentIndex()).
 //                           getFpses().at(this->ui->fpsComboBox->currentIndex());
-    videoForm = new VideoForm(camera, 400, 300);     //TODO remove his - for testing
+    videoForm = new VideoForm(*camera.get(), 400, 300);     //TODO remove his - for testing
 //    videoForm = new VideoForm(camera, capResolution.getWidth(), capResolution.getHeight());
     videoForm->setAttribute(Qt::WA_DeleteOnClose);
     videoForm->show();

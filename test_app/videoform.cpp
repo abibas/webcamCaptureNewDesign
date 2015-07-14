@@ -13,7 +13,7 @@ std::fstream outfile;
 #include <windows.h>
 
 
-VideoForm::VideoForm(CameraInterface *camera, int width, int height, QWidget *parent) :
+VideoForm::VideoForm(CameraInterface &camera, int width, int height, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::VideoForm),
     camera(camera),
@@ -27,7 +27,7 @@ VideoForm::VideoForm(CameraInterface *camera, int width, int height, QWidget *pa
 VideoForm::~VideoForm()
 {
 
-    camera->stop();
+    camera.stop();
     Sleep(1000);
     delete ui;
 }

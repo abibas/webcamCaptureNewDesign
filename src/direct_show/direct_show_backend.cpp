@@ -100,7 +100,7 @@ std::vector<CameraInformation> DirectShow_Backend::getAvailableCameras() const
     return result;
 }
 
-CameraInterface *DirectShow_Backend::getCamera(const CameraInformation &information) const
+std::unique_ptr<CameraInterface> DirectShow_Backend::getCamera(const CameraInformation &information) const
 {    
     return DirectShow_Camera::createCamera(mfDeinitializer, information);
 }
