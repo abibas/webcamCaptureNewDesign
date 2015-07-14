@@ -13,14 +13,21 @@ namespace webcam_capture {
 class WEBCAM_CAPTURE_EXPORT UniqueId
 {
 public:
-    UniqueId(BackendImplementation implementation);
     virtual ~UniqueId();
 
-    virtual bool operator==(const UniqueId &other);
-    virtual bool operator!=(const UniqueId &other);
+    bool operator==(const UniqueId &other);
+    bool operator!=(const UniqueId &other);
 
 protected:
-    BackendImplementation implementation;
+    UniqueId(BackendImplementation implementation);
+
+    virtual bool equals(const UniqueId& other) const;
+
+    const BackendImplementation implementation;
+
+private:
+    UniqueId & operator=(const UniqueId&) = delete;
+    UniqueId(const UniqueId&) = delete;
 };
 
 } // namespace webcam_capture

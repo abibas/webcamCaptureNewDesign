@@ -14,11 +14,17 @@ UniqueId::~UniqueId()
 
 bool UniqueId::operator==(const UniqueId &other)
 {
-    return this->implementation == other.implementation;
+    return equals(other);
 }
 
 bool UniqueId::operator!=(const UniqueId &other)
 {
-    return !(*this == other);
+    return !equals(other);
 }
+
+bool UniqueId::equals(const UniqueId &other) const
+{
+    return implementation == other.implementation;
+}
+
 }

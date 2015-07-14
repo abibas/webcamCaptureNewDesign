@@ -13,9 +13,10 @@ public:
     WinapiShared_UniqueId(WCHAR *uniqueId, BackendImplementation implementation);
     ~WinapiShared_UniqueId();
 
-    WCHAR *getId();
-    bool operator==(const UniqueId &other) override;
-    bool operator!=(const UniqueId &other) override;
+    WCHAR *getId() const;
+
+protected:
+    bool equals(const UniqueId &other) const override;
 
 private:    
     WCHAR *uniqueId; //TODO To consider do we need to save links in WCHAR* - we just could use std::wstring.

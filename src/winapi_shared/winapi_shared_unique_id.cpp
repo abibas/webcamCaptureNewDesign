@@ -12,14 +12,14 @@ WinapiShared_UniqueId::~WinapiShared_UniqueId()
 {
 }
 
-bool WinapiShared_UniqueId::operator==(const UniqueId &other)
+bool WinapiShared_UniqueId::equals(const UniqueId &other) const
 {
     // "other" must be a UniqueId of the same backend implementation in order to proceed
-    if (!UniqueId::operator==(other)) {
+    if (!UniqueId::equals(other)) {
         return false;
     }
 
-    WinapiShared_UniqueId otherUniqueId = static_cast<const WinapiShared_UniqueId &>(other);
+    const WinapiShared_UniqueId &otherUniqueId = static_cast<const WinapiShared_UniqueId &>(other);
     bool result = false;
     size_t localStrLen = wcslen(uniqueId);
     size_t otherStrLen = wcslen(otherUniqueId.getId());
@@ -40,12 +40,7 @@ bool WinapiShared_UniqueId::operator==(const UniqueId &other)
     return result;
 }
 
-bool WinapiShared_UniqueId::operator!=(const UniqueId &other)
-{
-    return !(*this == other);
-}
-
-WCHAR* WinapiShared_UniqueId::getId()
+WCHAR* WinapiShared_UniqueId::getId() const
 {
     return uniqueId;
 }
