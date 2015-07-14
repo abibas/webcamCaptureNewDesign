@@ -32,8 +32,8 @@ LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UI
                 DEBUG_PRINT("Couldn't initialize backend.\n");
                 break;
             }
-            // FIXME(nurupo): CameraInformation*
-            //pThis->devicesVector = pThis->backend->getAvailableCameras();
+
+            pThis->devicesVector = pThis->backend->getAvailableCameras();
             break;
         }
 
@@ -217,10 +217,10 @@ void WinapiShared_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr)
     int nameLen = strlen(pDi->dbcc_name);
     WCHAR *name = new WCHAR[nameLen];
     mbstowcs(name, pDi->dbcc_name, nameLen);
-    UniqueId *uniqId = new WinapiShared_UniqueId(name, implementation);
+    WinapiShared_UniqueId uniqId(name, implementation);
 
     for (int i = 0; i < devicesVector.size(); i++) {
-        if (*uniqId == *devicesVector.at(i).getUniqueId()) {
+        if (uniqId == *devicesVector.at(i).getUniqueId()) {
             notif_cb(devicesVector.at(i), CameraPlugStatus::CAMERA_DISCONNECTED);
             devicesVector.erase(devicesVector.begin() + i);
             break;
@@ -245,19 +245,17 @@ void WinapiShared_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHd
     int nameLen = strlen(pDi->dbcc_name);
     WCHAR *name = new WCHAR[nameLen];
     mbstowcs(name, pDi->dbcc_name, nameLen);    
-    UniqueId *uniqId = new WinapiShared_UniqueId(name, implementation);
-/* FIXME(nurupo): CameraInformation*
-    std::vector <CameraInformation *> camerasBuf = backend->getAvailableCameras();
+    WinapiShared_UniqueId uniqId(name, implementation);
 
-    for (int i = 0; i < camerasBuf.size(); i++) {
-        if (*camerasBuf.at(i)->getUniqueId() == *uniqId) {
-            CameraInformation *camNotifRes = new CameraInformation(*camerasBuf.at(i));  // creates a copy of object
-            notif_cb(camNotifRes, CameraPlugStatus::CAMERA_CONNECTED);
-            devicesVector.push_back(camerasBuf.at(i));
-        } else {
-            delete camerasBuf.at(i);
+    std::vector<CameraInformation> camerasBuf = backend->getAvailableCameras();
+
+    for (auto&& cameraInfo : camerasBuf) {
+        if (*cameraInfo.getUniqueId() == uniqId) {
+            notif_cb(cameraInfo, CameraPlugStatus::CAMERA_CONNECTED);
+            devicesVector.push_back(cameraInfo);
+            break;
         }
-    }*/
+    }
 }
 
 } // namespace webcam_capture

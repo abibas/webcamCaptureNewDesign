@@ -24,9 +24,9 @@ CameraInterface *MediaFoundation_Camera::createCamera(std::shared_ptr<void> mfDe
     IMFMediaSource *mediaSource = NULL;
     // Create the MediaSource
 
-    WinapiShared_UniqueId *uniqueId = static_cast<WinapiShared_UniqueId *>(information.getUniqueId());
+    WCHAR* symbolicLink = static_cast<WinapiShared_UniqueId *>(information.getUniqueId().get())->getId();
 
-    if (MediaFoundation_Camera::createVideoDeviceSource(uniqueId->getId(), &mediaSource) < 0) {
+    if (MediaFoundation_Camera::createVideoDeviceSource(symbolicLink, &mediaSource) < 0) {
         DEBUG_PRINT("Error: cannot create the media device source.\n");
         return NULL;
     }
@@ -68,9 +68,9 @@ int MediaFoundation_Camera::start(const CapabilityFormat &capabilityFormat,
     //"to test just comment this"
     safeReleaseMediaFoundation(&imf_media_source);
     // Create the MediaSource
-    WinapiShared_UniqueId *uniqueId = static_cast<WinapiShared_UniqueId *>(information.getUniqueId());
+    WCHAR* symbolicLink = static_cast<WinapiShared_UniqueId *>(information.getUniqueId().get())->getId();
 
-    if (createVideoDeviceSource(uniqueId->getId(), &imf_media_source) < 0) {
+    if (createVideoDeviceSource(symbolicLink, &imf_media_source) < 0) {
         DEBUG_PRINT("Error: cannot create the media device source.\n");
         return NULL;
     }

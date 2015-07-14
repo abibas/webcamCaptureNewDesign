@@ -7,7 +7,8 @@
 #ifndef CAMERA_INFORMATION_H
 #define CAMERA_INFORMATION_H
 
-#include <string.h>
+#include <memory>
+#include <string>
 
 #include <unique_id.h>
 #include <webcam_capture_export.h>
@@ -20,13 +21,13 @@ namespace webcam_capture {
 class WEBCAM_CAPTURE_EXPORT CameraInformation
 {
 public:
-    CameraInformation(UniqueId *uniqueId, std::string cameraName) : uniqueId(uniqueId), cameraName(cameraName) {}
+    CameraInformation(std::shared_ptr<UniqueId> uniqueId, std::string cameraName) : uniqueId(uniqueId), cameraName(cameraName) {}
     ~CameraInformation() {}
 
     /**
      * @return Unique camera id identifying a camera.
      */
-    UniqueId *getUniqueId() const
+    std::shared_ptr<UniqueId> getUniqueId() const
     {
         return uniqueId;
     }
@@ -41,8 +42,8 @@ public:
 
 private:
     std::string cameraName;
-    UniqueId *uniqueId;
-}; // FIXME(nurupo): we souldn't use pointer to UniqueId but rather UniqueId itself.
+    std::shared_ptr<UniqueId> uniqueId;
+};
 
 } // namespace webcam_capture
 

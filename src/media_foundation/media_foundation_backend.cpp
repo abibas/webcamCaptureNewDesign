@@ -92,15 +92,14 @@ std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() co
         UINT32 friendly_name_len = 0;
         UINT32 symbolic_link_len = 0;
 
-        hr1 = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME,  &friendly_name, &friendly_name_len);
+        hr1 = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME, &friendly_name, &friendly_name_len);
         hr2 = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
                                              &symbolic_link, &symbolic_link_len);
 
         if (SUCCEEDED(hr1) && SUCCEEDED(hr2)) {
             std::string name = string_cast<std::string>(friendly_name);
-            //WinapiShared_UniqueId mfUniqueId(symbolic_link, BackendImplementation::MediaFoundation);
-            UniqueId *uniqueId = new WinapiShared_UniqueId(symbolic_link, BackendImplementation::MediaFoundation);
-            result.push_back({uniqueId, name});
+            result.push_back({std::make_shared<WinapiShared_UniqueId>(symbolic_link, BackendImplementation::MediaFoundation),
+                              name});
         }
 
         CoTaskMemFree(friendly_name);

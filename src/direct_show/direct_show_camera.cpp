@@ -206,7 +206,7 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
 
 
 /******** SDK FUNCTIONS ******/
-IMoniker* DirectShow_Camera::getIMonikerByUniqueId(UniqueId *uniqueId)
+IMoniker* DirectShow_Camera::getIMonikerByUniqueId(std::shared_ptr<UniqueId> &uniqueId)
 {
     IEnumMoniker *pEnum;
     ICreateDevEnum *pDevEnum;
@@ -244,8 +244,8 @@ IMoniker* DirectShow_Camera::getIMonikerByUniqueId(UniqueId *uniqueId)
             WCHAR *linkStr = new WCHAR[linkLen];
             wcsncpy(linkStr, var.bstrVal, linkLen);
 
-            UniqueId *ud = new WinapiShared_UniqueId(linkStr, BackendImplementation::DirectShow);
-            if (*uniqueId == *ud) {
+            WinapiShared_UniqueId ud(linkStr, BackendImplementation::DirectShow);
+            if (*uniqueId == ud) {
                 pResult = pMoniker;
                 VariantClear(&var);
                 pPropBag->Release();

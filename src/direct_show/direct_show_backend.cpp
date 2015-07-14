@@ -86,10 +86,9 @@ std::vector<CameraInformation> DirectShow_Backend::getAvailableCameras() const
             size_t linkLen = wcslen(var.bstrVal);
             WCHAR *linkStr = new WCHAR[linkLen];
             wcsncpy(linkStr, var.bstrVal, linkLen);
-
-            UniqueId *uniqueId = new WinapiShared_UniqueId(linkStr, BackendImplementation::DirectShow);
             std::string name( wname.begin(), wname.end());
-            result.push_back({uniqueId, name});
+            result.push_back({std::make_shared<WinapiShared_UniqueId>(linkStr, BackendImplementation::DirectShow),
+                              name});
             VariantClear(&var);
         }
 
