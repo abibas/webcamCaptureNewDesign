@@ -211,10 +211,10 @@ void WinapiShared_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr)
 //    }
 
     DEV_BROADCAST_DEVICEINTERFACE *pDi = reinterpret_cast<DEV_BROADCAST_DEVICEINTERFACE *>(pHdr);
-    int nameLen = strlen(pDi->dbcc_name);
-    WCHAR *name = new WCHAR[nameLen];
-    mbstowcs(name, pDi->dbcc_name, nameLen);
-    WinapiShared_UniqueId uniqId(name, implementation);
+    size_t nameLen = strlen(pDi->dbcc_name);
+    std::unique_ptr<WCHAR[]> name(new WCHAR[nameLen]);
+    mbstowcs(name.get(), pDi->dbcc_name, nameLen);
+    WinapiShared_UniqueId uniqId(name.get(), implementation);
 
     for (int i = 0; i < devicesVector.size(); i++) {
         if (uniqId == *devicesVector.at(i).getUniqueId()) {
@@ -239,10 +239,10 @@ void WinapiShared_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHd
 //    }
 
     DEV_BROADCAST_DEVICEINTERFACE *pDi = reinterpret_cast<DEV_BROADCAST_DEVICEINTERFACE *>(pHdr);
-    int nameLen = strlen(pDi->dbcc_name);
-    WCHAR *name = new WCHAR[nameLen];
-    mbstowcs(name, pDi->dbcc_name, nameLen);    
-    WinapiShared_UniqueId uniqId(name, implementation);
+    size_t nameLen = strlen(pDi->dbcc_name);
+    std::unique_ptr<WCHAR[]> name(new WCHAR[nameLen]);
+    mbstowcs(name.get(), pDi->dbcc_name, nameLen);
+    WinapiShared_UniqueId uniqId(name.get(), implementation);
 
     std::vector<CameraInformation> camerasBuf = backend->getAvailableCameras();
 

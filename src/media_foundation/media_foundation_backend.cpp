@@ -102,6 +102,7 @@ std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() co
                               name});
         }
 
+        CoTaskMemFree(symbolic_link);
         CoTaskMemFree(friendly_name);
     }
 
