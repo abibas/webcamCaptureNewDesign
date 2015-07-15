@@ -21,7 +21,7 @@ protected:
     bool equals(const UniqueId &other) const override;
 
 private:    
-    std::wstring uniqueId; //TODO To consider do we need to save links in WCHAR* - we just could use std::wstring.
+    std::wstring uniqueId;
 };
 
 } // namespace webcam_capture
