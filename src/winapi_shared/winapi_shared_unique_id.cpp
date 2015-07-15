@@ -2,7 +2,7 @@
 
 namespace webcam_capture {
 
-WinapiShared_UniqueId::WinapiShared_UniqueId(WCHAR* uniqueId, BackendImplementation implementation)
+WinapiShared_UniqueId::WinapiShared_UniqueId(const WCHAR *uniqueId, BackendImplementation implementation)
     :   UniqueId(implementation),
         uniqueId(uniqueId)
 {
@@ -19,28 +19,19 @@ bool WinapiShared_UniqueId::equals(const UniqueId &other) const
         return false;
     }
 
-    const WinapiShared_UniqueId &otherUniqueId = static_cast<const WinapiShared_UniqueId &>(other);
-    bool result = false;
-    size_t localStrLen = wcslen(uniqueId);
-    size_t otherStrLen = wcslen(otherUniqueId.getId());
-    WCHAR *localStr = new WCHAR[localStrLen];
-    WCHAR *otherStr = new WCHAR[otherStrLen];
     //need to compare string without this "{...}" value.
-    wcsncpy(localStr, uniqueId, localStrLen); //copy string
-    wcsncpy(otherStr, otherUniqueId.getId(), otherStrLen); //copy string
-    localStr = wcstok(localStr, L"{");
-    otherStr = wcstok(otherStr, L"{");
+    const WinapiShared_UniqueId &otherUniqueId = static_cast<const WinapiShared_UniqueId &>(other);
+    size_t thisPos = uniqueId.find_first_of(L'{');
+    size_t otherPos = otherUniqueId.uniqueId.find_first_of(L'{');
 
-    if (_wcsicmp(localStr, otherStr) == 0) {
-        result = true;    //if equals
+    if (thisPos != otherPos || thisPos == std::string::npos) {
+        return false;
     }
 
-    delete[] localStr;
-    delete[] otherStr;
-    return result;
+    return uniqueId.compare(0, thisPos, otherUniqueId.uniqueId, 0, otherPos) == 0;
 }
 
-WCHAR* WinapiShared_UniqueId::getId() const
+const std::wstring &WinapiShared_UniqueId::getId() const
 {
     return uniqueId;
 }

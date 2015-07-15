@@ -82,13 +82,8 @@ std::vector<CameraInformation> DirectShow_Backend::getAvailableCameras() const
         hr = pPropBag->Read(L"DevicePath", &var, 0);
         if (SUCCEEDED(hr)) {
             /// The device path is not intended for display.
-            // need to copy var.bstrVal
-            size_t linkLen = wcslen(var.bstrVal);
-            WCHAR *linkStr = new WCHAR[linkLen];
-            wcsncpy(linkStr, var.bstrVal, linkLen);
-            std::string name( wname.begin(), wname.end());
-            result.push_back({std::make_shared<WinapiShared_UniqueId>(linkStr, BackendImplementation::DirectShow),
-                              name});
+            result.push_back({std::make_shared<WinapiShared_UniqueId>(var.bstrVal, BackendImplementation::DirectShow),
+                              {wname.begin(), wname.end()}});
             VariantClear(&var);
         }
 

@@ -241,11 +241,7 @@ IMoniker* DirectShow_Camera::getIMonikerByUniqueId(std::shared_ptr<UniqueId> &un
 
         hr = pPropBag->Read(L"DevicePath", &var, 0);
         if (SUCCEEDED(hr)) {
-            size_t linkLen = wcslen(var.bstrVal);
-            WCHAR *linkStr = new WCHAR[linkLen];
-            wcsncpy(linkStr, var.bstrVal, linkLen);
-
-            WinapiShared_UniqueId ud(linkStr, BackendImplementation::DirectShow);
+            WinapiShared_UniqueId ud(var.bstrVal, BackendImplementation::DirectShow);
             if (*uniqueId == ud) {
                 pResult = pMoniker;
                 VariantClear(&var);

@@ -61,7 +61,7 @@ private:
     int createSourceReader(IMFMediaSource *mediaSource, IMFSourceReaderCallback *callback,
                            IMFSourceReader **sourceReader) const;
     static int createVideoDeviceSource(const int device, IMFMediaSource **source); //TODO outdated method - to remove
-    static int createVideoDeviceSource(WCHAR *pszSymbolicLink, IMFMediaSource **ppSource);
+    static int createVideoDeviceSource(const std::wstring &pszSymbolicLink, IMFMediaSource **ppSource);
     int getVideoCapabilities(IMFMediaSource *source, std::vector<CapabilityFormat> &capFormatVector) const;
     int setDeviceFormat(IMFMediaSource *source, const int width, const int height, const Format pixelFormat,
                         const int fps) const;

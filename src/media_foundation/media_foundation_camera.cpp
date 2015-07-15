@@ -24,7 +24,7 @@ std::unique_ptr<CameraInterface> MediaFoundation_Camera::createCamera(std::share
     IMFMediaSource *mediaSource = NULL;
     // Create the MediaSource
 
-    WCHAR* symbolicLink = static_cast<WinapiShared_UniqueId *>(information.getUniqueId().get())->getId();
+    const std::wstring& symbolicLink = static_cast<WinapiShared_UniqueId *>(information.getUniqueId().get())->getId();
 
     if (MediaFoundation_Camera::createVideoDeviceSource(symbolicLink, &mediaSource) < 0) {
         DEBUG_PRINT("Error: cannot create the media device source.\n");
@@ -69,7 +69,7 @@ int MediaFoundation_Camera::start(const CapabilityFormat &capabilityFormat,
     //"to test just comment this"
     safeReleaseMediaFoundation(&imf_media_source);
     // Create the MediaSource
-    WCHAR* symbolicLink = static_cast<WinapiShared_UniqueId *>(information.getUniqueId().get())->getId();
+    const std::wstring& symbolicLink = static_cast<WinapiShared_UniqueId *>(information.getUniqueId().get())->getId();
 
     if (createVideoDeviceSource(symbolicLink, &imf_media_source) < 0) {
         DEBUG_PRINT("Error: cannot create the media device source.\n");
@@ -900,7 +900,7 @@ done:
  *                                   given `device` parameter. When ready, call
  *                                   `safeReleaseMediaFoundation(&source)` to free memory.
  */
-int MediaFoundation_Camera::createVideoDeviceSource(WCHAR *pszSymbolicLink, IMFMediaSource **ppSource)
+int MediaFoundation_Camera::createVideoDeviceSource(const std::wstring &pszSymbolicLink, IMFMediaSource **ppSource)
 {
     *ppSource = NULL;
     IMFAttributes *pAttributes = NULL;
@@ -925,7 +925,7 @@ int MediaFoundation_Camera::createVideoDeviceSource(WCHAR *pszSymbolicLink, IMFM
 
     // Set the symbolic link.
     hr = pAttributes->SetString(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
-                                (LPCWSTR)pszSymbolicLink);
+                                pszSymbolicLink.c_str());
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Error: cannot set the symbolic link.\n");
