@@ -4,6 +4,7 @@
 #include "direct_show_camera.h"
 #include "../winapi_shared/winapi_shared_unique_id.h"
 #include "direct_show_utils.h"
+#include "../capability_tree_builder.h"
 
 #include <iostream>
 #include <dshow.h>
@@ -211,15 +212,30 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
         return result;
     }
 
+    CapabilityTreeBuilder capabilityBuilder;
     for (DWORD capId = 0; capId < iCount; capId++) {
         VIDEO_STREAM_CONFIG_CAPS scc;
         AM_MEDIA_TYPE *pmtConfig;
 
         hr = pConfig->GetStreamCaps(capId, &pmtConfig, (BYTE*)&scc);
+
         if (SUCCEEDED(hr)) {
-            Format buf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+            VIDEOINFOHEADER * pVHeader = (VIDEOINFOHEADER*)pmtConfig->pbFormat;
+            Format pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+            int width = pVHeader->bmiHeader.biWidth;
+            int height = pVHeader->bmiHeader.biHeight;
+            int timePerFrame = (LONG) ((VIDEOINFOHEADER *)(pmtConfig->pbFormat))->AvgTimePerFrame;
+            int minFps = scc.MinFrameInterval / timePerFrame;
+            int maxFps = scc.MaxFrameInterval / timePerFrame;
+            int currentFps = 10000000 / timePerFrame;
+
+            //to set frame rate - you need to set AvgTimePerFrame... LOL... it's really stupid...
+            //VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmtConfig->pbFormat;
+            //int currentFps = vih->AvgTimePerFrame / 30;
+            capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
         }
     }
+    result = capabilityBuilder.build();
 
     return result;
 }
