@@ -1,10 +1,12 @@
+#include <atlbase.h>    //DO NOT move this include - if it will be after #include "direct_show_camera.h" will be error.
+
 #include "../capability_tree_builder.h"
 #include "direct_show_camera.h"
 #include "../winapi_shared/winapi_shared_unique_id.h"
+#include "direct_show_utils.h"
 
 #include <iostream>
 #include <dshow.h>
-
 
 //Include Qedit.h. This header file is not compatible with Microsoft® Direct3D® headers later than version 7
 //That's why we creating custom define
@@ -56,13 +58,12 @@ int DirectShow_Camera::start(const CapabilityFormat &capabilityFormat,
 
     cb_frame = cb;
 
-    pixel_buffer.height[0] = 480;
-    pixel_buffer.width[0] = 640;
-    pixel_buffer.pixel_format = Format::YUY2;
+    pixel_buffer.height[0] = 480;               //TODO To remov hard code
+    pixel_buffer.width[0] = 640;                //TODO To remov hard code
+    pixel_buffer.pixel_format = Format::YUY2;   //TODO To remov hard code
 
-    /// 1 step get IMoniker.
-    IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
-    /// 2 step Create the Capture Graph Builder.
+
+    /// 1 step Create the Capture Graph Builder.
     ICaptureGraphBuilder2   *pBuild;
     HRESULT hr;
     hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL, CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&pBuild );
@@ -70,36 +71,39 @@ int DirectShow_Camera::start(const CapabilityFormat &capabilityFormat,
         return -99;
     }
 
-    /// 3 step Create the Filter Graph Manager.
+    /// 2 step Create the Filter Graph Manager.
     IGraphBuilder           *pGraph;
     hr = CoCreateInstance(CLSID_FilterGraph, 0, CLSCTX_INPROC, IID_IGraphBuilder, (void**)&pGraph);
     if (FAILED(hr)) {
         return -99;
     }
 
-    /// 4 step Initialize the Filter Graph  for the Capture Graph Builder to use.
-    pBuild->SetFiltergraph(pGraph);
+    /// 3 step Initialize the Filter Graph  for the Capture Graph Builder to use.
+    pBuild->SetFiltergraph(pGraph);           
 
-    /// 5 step Attach the graph control
+    /// 4 step Attach the graph control
     IMediaControl           *pControl;
     hr = pGraph->QueryInterface(IID_IMediaControl, (void **)&pControl);
     if (FAILED(hr)) {
         return -99;
     }
 
-    /// 6 step  Attach the graph events
+    /// 5 step  Attach the graph events
     IMediaEvent             *pEvent;
     hr = pGraph->QueryInterface(IID_IMediaEvent, (void **)&pEvent);
     if (FAILED(hr)) {
         return -99;
     }
 
+    /// 6 step get IMoniker.
+    IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
     /// 7 step Device binding with connection
     IBaseFilter             *pVCap;
     hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
     if (FAILED(hr)) {
         return -99;
     }
+
     /// 8 Add the Device Filter to the Graph
     hr = pGraph->AddFilter(pVCap, L"Video Capture");
     if (FAILED(hr)) {
@@ -176,7 +180,46 @@ std::unique_ptr<PixelBuffer> DirectShow_Camera::CaptureFrame()
 std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
 {
     std::vector<CapabilityFormat> result;
-//    getVideoCapabilities(imf_media_source, result);
+
+    IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
+    IBaseFilter             *pVCap;
+    HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
+    if (FAILED(hr)) {
+        return result;
+    }
+
+    ICaptureGraphBuilder2   *pBuild;
+    hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL, CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&pBuild );
+    if (FAILED(hr)) {
+        return result;
+    }
+
+    CComPtr<IAMStreamConfig>        pConfig;
+    hr = pBuild->FindInterface(
+                &PIN_CATEGORY_STILL,
+                &MEDIATYPE_Video,
+                pVCap,
+                IID_IAMStreamConfig,
+                (void**)&pConfig);
+
+   int iCount = 0;
+   int iSize = 0;
+
+    // get the number of different resolutions possible
+    hr = pConfig->GetNumberOfCapabilities(&iCount, &iSize);
+    if (FAILED(hr)) {
+        return result;
+    }
+
+    for (DWORD capId = 0; capId < iCount; capId++) {
+        VIDEO_STREAM_CONFIG_CAPS scc;
+        AM_MEDIA_TYPE *pmtConfig;
+
+        hr = pConfig->GetStreamCaps(capId, &pmtConfig, (BYTE*)&scc);
+        if (SUCCEEDED(hr)) {
+            Format buf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+        }
+    }
 
     return result;
 }
