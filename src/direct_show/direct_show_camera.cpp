@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <dshow.h>
+#include <Dvdmedia.h>
 
 //Include Qedit.h. This header file is not compatible with Microsoft® Direct3D® headers later than version 7
 //That's why we creating custom define
@@ -182,26 +183,34 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
 {
     std::vector<CapabilityFormat> result;
 
-    IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
-    IBaseFilter             *pVCap;
+    IMoniker *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
+    if (!pVideoSel) {
+        return result;
+    }
+
+    IBaseFilter *pVCap;
     HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
     if (FAILED(hr)) {
         return result;
     }
 
-    ICaptureGraphBuilder2   *pBuild;
+    ICaptureGraphBuilder2 *pBuild;
     hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL, CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&pBuild );
     if (FAILED(hr)) {
         return result;
     }
 
-    CComPtr<IAMStreamConfig>        pConfig;
+    CComPtr<IAMStreamConfig> pConfig;
     hr = pBuild->FindInterface(
-                &PIN_CATEGORY_STILL,
+                NULL,
                 &MEDIATYPE_Video,
                 pVCap,
                 IID_IAMStreamConfig,
                 (void**)&pConfig);
+
+    if (FAILED(hr)) {
+        return result;
+    }
 
    int iCount = 0;
    int iSize = 0;
@@ -213,6 +222,7 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
     }
 
     CapabilityTreeBuilder capabilityBuilder;
+
     for (DWORD capId = 0; capId < iCount; capId++) {
         VIDEO_STREAM_CONFIG_CAPS scc;
         AM_MEDIA_TYPE *pmtConfig;
@@ -220,19 +230,37 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
         hr = pConfig->GetStreamCaps(capId, &pmtConfig, (BYTE*)&scc);
 
         if (SUCCEEDED(hr)) {
-            VIDEOINFOHEADER * pVHeader = (VIDEOINFOHEADER*)pmtConfig->pbFormat;
-            Format pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
-            int width = pVHeader->bmiHeader.biWidth;
-            int height = pVHeader->bmiHeader.biHeight;
-            int timePerFrame = (LONG) ((VIDEOINFOHEADER *)(pmtConfig->pbFormat))->AvgTimePerFrame;
-            int minFps = scc.MinFrameInterval / timePerFrame;
-            int maxFps = scc.MaxFrameInterval / timePerFrame;
-            int currentFps = 10000000 / timePerFrame;
+            if (pmtConfig->formattype == FORMAT_VideoInfo) {
+                VIDEOINFOHEADER *pVHeader = reinterpret_cast<VIDEOINFOHEADER*>(pmtConfig->pbFormat);
 
-            //to set frame rate - you need to set AvgTimePerFrame... LOL... it's really stupid...
-            //VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmtConfig->pbFormat;
-            //int currentFps = vih->AvgTimePerFrame / 30;
-            capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
+                Format pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+
+                int width = pVHeader->bmiHeader.biWidth;
+                int height = pVHeader->bmiHeader.biHeight;
+
+                // FIXME(nurupo): store FPS as float and fix that FPS/100 thing.
+                int minFps = 1000000000 / scc.MinFrameInterval;
+                int maxFps = 1000000000 / scc.MaxFrameInterval;
+                int currentFps = 1000000000 / pVHeader->AvgTimePerFrame;
+
+                //to set frame rate - you need to set AvgTimePerFrame... LOL... it's really stupid...
+                //VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmtConfig->pbFormat;
+                //int currentFps = vih->AvgTimePerFrame / 30;
+                capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
+            } else if (pmtConfig->formattype == FORMAT_VideoInfo2) {
+                VIDEOINFOHEADER2 *pVHeader = reinterpret_cast<VIDEOINFOHEADER2*>(pmtConfig->pbFormat);
+
+                Format pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+
+                int width = pVHeader->bmiHeader.biWidth;
+                int height = pVHeader->bmiHeader.biHeight;
+
+                int minFps = 1000000000 / scc.MinFrameInterval;
+                int maxFps = 1000000000 / scc.MaxFrameInterval;
+                int currentFps = 1000000000 / pVHeader->AvgTimePerFrame;
+
+                capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
+            }
         }
     }
     result = capabilityBuilder.build();
@@ -305,7 +333,7 @@ IMoniker* DirectShow_Camera::getIMonikerByUniqueId(std::shared_ptr<UniqueId> &un
                 pResult = pMoniker;
                 VariantClear(&var);
                 pPropBag->Release();
-                continue;
+                break;
             }
             VariantClear(&var);
         }
