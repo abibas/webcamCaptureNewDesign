@@ -239,8 +239,8 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
                 int height = pVHeader->bmiHeader.biHeight;
 
                 // FIXME(nurupo): store FPS as float and fix that FPS/100 thing.
-                int minFps = 1000000000 / scc.MinFrameInterval;
-                int maxFps = 1000000000 / scc.MaxFrameInterval;
+                int minFps = 1000000000 / scc.MaxFrameInterval;
+                int maxFps = 1000000000 / scc.MinFrameInterval;
                 int currentFps = 1000000000 / pVHeader->AvgTimePerFrame;
 
                 //to set frame rate - you need to set AvgTimePerFrame... LOL... it's really stupid...
@@ -255,8 +255,8 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
                 int width = pVHeader->bmiHeader.biWidth;
                 int height = pVHeader->bmiHeader.biHeight;
 
-                int minFps = 1000000000 / scc.MinFrameInterval;
-                int maxFps = 1000000000 / scc.MaxFrameInterval;
+                int minFps = 1000000000 / scc.MaxFrameInterval;
+                int maxFps = 1000000000 / scc.MinFrameInterval;
                 int currentFps = 1000000000 / pVHeader->AvgTimePerFrame;
 
                 capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
@@ -272,6 +272,59 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
 
 bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRange *videoPropRange)
 {
+    IAMVideoProcAmp *pProcAmp = NULL;
+    VideoProcAmpProperty ampProperty;
+    long lMin, lMax, lStep, lDefault, lCaps;
+
+    /// get IMoniker.
+    IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
+    /// Device binding with connection
+    IBaseFilter             *pVCap;
+    HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
+    if (FAILED(hr)) {
+        return false;
+    }
+
+    hr = pVCap->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
+    if (FAILED(hr)) {
+        DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
+        return false;
+    }
+
+    switch (property) {
+        case VideoProperty::Brightness : {
+            ampProperty = VideoProcAmp_Brightness;
+            break;
+        }
+
+        case VideoProperty::Contrast : {
+            ampProperty = VideoProcAmp_Contrast;
+            break;
+        }
+
+        case VideoProperty::Saturation : {
+            ampProperty = VideoProcAmp_Saturation;
+            break;
+        }
+
+        default: {
+            DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+            return false;
+        }
+    }
+
+    hr = pProcAmp->GetRange(ampProperty, &lMin, &lMax, &lStep, &lDefault, &lCaps);
+
+    if (FAILED(hr)) {
+        DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+        return false;
+    }
+
+    videoPropRange->setMaxValue(lMax);
+    videoPropRange->setMinValue(lMin);
+    videoPropRange->setStepValue(lStep);
+    videoPropRange->setDefaultValue(lDefault);
+
     return true;
 }
 
@@ -279,15 +332,117 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
 
 int DirectShow_Camera::getProperty(VideoProperty property)
 {
-    return 1;
+    IAMVideoProcAmp *pProcAmp = NULL;
+    VideoProcAmpProperty ampProperty;
+    long value, flags;
+
+    /// get IMoniker.
+    IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
+    /// Device binding with connection
+    IBaseFilter             *pVCap;
+    HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
+    if (FAILED(hr)) {
+        return -111;
+    }
+
+    hr = pVCap->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
+    if (FAILED(hr)) {
+        DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
+        return -111;
+    }
+
+    switch (property) {
+        case VideoProperty::Brightness : {
+            ampProperty = VideoProcAmp_Brightness;
+            break;
+        }
+
+        case VideoProperty::Contrast : {
+            ampProperty = VideoProcAmp_Contrast;
+            break;
+        }
+
+        case VideoProperty::Saturation : {
+            ampProperty = VideoProcAmp_Saturation;
+            break;
+        }
+
+        default: {
+            DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+            return -111;
+        }
+    }
+
+
+    hr = pProcAmp->Get(ampProperty, &value, &flags);
+
+    if (FAILED(hr)) {
+        DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
+        return -99999;
+    }
+
+    return value;
 }
 
 
 
 bool DirectShow_Camera::setProperty(const VideoProperty property, const int value)
 {
+    IAMVideoProcAmp *pProcAmp = NULL;
+    VideoProcAmpProperty ampProperty;
+    long val, flags;
+
+    /// get IMoniker.
+    IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
+    /// Device binding with connection
+    IBaseFilter             *pVCap;
+    HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
+    if (FAILED(hr)) {
+        return false;
+    }
+
+    hr = pVCap->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
+    if (FAILED(hr)) {
+        DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
+        return false;
+    }
+
+    switch (property) {
+        case VideoProperty::Brightness : {
+            ampProperty = VideoProcAmp_Brightness;
+            break;
+        }
+
+        case VideoProperty::Contrast : {
+            ampProperty = VideoProcAmp_Contrast;
+            break;
+        }
+
+        case VideoProperty::Saturation : {
+            ampProperty = VideoProcAmp_Saturation;
+            break;
+        }
+
+        default: {
+            DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+            return false;
+        }
+    }
 
 
+    hr = pProcAmp->Get(ampProperty, &val, &flags);
+
+    if (FAILED(hr)) {
+        DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
+        return false;
+    }
+
+    hr = pProcAmp->Set(ampProperty, value, flags);
+
+    if (FAILED(hr)) {
+        DEBUG_PRINT("Error during IAMVideoProcAmp->Set. SetProperty failed.\n");
+        return false;
+    }
 
     return true;
 }
