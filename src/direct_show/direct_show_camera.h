@@ -1,9 +1,3 @@
-/**
-    This header is using code from the https://github.com/roxlu/video_capture
-    distributed under the Apache 2.0 license
-    http://www.apache.org/licenses/LICENSE-2.0
-  */
-
 #ifndef DIRECT_SHOW_CAMERA_H
 #define DIRECT_SHOW_CAMERA_H
 
@@ -52,6 +46,12 @@ private:
     /***** SDK FUNCTIONS *****/
     IMoniker* getIMonikerByUniqueId(std::shared_ptr<UniqueId> &uniqueId);
     HRESULT ConnectFilters(ICaptureGraphBuilder2 *pBuild, IGraphBuilder *pGraph, IBaseFilter *pFirst, IBaseFilter *pSecond);
+    int setCapabilities(ICaptureGraphBuilder2 *pBuild,
+                        IBaseFilter *pVCap,
+                        const CapabilityFormat &capabilityFormat,
+                        const CapabilityResolution &capabilityResolution,
+                        const CapabilityFps &capabilityFps);
+
 public:
     std::shared_ptr<void> mfDeinitializer;
     PixelBuffer pixel_buffer;

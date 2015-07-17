@@ -42,10 +42,10 @@ DirectShow_Camera::~DirectShow_Camera()
     }
 }
 
-int DirectShow_Camera::start(const CapabilityFormat &capabilityFormat,
-                                  const CapabilityResolution &capabilityResolution,
-                                  const CapabilityFps &capabilityFps,
-                                  frame_callback cb)
+int DirectShow_Camera::start( const CapabilityFormat &capabilityFormat,
+                              const CapabilityResolution &capabilityResolution,
+                              const CapabilityFps &capabilityFps,
+                              frame_callback cb )
 {
     if (!cb) {
         DEBUG_PRINT("Error: The callback function is empty. Capturing was not started.\n");
@@ -73,56 +73,60 @@ int DirectShow_Camera::start(const CapabilityFormat &capabilityFormat,
     pixel_buffer.pixel_format = capabilityFormat.getPixelFormat();
 
 
-    /// 1 step Create the Capture Graph Builder.
-    ICaptureGraphBuilder2   *pBuild;
     HRESULT hr;
+    /// 1 step get IMoniker.
+    IMoniker *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
+
+    /// 2 step Device binding with connection
+    IBaseFilter *pVCap;
+    hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
+    if (FAILED(hr)) {
+        return -99;
+    }
+
+    /// 3 step Create the Capture Graph Builder.
+    ICaptureGraphBuilder2   *pBuild;
     hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL, CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&pBuild );
     if (FAILED(hr)) {
         return -99;
     }
 
-    /// 2 step Create the Filter Graph Manager.
+    /// 4 step Set capabilities
+    int setCapRes = setCapabilities(pBuild, pVCap, capabilityFormat, capabilityResolution, capabilityFps);
+    if ( setCapRes < 0 ) {
+        return setCapRes;
+    }
+
+    /// 5 step Create the Filter Graph Manager.
     IGraphBuilder           *pGraph;
     hr = CoCreateInstance(CLSID_FilterGraph, 0, CLSCTX_INPROC, IID_IGraphBuilder, (void**)&pGraph);
     if (FAILED(hr)) {
         return -99;
     }
 
-    /// 3 step Initialize the Filter Graph  for the Capture Graph Builder to use.
+    /// 6 step Initialize the Filter Graph  for the Capture Graph Builder to use.
     pBuild->SetFiltergraph(pGraph);           
 
-    /// 4 step Attach the graph control
+    /// 7 step Attach the graph control
     IMediaControl           *pControl;
     hr = pGraph->QueryInterface(IID_IMediaControl, (void **)&pControl);
     if (FAILED(hr)) {
         return -99;
     }
 
-    /// 5 step  Attach the graph events
+    /// 8 step  Attach the graph events
     IMediaEvent             *pEvent;
     hr = pGraph->QueryInterface(IID_IMediaEvent, (void **)&pEvent);
     if (FAILED(hr)) {
         return -99;
     }
 
-    /// 6 step get IMoniker.
-    IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
-    /// 7 step Device binding with connection
-    IBaseFilter             *pVCap;
-    hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
-    if (FAILED(hr)) {
-        return -99;
-    }
-
-
-
-
-    /// 8 Add the Device Filter to the Graph
+    /// 9 Add the Device Filter to the Graph
     hr = pGraph->AddFilter(pVCap, L"Video Capture");
     if (FAILED(hr)) {
         return -99;
     }
-    /// 9 Creates Grabber Filter and adds it to the Filter Graph
+    /// 10 Creates Grabber Filter and adds it to the Filter Graph
     /// Once connected, Grabber Filter will capture still images
     IBaseFilter             *pGrabberFilter;
     hr = CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pGrabberFilter));
@@ -130,7 +134,7 @@ int DirectShow_Camera::start(const CapabilityFormat &capabilityFormat,
         return -99;
     }
 
-    /// 10 Create Sample grabber
+    /// 11 Create Sample grabber
     hr = pGraph->AddFilter(pGrabberFilter, L"Sample Grabber");
     ISampleGrabber          *pSampleGrabber;
     hr = pGrabberFilter->QueryInterface(IID_ISampleGrabber, (void**)&pSampleGrabber);
@@ -138,20 +142,12 @@ int DirectShow_Camera::start(const CapabilityFormat &capabilityFormat,
         return -99;
     }
 
-    /// 11 set callback
+    /// 12 set callback
     ISampleGrabberCB* pGrabberCB = new DirectShow_Callback(this);
 
-    /// 12 set callback to the ISampleGrabber
+    /// 13 set callback to the ISampleGrabber
     pSampleGrabber->SetCallback(pGrabberCB, 0);
 
-//    AM_MEDIA_TYPE mt;
-//    ZeroMemory(&mt, sizeof(mt));
-//    mt.majortype = MEDIATYPE_Video;
-//    mt.subtype = MEDIASUBTYPE_YUY2;
-//    hr = pSampleGrabber->SetMediaType(&mt);
-//    if (FAILED(hr)) {
-//        return -99;
-//    }
     hr = pSampleGrabber->SetOneShot(FALSE);
     if (FAILED(hr)) {
         return -99;
@@ -160,15 +156,6 @@ int DirectShow_Camera::start(const CapabilityFormat &capabilityFormat,
     if (FAILED(hr)) {
         return -99;
     }
-
-//    hr = pSampleGrabber->GetConnectedMediaType(&mt);
-//    if (FAILED(hr)) {
-//        return -99;
-//    }
-//    VIDEOINFOHEADER *pVih = (VIDEOINFOHEADER *)mt.pbFormat;
-//    int gChannels = pVih->bmiHeader.biBitCount / 8;
-//    int gWidth = pVih->bmiHeader.biWidth;
-//    int gHeight = pVih->bmiHeader.biHeight;
 
     hr = pBuild->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, pVCap, pGrabberFilter, NULL);
 
@@ -230,7 +217,7 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
     hr = pConfig->GetNumberOfCapabilities(&iCount, &iSize);
     if (FAILED(hr)) {
         return result;
-    }
+    }    
 
     CapabilityTreeBuilder capabilityBuilder;
 
@@ -511,7 +498,89 @@ IMoniker* DirectShow_Camera::getIMonikerByUniqueId(std::shared_ptr<UniqueId> &un
     return pResult;
 }
 
-HRESULT DirectShow_Camera::ConnectFilters(ICaptureGraphBuilder2 *pBuild, IGraphBuilder *pGraph, IBaseFilter *pFirst, IBaseFilter *pSecond) {
+int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild,
+                    IBaseFilter *pVCap,
+                    const CapabilityFormat &capabilityFormat,
+                    const CapabilityResolution &capabilityResolution,
+                    const CapabilityFps &capabilityFps)
+{
+    CComPtr<IAMStreamConfig> pConfig;
+    HRESULT hr = pBuild->FindInterface(
+                NULL,
+                &MEDIATYPE_Video,
+                pVCap,
+                IID_IAMStreamConfig,
+                (void**)&pConfig);
+
+    if (FAILED(hr)) {
+        return -1;
+    }
+
+   int iCount = 0;
+   int iSize = 0;
+
+    // get the number of different resolutions possible
+    hr = pConfig->GetNumberOfCapabilities(&iCount, &iSize);
+    if (FAILED(hr)) {
+        return -2;
+    }
+
+    for (DWORD capId = 0; capId < iCount; capId++) {
+        VIDEO_STREAM_CONFIG_CAPS scc;
+        AM_MEDIA_TYPE *pmtConfig;
+
+        hr = pConfig->GetStreamCaps(capId, &pmtConfig, (BYTE*)&scc);
+
+        if (SUCCEEDED(hr)) {
+            if (pmtConfig->formattype == FORMAT_VideoInfo) {
+                VIDEOINFOHEADER *pVHeader = reinterpret_cast<VIDEOINFOHEADER*>(pmtConfig->pbFormat);
+
+                Format pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+                int width = pVHeader->bmiHeader.biWidth;
+                int height = pVHeader->bmiHeader.biHeight;
+                if ( pixelFormat == capabilityFormat.getPixelFormat() &&
+                     width == capabilityResolution.getWidth() &&
+                     height == capabilityResolution.getHeight() ) {
+
+                    // FIXME(nurupo): store FPS as float and fix that FPS/100 thing.
+                    pVHeader->AvgTimePerFrame = 1000000000 / capabilityFps.getFps();
+                    pConfig->SetFormat(pmtConfig);
+                    if (FAILED(hr)) {
+                        return -4;
+                    }
+                    break;
+                }
+
+
+                //to set frame rate - you need to set AvgTimePerFrame... LOL... it's really stupid...
+                //VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmtConfig->pbFormat;
+                //int currentFps = vih->AvgTimePerFrame / 30;
+            } else if (pmtConfig->formattype == FORMAT_VideoInfo2) {
+                VIDEOINFOHEADER2 *pVHeader = reinterpret_cast<VIDEOINFOHEADER2*>(pmtConfig->pbFormat);
+
+                Format pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+                int width = pVHeader->bmiHeader.biWidth;
+                int height = pVHeader->bmiHeader.biHeight;
+                if ( pixelFormat == capabilityFormat.getPixelFormat() &&
+                     width == capabilityResolution.getWidth() &&
+                     height == capabilityResolution.getHeight() ) {
+
+                    // FIXME(nurupo): store FPS as float and fix that FPS/100 thing.
+                    pVHeader->AvgTimePerFrame = 1000000000 / capabilityFps.getFps();
+                    pConfig->SetFormat(pmtConfig);
+                    if (FAILED(hr)) {
+                        return -4;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    return 1;
+}
+
+HRESULT DirectShow_Camera::ConnectFilters(ICaptureGraphBuilder2 *pBuild, IGraphBuilder *pGraph, IBaseFilter *pFirst, IBaseFilter *pSecond)
+{
     HRESULT hr = S_OK;
 //    IPin *pOut = NULL;
 //    IPin *pIn  = NULL;
