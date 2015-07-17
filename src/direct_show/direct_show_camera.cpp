@@ -14,6 +14,8 @@
 DEFINE_GUID(CLSID_SampleGrabber,
 0xC1F400A0, 0x3F08, 0x11D3, 0x9F, 0x0B, 0x00, 0x60, 0x08, 0x03, 0x9E, 0x37); //qedit.dll
 
+DEFINE_GUID(CLSID_NullRenderer,
+0xC1F400A4, 0x3F08, 0x11D3, 0x9F, 0x0B, 0x00, 0x60, 0x08, 0x03, 0x9E, 0x37); //qedit.dll
 
 namespace webcam_capture {
 
@@ -85,7 +87,7 @@ int DirectShow_Camera::start( const CapabilityFormat &capabilityFormat,
     }
 
     /// 3 step Create the Capture Graph Builder.
-    ICaptureGraphBuilder2   *pBuild;
+    ICaptureGraphBuilder2 *pBuild;
     hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL, CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&pBuild );
     if (FAILED(hr)) {
         return -99;
@@ -98,7 +100,7 @@ int DirectShow_Camera::start( const CapabilityFormat &capabilityFormat,
     }
 
     /// 5 step Create the Filter Graph Manager.
-    IGraphBuilder           *pGraph;
+    IGraphBuilder *pGraph;
     hr = CoCreateInstance(CLSID_FilterGraph, 0, CLSCTX_INPROC, IID_IGraphBuilder, (void**)&pGraph);
     if (FAILED(hr)) {
         return -99;
@@ -108,14 +110,13 @@ int DirectShow_Camera::start( const CapabilityFormat &capabilityFormat,
     pBuild->SetFiltergraph(pGraph);           
 
     /// 7 step Attach the graph control
-    IMediaControl           *pControl;
     hr = pGraph->QueryInterface(IID_IMediaControl, (void **)&pControl);
     if (FAILED(hr)) {
         return -99;
-    }
+    }    
 
     /// 8 step  Attach the graph events
-    IMediaEvent             *pEvent;
+    IMediaEvent *pEvent;
     hr = pGraph->QueryInterface(IID_IMediaEvent, (void **)&pEvent);
     if (FAILED(hr)) {
         return -99;
@@ -128,7 +129,7 @@ int DirectShow_Camera::start( const CapabilityFormat &capabilityFormat,
     }
     /// 10 Creates Grabber Filter and adds it to the Filter Graph
     /// Once connected, Grabber Filter will capture still images
-    IBaseFilter             *pGrabberFilter;
+    IBaseFilter *pGrabberFilter;
     hr = CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pGrabberFilter));
     if (FAILED(hr)) {
         return -99;
@@ -136,14 +137,14 @@ int DirectShow_Camera::start( const CapabilityFormat &capabilityFormat,
 
     /// 11 Create Sample grabber
     hr = pGraph->AddFilter(pGrabberFilter, L"Sample Grabber");
-    ISampleGrabber          *pSampleGrabber;
+    ISampleGrabber *pSampleGrabber;
     hr = pGrabberFilter->QueryInterface(IID_ISampleGrabber, (void**)&pSampleGrabber);
     if (FAILED(hr)) {
         return -99;
     }
 
     /// 12 set callback
-    ISampleGrabberCB* pGrabberCB = new DirectShow_Callback(this);
+    ISampleGrabberCB *pGrabberCB = new DirectShow_Callback(this);
 
     /// 13 set callback to the ISampleGrabber
     pSampleGrabber->SetCallback(pGrabberCB, 0);
@@ -157,16 +158,34 @@ int DirectShow_Camera::start( const CapabilityFormat &capabilityFormat,
         return -99;
     }
 
-    hr = pBuild->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, pVCap, pGrabberFilter, NULL);
+    ///create NULL renderer - to disable ActiveMovie Window
+    IBaseFilter *pNullRenderer;
+    hr = CoCreateInstance(CLSID_NullRenderer, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pNullRenderer);
+    if (FAILED(hr)) {
+        return -99;
+    }
+    hr = pGraph->AddFilter(pNullRenderer, L"NullRender");
 
-    pControl->Run();
-/////////////////
+    hr = pBuild->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, pVCap, pGrabberFilter, pNullRenderer);
+    if (FAILED(hr)) {
+        return -99;
+    }
+
+    pControl->Run();    
 
     return 1;      //TODO Err code
 }
 
 int DirectShow_Camera::stop()
-{
+{        
+    if (!state & CA_STATE_CAPTURING) {
+        DEBUG_PRINT("Error: Cannot stop capture because we're not capturing yet.\n");
+        return -1;    //TODO Err code
+    }
+
+    state &= ~CA_STATE_CAPTURING;
+
+    pControl->Stop();
     return 1;   //TODO Err code
 }
 
@@ -577,22 +596,6 @@ int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild,
         }
     }
     return 1;
-}
-
-HRESULT DirectShow_Camera::ConnectFilters(ICaptureGraphBuilder2 *pBuild, IGraphBuilder *pGraph, IBaseFilter *pFirst, IBaseFilter *pSecond)
-{
-    HRESULT hr = S_OK;
-//    IPin *pOut = NULL;
-//    IPin *pIn  = NULL;
-
-//    pBuild->FindPin(pFirst,  PINDIR_OUTPUT, NULL, NULL, TRUE, 0, &pOut);
-//    pBuild->FindPin(pSecond, PINDIR_INPUT, NULL, NULL, TRUE, 0, &pIn);
-
-//    if(pOut && pIn) hr = pGraph->Connect(pOut, pIn);
-//    if(pIn) pIn->Release();
-//    if(pOut) pOut->Release();
-
-    return hr;
 }
 
 } // namespace webcam_capture
