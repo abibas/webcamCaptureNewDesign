@@ -538,7 +538,7 @@ int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild,
    int iCount = 0;
    int iSize = 0;
 
-    // get the number of different resolutions possible
+    // get the number of different possible resolutions
     hr = pConfig->GetNumberOfCapabilities(&iCount, &iSize);
     if (FAILED(hr)) {
         return -2;
@@ -569,11 +569,6 @@ int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild,
                     }
                     break;
                 }
-
-
-                //to set frame rate - you need to set AvgTimePerFrame... LOL... it's really stupid...
-                //VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmtConfig->pbFormat;
-                //int currentFps = vih->AvgTimePerFrame / 30;
             } else if (pmtConfig->formattype == FORMAT_VideoInfo2) {
                 VIDEOINFOHEADER2 *pVHeader = reinterpret_cast<VIDEOINFOHEADER2*>(pmtConfig->pbFormat);
 
