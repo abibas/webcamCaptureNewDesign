@@ -3,8 +3,6 @@
     distributed under the Apache 2.0 license
     http://www.apache.org/licenses/LICENSE-2.0
   */
-#include <iostream>
-
 
 #include "media_foundation_camera.h"
 #include "media_foundation_backend.h"

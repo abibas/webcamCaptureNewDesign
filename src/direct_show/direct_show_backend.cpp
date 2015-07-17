@@ -1,8 +1,6 @@
 #include <windows.h>
 #include <dshow.h>
 
-#include <iostream>
-
 #include "direct_show_backend.h"
 #include "direct_show_camera.h"
 #include "../winapi_shared/winapi_shared_unique_id.h"

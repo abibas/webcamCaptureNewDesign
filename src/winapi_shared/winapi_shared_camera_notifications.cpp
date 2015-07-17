@@ -5,7 +5,6 @@
 #include <backend_factory.h>
 
 #include <algorithm>
-#include <iostream>
 
 #include <ks.h>
 #include <Ksmedia.h>

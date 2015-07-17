@@ -6,7 +6,6 @@
 #include "direct_show_utils.h"
 #include "../capability_tree_builder.h"
 
-#include <iostream>
 #include <dshow.h>
 #include <Dvdmedia.h>
 
@@ -58,11 +57,20 @@ int DirectShow_Camera::start(const CapabilityFormat &capabilityFormat,
         return -2;      //TODO Err code
     }
 
+    // Set the media format, width, height
+    std::vector<CapabilityFormat> capabilities = getCapabilities();
+
+    //Check of "capabilities" have inputed params
+    int checkRes = check_inputed_capability_params(capabilities, capabilityFormat, capabilityResolution, capabilityFps);
+    if ( checkRes < 0 ) {
+        return checkRes; //return err code
+    }
+
     cb_frame = cb;
 
-    pixel_buffer.height[0] = 480;               //TODO To remov hard code
-    pixel_buffer.width[0] = 640;                //TODO To remov hard code
-    pixel_buffer.pixel_format = Format::YUY2;   //TODO To remov hard code
+    pixel_buffer.height[0] = capabilityResolution.getHeight();
+    pixel_buffer.width[0] = capabilityResolution.getWidth();
+    pixel_buffer.pixel_format = capabilityFormat.getPixelFormat();
 
 
     /// 1 step Create the Capture Graph Builder.
@@ -106,6 +114,9 @@ int DirectShow_Camera::start(const CapabilityFormat &capabilityFormat,
         return -99;
     }
 
+
+
+
     /// 8 Add the Device Filter to the Graph
     hr = pGraph->AddFilter(pVCap, L"Video Capture");
     if (FAILED(hr)) {
@@ -133,14 +144,14 @@ int DirectShow_Camera::start(const CapabilityFormat &capabilityFormat,
     /// 12 set callback to the ISampleGrabber
     pSampleGrabber->SetCallback(pGrabberCB, 0);
 
-    AM_MEDIA_TYPE mt;
-    ZeroMemory(&mt, sizeof(mt));
-    mt.majortype = MEDIATYPE_Video;
-    mt.subtype = MEDIASUBTYPE_YUY2;
-    hr = pSampleGrabber->SetMediaType(&mt);
-    if (FAILED(hr)) {
-        return -99;
-    }
+//    AM_MEDIA_TYPE mt;
+//    ZeroMemory(&mt, sizeof(mt));
+//    mt.majortype = MEDIATYPE_Video;
+//    mt.subtype = MEDIASUBTYPE_YUY2;
+//    hr = pSampleGrabber->SetMediaType(&mt);
+//    if (FAILED(hr)) {
+//        return -99;
+//    }
     hr = pSampleGrabber->SetOneShot(FALSE);
     if (FAILED(hr)) {
         return -99;

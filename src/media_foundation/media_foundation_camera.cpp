@@ -2,8 +2,6 @@
 #include "media_foundation_camera.h"
 #include "../winapi_shared/winapi_shared_unique_id.h"
 
-#include <iostream>
-
 namespace webcam_capture {
 
 MediaFoundation_Camera::MediaFoundation_Camera(std::shared_ptr<void> mfDeinitializer,
@@ -87,59 +85,11 @@ int MediaFoundation_Camera::start(const CapabilityFormat &capabilityFormat,
         return -4;      //TODO Err code
     }
 
-///Check of "capabilities" have inputed params
-//check format
-    bool isFormatValid = false;
-    int formatIndex = 0;
-
-    for (int i = 0; i < capabilities.size(); i++) {
-        if (capabilities.at(i).getPixelFormat() == capabilityFormat.getPixelFormat()) {
-            formatIndex = i;
-            isFormatValid = true;
-            break;
-        }
+    //Check of "capabilities" have inputed params
+    int checkRes = check_inputed_capability_params(capabilities, capabilityFormat, capabilityResolution, capabilityFps);
+    if ( checkRes < 0 ) {
+        return checkRes; //return err code
     }
-
-    if (!isFormatValid) {
-        DEBUG_PRINT("Error: cannot found such capabilityFormat in capabilities.\n");
-        return -5;
-    }
-
-//chech resolution
-    const std::vector<CapabilityResolution> &resolutionVectorBuf = capabilities.at(formatIndex).getResolutions();
-    bool isResolutionValid = false;
-    int resolutionsIndex = 0;
-
-    for (int j = 0; j < resolutionVectorBuf.size(); j++) {
-        if (resolutionVectorBuf.at(j).getHeight()  == capabilityResolution.getHeight() &&
-                resolutionVectorBuf.at(j).getWidth() == capabilityResolution.getWidth()) {
-            resolutionsIndex = j;
-            isResolutionValid = true;
-            break;
-        }
-    }
-
-    if (!isResolutionValid) {
-        DEBUG_PRINT("Error: cannot found such capabilityResolution in capabilities.\n");
-        return -6;
-    }
-
-//check fps
-    const std::vector<CapabilityFps> &fpsVectorBuf = resolutionVectorBuf.at(resolutionsIndex).getFpses();
-    bool isFpsValid = false;
-
-    for (int k = 0; k < fpsVectorBuf.size(); k++) {
-        if (fpsVectorBuf.at(k).getFps() == capabilityFps.getFps()) {
-            isFpsValid = true;
-        }
-    }
-
-    if (!isFpsValid) {
-        DEBUG_PRINT("Error: cannot found such capabilityFps in capabilities.\n");
-        return -7;
-    }
-
-//END OF Check that "capabilities" list has inputed params
 
     if (capabilityFormat.getPixelFormat() == Format::UNKNOWN) {
         DEBUG_PRINT("Error: cannot set a pixel format for UNKNOWN.\n");
