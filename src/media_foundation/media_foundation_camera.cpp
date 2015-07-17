@@ -166,7 +166,7 @@ int MediaFoundation_Camera::start(const CapabilityFormat &capabilityFormat,
     // Set the source reader format.
     if (setReaderFormat(imf_source_reader, capabilityResolution.getWidth(),
                         capabilityResolution.getHeight(),
-                        capabilityFormat.getPixelFormat()) < 0) {
+                        capabilityFormat.getPixelFormat(), capabilityFps.getFps()) < 0) {
         DEBUG_PRINT("Error: cannot set the reader format.\n");
         safeReleaseMediaFoundation(&mf_callback);
         safeReleaseMediaFoundation(&imf_source_reader);
@@ -617,7 +617,7 @@ done:
 }
 
 int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int width, const int height,
-        const Format pixelFormat) const
+        const Format pixelFormat, const int fps) const
 {
 
     DWORD media_type_index = 0;
@@ -675,7 +675,8 @@ int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int w
             // When the output media type of the source reader matches our specs, set it!
             if (widthBuf == width &&
                     heightBuf == height &&
-                    pixelFormatBuf == pixelFormat) {
+                    pixelFormatBuf == pixelFormat &&
+                    currentFpsBuf == fps) {
 
                 hr = reader->SetCurrentMediaType(0, NULL, type);
 
