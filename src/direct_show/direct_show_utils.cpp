@@ -1,7 +1,9 @@
 #include "direct_show_utils.h"
+
 #include <format.h>
+
 #include <dshow.h>
-//#include <wmcodecdsp.h> - when using AVC1, h264, X264, x264
+#include <wmcodecdsp.h>
 
 namespace webcam_capture {
 
@@ -66,19 +68,11 @@ Format direct_show_video_format_to_capture_format(GUID guid)
     } else if (IsEqualGUID(guid, MEDIASUBTYPE_dvh1)) {
         return Format::DVH1;
     }
-    //  Miscellaneous
-    // MEDIASUBTYPE_DVSD is another then MEDIASUBTYPE_dsvd
-//    else if (IsEqualGUID(guid, MEDIASUBTYPE_DVCS)) {
-//        return Format::DVCS;
-//    } else if (IsEqualGUID(guid, MEDIASUBTYPE_DVSD)) {
-//        return Format::DVSD;
 
     ///H.264 Video Types
     else if (IsEqualGUID(guid, MEDIASUBTYPE_H264)) {
         return Format::H264;
-    }
-    //when using AVC1, h264, X264, x264 - need to link with external LIB
-    /*else if (IsEqualGUID(guid, MEDIASUBTYPE_AVC1)) {
+    } else if (IsEqualGUID(guid, MEDIASUBTYPE_AVC1)) {
         return Format::AVC1;
     //Equivalent to MEDIASUBTYPE_H264, with a different FOURCC.
     } else if (IsEqualGUID(guid, MEDIASUBTYPE_h264)) {
@@ -89,7 +83,7 @@ Format direct_show_video_format_to_capture_format(GUID guid)
     //Equivalent to MEDIASUBTYPE_H264, with a different FOURCC.
     } else if (IsEqualGUID(guid, MEDIASUBTYPE_x264)) {
         return Format::H264;
-    }*/
+    }
 
     ///Uncompressed RGB Video Subtypes
     // Uncompressed RGB formats with no alpha channel.
@@ -125,7 +119,7 @@ Format direct_show_video_format_to_capture_format(GUID guid)
 
     ///Video Mixing Renderer Video Subtypes
     // VMR-7 Subtypes
-    if (IsEqualGUID(guid, MEDIASUBTYPE_RGB32_D3D_DX7_RT)) {
+    else if (IsEqualGUID(guid, MEDIASUBTYPE_RGB32_D3D_DX7_RT)) {
         return Format::RGB32_D3D_DX7_RT;
     } else if (IsEqualGUID(guid, MEDIASUBTYPE_RGB16_D3D_DX7_RT)) {
         return Format::RGB16_D3D_DX7_RT;
@@ -169,12 +163,11 @@ Format direct_show_video_format_to_capture_format(GUID guid)
         return Format::YV12;
     } else if (IsEqualGUID(guid, MEDIASUBTYPE_NV12)) {
         return Format::NV12;
-    }
+
     // Other YUV Format Types
-// Missing MEDIASUBTYPE_I420 in dshow.h header
-//    } else if (IsEqualGUID(guid, MEDIASUBTYPE_I420)) {
-//        return Format::I420;
-    else if (IsEqualGUID(guid, MEDIASUBTYPE_IF09)) {
+    } else if (IsEqualGUID(guid, MEDIASUBTYPE_I420)) {
+        return Format::I420;
+    } else if (IsEqualGUID(guid, MEDIASUBTYPE_IF09)) {
         return Format::IF09;
     } else if (IsEqualGUID(guid, MEDIASUBTYPE_IYUV)) {
         return Format::IYUV;

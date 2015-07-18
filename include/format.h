@@ -6,6 +6,8 @@
 /* Media Foundation
  *   - Formats: https://msdn.microsoft.com/en-us/library/windows/desktop/aa370819(v=vs.85).aspx
  *   - Description: https://msdn.microsoft.com/en-us/library/windows/desktop/dd206750(v=vs.85).aspx
+ * Direct Show
+ *   - https://msdn.microsoft.com/en-us/library/windows/desktop/dd407353(v=vs.85).aspx
  */
 
 namespace webcam_capture {

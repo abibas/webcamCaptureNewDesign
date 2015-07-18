@@ -27,6 +27,7 @@ if (WIN32)
   if (BACKEND_DIRECT_SHOW)
     set(LIBS ${LIBS}
       strmiids
+      wmcodecdspuuid
     )
 
     add_definitions(-DWEBCAM_CAPTURE_BACKEND_DIRECT_SHOW)
