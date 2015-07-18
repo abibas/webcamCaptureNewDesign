@@ -42,8 +42,7 @@ public:
     ~MediaFoundation_Camera();
     static std::unique_ptr<CameraInterface> createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
 
-    int start(const CapabilityFormat &capabilityFormat, const CapabilityResolution &capabilityResolution,
-              const CapabilityFps &capabilityFps, frame_callback cb);
+    int start(Format pixelFormat, int width, int height, int fps, frame_callback cb);
     int stop();
     std::unique_ptr<PixelBuffer> CaptureFrame();  //TODO
     // ---- Capabilities ----

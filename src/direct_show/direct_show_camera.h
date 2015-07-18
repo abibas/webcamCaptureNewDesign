@@ -30,8 +30,7 @@ public:
     ~DirectShow_Camera();
     static std::unique_ptr<CameraInterface> createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
 
-    int start(const CapabilityFormat &capabilityFormat, const CapabilityResolution &capabilityResolution,
-              const CapabilityFps &capabilityFps, frame_callback cb);
+    int start(Format pixelFormat, int width, int height, int fps, frame_callback cb);
     int stop();
     std::unique_ptr<PixelBuffer> CaptureFrame();
     // ---- Capabilities ----
@@ -45,11 +44,7 @@ private:
 
     /***** SDK FUNCTIONS *****/
     IMoniker* getIMonikerByUniqueId(std::shared_ptr<UniqueId> &uniqueId);    
-    int setCapabilities(ICaptureGraphBuilder2 *pBuild,
-                        IBaseFilter *pVCap,
-                        const CapabilityFormat &capabilityFormat,
-                        const CapabilityResolution &capabilityResolution,
-                        const CapabilityFps &capabilityFps);
+    int setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pVCap, Format pixelFormat, int width, int height, int fps);
 
 public:
     std::shared_ptr<void> mfDeinitializer;

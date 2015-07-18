@@ -32,18 +32,16 @@ public:
     CameraInterface() {}
     virtual ~CameraInterface() {}
 
-    //FIXME(nurupo): change CapabilityX to just X in here, since those CapabilityX might be from different camera.
-    //a camera should store a list of all capabilities inside and check against them.
     /**
-     * Starts video capture in specified format with specified resolution and frame rate.
-     * @param capabilityFormat Pixel format in which you want to capture the video frames.
-     * @param capabilityResolution Resolution of the captured video frames.
-     * @param capabilityFps Frame rate of capturing.
+     * Starts video capture in specified format, resolution and frame rate.
+     * @param pixelFormat Pixel format in which you want to capture the video frames.
+     * @param width Width part of resolution of the captured video frames.
+     * @param height Height part of resolution of the captured video frames.
+     * @param fps Frame rate of capturing.
      * @param cb Callback with the captured video frame data.
      * @return TODO(nurupo): add enum for: already in use, already started, invalid combination of capabilities, unknown error.
      */
-    virtual int start(const CapabilityFormat &capabilityFormat, const CapabilityResolution &capabilityResolution,
-                      const CapabilityFps &capabilityFps, frame_callback cb) = 0;
+    virtual int start(Format pixelFormat, int width, int height, int fps, frame_callback cb) = 0;
 
     /**
      * Stops video capture.

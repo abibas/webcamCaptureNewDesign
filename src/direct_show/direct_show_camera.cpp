@@ -44,9 +44,9 @@ DirectShow_Camera::~DirectShow_Camera()
     }
 }
 
-int DirectShow_Camera::start( const CapabilityFormat &capabilityFormat,
-                              const CapabilityResolution &capabilityResolution,
-                              const CapabilityFps &capabilityFps,
+int DirectShow_Camera::start(Format pixelFormat,
+                              int width,
+                              int height, int fps,
                               frame_callback cb )
 {
     if (!cb) {
@@ -59,20 +59,12 @@ int DirectShow_Camera::start( const CapabilityFormat &capabilityFormat,
         return -2;      //TODO Err code
     }
 
-    // Set the media format, width, height
-    std::vector<CapabilityFormat> capabilities = getCapabilities();
-
-    //Check of "capabilities" have inputed params
-    int checkRes = check_inputed_capability_params(capabilities, capabilityFormat, capabilityResolution, capabilityFps);
-    if ( checkRes < 0 ) {
-        return checkRes; //return err code
-    }
-
     cb_frame = cb;
 
-    pixel_buffer.height[0] = capabilityResolution.getHeight();
-    pixel_buffer.width[0] = capabilityResolution.getWidth();
-    pixel_buffer.pixel_format = capabilityFormat.getPixelFormat();
+
+    pixel_buffer.width[0] = width;
+    pixel_buffer.height[0] = height;
+    pixel_buffer.pixel_format = pixelFormat;
 
 
     HRESULT hr;
@@ -94,7 +86,7 @@ int DirectShow_Camera::start( const CapabilityFormat &capabilityFormat,
     }
 
     /// 4 step Set capabilities
-    int setCapRes = setCapabilities(pBuild, pVCap, capabilityFormat, capabilityResolution, capabilityFps);
+    int setCapRes = setCapabilities(pBuild, pVCap, pixelFormat, width, height, fps);
     if ( setCapRes < 0 ) {
         return setCapRes;
     }
@@ -517,11 +509,8 @@ IMoniker* DirectShow_Camera::getIMonikerByUniqueId(std::shared_ptr<UniqueId> &un
     return pResult;
 }
 
-int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild,
-                    IBaseFilter *pVCap,
-                    const CapabilityFormat &capabilityFormat,
-                    const CapabilityResolution &capabilityResolution,
-                    const CapabilityFps &capabilityFps)
+int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pVCap, Format pixelFormat,
+                                       int width, int height, int fps)
 {
     CComPtr<IAMStreamConfig> pConfig;
     HRESULT hr = pBuild->FindInterface(
@@ -535,8 +524,8 @@ int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild,
         return -1;
     }
 
-   int iCount = 0;
-   int iSize = 0;
+    int iCount = 0;
+    int iSize = 0;
 
     // get the number of different possible resolutions
     hr = pConfig->GetNumberOfCapabilities(&iCount, &iSize);
@@ -554,15 +543,15 @@ int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild,
             if (pmtConfig->formattype == FORMAT_VideoInfo) {
                 VIDEOINFOHEADER *pVHeader = reinterpret_cast<VIDEOINFOHEADER*>(pmtConfig->pbFormat);
 
-                Format pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
-                int width = pVHeader->bmiHeader.biWidth;
-                int height = pVHeader->bmiHeader.biHeight;
-                if ( pixelFormat == capabilityFormat.getPixelFormat() &&
-                     width == capabilityResolution.getWidth() &&
-                     height == capabilityResolution.getHeight() ) {
+                Format pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+                int widthBuf = pVHeader->bmiHeader.biWidth;
+                int heightBuf = pVHeader->bmiHeader.biHeight;
+                if ( pixelFormatBuf == pixelFormat &&
+                     widthBuf == width &&
+                     heightBuf == height ) {
 
                     // FIXME(nurupo): store FPS as float and fix that FPS/100 thing.
-                    pVHeader->AvgTimePerFrame = 1000000000 / capabilityFps.getFps();
+                    pVHeader->AvgTimePerFrame = 1000000000 / fps;
                     pConfig->SetFormat(pmtConfig);
                     if (FAILED(hr)) {
                         return -4;
@@ -572,15 +561,15 @@ int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild,
             } else if (pmtConfig->formattype == FORMAT_VideoInfo2) {
                 VIDEOINFOHEADER2 *pVHeader = reinterpret_cast<VIDEOINFOHEADER2*>(pmtConfig->pbFormat);
 
-                Format pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
-                int width = pVHeader->bmiHeader.biWidth;
-                int height = pVHeader->bmiHeader.biHeight;
-                if ( pixelFormat == capabilityFormat.getPixelFormat() &&
-                     width == capabilityResolution.getWidth() &&
-                     height == capabilityResolution.getHeight() ) {
+                Format pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+                int widthBuf = pVHeader->bmiHeader.biWidth;
+                int heightBuf = pVHeader->bmiHeader.biHeight;
+                if ( pixelFormatBuf == pixelFormat &&
+                     widthBuf == width &&
+                     heightBuf == height ) {
 
                     // FIXME(nurupo): store FPS as float and fix that FPS/100 thing.
-                    pVHeader->AvgTimePerFrame = 1000000000 / capabilityFps.getFps();
+                    pVHeader->AvgTimePerFrame = 1000000000 / fps;
                     pConfig->SetFormat(pmtConfig);
                     if (FAILED(hr)) {
                         return -4;

@@ -44,9 +44,9 @@ MediaFoundation_Camera::~MediaFoundation_Camera()
     safeReleaseMediaFoundation(&imf_media_source);
 }
 
-int MediaFoundation_Camera::start(const CapabilityFormat &capabilityFormat,
-                                  const CapabilityResolution &capabilityResolution,
-                                  const CapabilityFps &capabilityFps,
+int MediaFoundation_Camera::start(Format pixelFormat,
+                                  int width,
+                                  int height, int fps,
                                   frame_callback cb)
 {
     if (!cb) {
@@ -76,30 +76,15 @@ int MediaFoundation_Camera::start(const CapabilityFormat &capabilityFormat,
 
     //End of "to test comment this"
 
-
-    // Set the media format, width, height
-    std::vector<CapabilityFormat> capabilities;
-
-    if (getVideoCapabilities(imf_media_source, capabilities) < 0) {
-        DEBUG_PRINT("Error: cannot create the capabilities list to start capturing. Capturing was not started.\n");
-        return -4;      //TODO Err code
-    }
-
-    //Check of "capabilities" have inputed params
-    int checkRes = check_inputed_capability_params(capabilities, capabilityFormat, capabilityResolution, capabilityFps);
-    if ( checkRes < 0 ) {
-        return checkRes; //return err code
-    }
-
-    if (capabilityFormat.getPixelFormat() == Format::UNKNOWN) {
+    if (pixelFormat == Format::UNKNOWN) {
         DEBUG_PRINT("Error: cannot set a pixel format for UNKNOWN.\n");
         return -8;      //TODO Err code
     }
 
-    if (setDeviceFormat(imf_media_source, capabilityResolution.getWidth(),
-                        capabilityResolution.getHeight(),
-                        capabilityFormat.getPixelFormat(),
-                        capabilityFps.getFps()) < 0) {
+    if (setDeviceFormat(imf_media_source, width,
+                        height,
+                        pixelFormat,
+                        fps) < 0) {
         DEBUG_PRINT("Error: cannot set the device format.\n");
         return -9;      //TODO Err code
     }
@@ -114,19 +99,19 @@ int MediaFoundation_Camera::start(const CapabilityFormat &capabilityFormat,
     }
 
     // Set the source reader format.
-    if (setReaderFormat(imf_source_reader, capabilityResolution.getWidth(),
-                        capabilityResolution.getHeight(),
-                        capabilityFormat.getPixelFormat(), capabilityFps.getFps()) < 0) {
+    if (setReaderFormat(imf_source_reader, width,
+                        height,
+                        pixelFormat,
+                        fps) < 0) {
         DEBUG_PRINT("Error: cannot set the reader format.\n");
         safeReleaseMediaFoundation(&mf_callback);
         safeReleaseMediaFoundation(&imf_source_reader);
         return -11;      //TODO Err code
     }
 
-    pixel_buffer.height[0] = capabilityResolution.getHeight();
-    pixel_buffer.width[0] = capabilityResolution.getWidth();
-    pixel_buffer.pixel_format = capabilityFormat.getPixelFormat();
-
+    pixel_buffer.width[0] = width;
+    pixel_buffer.height[0] = height;
+    pixel_buffer.pixel_format = pixelFormat;
 
     // Kick off the capture stream.
     HRESULT hr = imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
@@ -293,7 +278,6 @@ int MediaFoundation_Camera::getProperty(VideoProperty property)
 
 bool MediaFoundation_Camera::setProperty(const VideoProperty property, const int value)
 {
-
     IAMVideoProcAmp *pProcAmp = NULL;
     VideoProcAmpProperty ampProperty;
     HRESULT hr = imf_media_source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
@@ -392,12 +376,14 @@ int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int wi
 
     PROPVARIANT var;
 
+    bool setType = false;
+
     for (DWORD i = 0; i < types_count; ++i) {
         Format pixelFormatBuf = Format::UNKNOWN;
         int widthBuf = 0;
         int heightBuf = 0;
-        int fpsBuf = 0;
-        int currentFpsBuf = 0;
+        UINT32 high = 0;
+        UINT32 low =  0;
 
         hr = media_handler->GetMediaTypeByIndex(i, &type);
 
@@ -426,77 +412,67 @@ int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int wi
                 if (FAILED(hr)) {
                     DEBUG_PRINT("Error: cannot get item by index.\n");
                     result = -7;        //TODO Err code
+                    PropVariantClear(&var);
                     goto done;
                 }
 
                 if (guid == MF_MT_SUBTYPE && var.vt == VT_CLSID) {
                     pixelFormatBuf = media_foundation_video_format_to_capture_format(*var.puuid);
                 } else if (guid == MF_MT_FRAME_SIZE) {
-                    UINT32 high = 0;
-                    UINT32 low =  0;
                     Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
                     widthBuf = (int)high;
                     heightBuf = (int)low;
-                } else if (guid == MF_MT_FRAME_RATE) {
-                    UINT32 high = 0;
-                    UINT32 low =  0;
-                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                    currentFpsBuf = fps_from_rational(low, high);
                 }
 
                 PropVariantClear(&var);
             }
 
-            // When the output media type of the source reader matches our specs, set it!
-            if (widthBuf == width &&
-                    heightBuf == height &&
-                    pixelFormatBuf == pixelFormat) {
+            // Wait till we get the format and resolution we are looking for
+            if (widthBuf != width || heightBuf != height || pixelFormatBuf != pixelFormat) {
+                safeReleaseMediaFoundation(&type);
+                continue;
+            }
 
-                //Compare input fps with max\min fpses and preset it
+            // figure out fps
+            // we don't read fps above because we need to set it on type, which requires PROPVARIANT of that fps
+
+            auto trySetFps = [&type, &var, &hr, &high, &low, fps](REFGUID GUID) {
+                bool setFps = false;
+
                 PropVariantInit(&var);
-                hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
-
+                hr = type->GetItem(GUID, &var);
                 if (SUCCEEDED(hr)) {
-                    UINT32 high = 0;
-                    UINT32 low =  0;
                     Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                    fpsBuf = fps_from_rational(low, high);
+                    int fpsBuf = fps_from_rational(low, high);
 
                     if (fpsBuf == fps) {
                         hr = type->SetItem(MF_MT_FRAME_RATE, var);
+                        setFps = SUCCEEDED(hr);
                     }
                 }
-
                 PropVariantClear(&var);
 
-                PropVariantInit(&var);
-                hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
+                return setFps;
+            };
 
-                if (SUCCEEDED(hr)) {
-                    UINT32 high = 0;
-                    UINT32 low =  0;
-                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                    fpsBuf = fps_from_rational(low, high);
-
-                    if (fpsBuf == fps) {
-                        hr = type->SetItem(MF_MT_FRAME_RATE, var);
-                    }
-                }
-
-                PropVariantClear(&var);
-
-
+            // if we found the fps we are looking for and set it on the type
+            if (trySetFps(MF_MT_FRAME_RATE) || trySetFps(MF_MT_FRAME_RATE_RANGE_MAX) || trySetFps(MF_MT_FRAME_RATE_RANGE_MIN)) {
+                setType = true;
                 hr = media_handler->SetCurrentMediaType(type);
-
                 if (FAILED(hr)) {
+                    result = -7;
                     DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
-                } else {
-                    break;
                 }
+                safeReleaseMediaFoundation(&type);
+                break;
             }
-        }
 
-        safeReleaseMediaFoundation(&type);
+            safeReleaseMediaFoundation(&type);
+        }
+    }
+
+    if (!setType) {
+        result = -8;
     }
 
 done:
@@ -504,7 +480,6 @@ done:
     safeReleaseMediaFoundation(&stream_desc);
     safeReleaseMediaFoundation(&media_handler);
     safeReleaseMediaFoundation(&type);
-    PropVariantClear(&var);
 
     return result;
 }
@@ -575,75 +550,72 @@ int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int w
     HRESULT hr = S_OK;
     int currentFpsBuf;
 
-    while (SUCCEEDED(hr)) {
+    for (DWORD media_type_index = 0; true; ++media_type_index) {
         Format pixelFormatBuf = Format::UNKNOWN;
         int widthBuf = 0;
         int heightBuf = 0;
+        UINT32 high = 0;
+        UINT32 low =  0;
         IMFMediaType *type = NULL;
 
         hr = reader->GetNativeMediaType(0, media_type_index, &type);
 
+        if (FAILED(hr)) {
+            break;
+        }
+
+        // PIXELFORMAT
+        PROPVARIANT var;
+        PropVariantInit(&var);
+        hr = type->GetItem(MF_MT_SUBTYPE, &var);
+
         if (SUCCEEDED(hr)) {
+            pixelFormatBuf = media_foundation_video_format_to_capture_format(*var.puuid);
+        }
 
-            // PIXELFORMAT
-            PROPVARIANT var;
-            PropVariantInit(&var);
-            hr = type->GetItem(MF_MT_SUBTYPE, &var);
+        PropVariantClear(&var);
 
-            if (SUCCEEDED(hr)) {
-                pixelFormatBuf = media_foundation_video_format_to_capture_format(*var.puuid);
+        // SIZE
+        PropVariantInit(&var);
+        hr = type->GetItem(MF_MT_FRAME_SIZE, &var);
+
+        if (SUCCEEDED(hr)) {
+            Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+            widthBuf = high;
+            heightBuf = low;
+        }
+
+        PropVariantClear(&var);
+
+        PropVariantInit(&var);
+        hr = type->GetItem(MF_MT_FRAME_RATE, &var);
+
+        if (SUCCEEDED(hr)) {
+            Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+            currentFpsBuf = fps_from_rational(low, high);
+        }
+
+        PropVariantClear(&var);
+
+        // When the output media type of the source reader matches our specs, set it!
+        if (widthBuf == width &&
+                heightBuf == height &&
+                pixelFormatBuf == pixelFormat &&
+                currentFpsBuf == fps) {
+
+            hr = reader->SetCurrentMediaType(0, NULL, type);
+
+            if (FAILED(hr)) {
+                DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
+            } else {
+                hr = S_OK;
+                result = 1;        //TODO Err code
             }
-
-            PropVariantClear(&var);
-
-            // SIZE
-            PropVariantInit(&var);
-            hr = type->GetItem(MF_MT_FRAME_SIZE, &var);
-
-            if (SUCCEEDED(hr)) {
-                UINT32 high = 0;
-                UINT32 low =  0;
-                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                widthBuf = high;
-                heightBuf = low;
-            }
-
-            PropVariantClear(&var);
-
-            PropVariantInit(&var);
-            hr = type->GetItem(MF_MT_FRAME_RATE, &var);
-
-            if (SUCCEEDED(hr)) {
-                UINT32 high = 0;
-                UINT32 low =  0;
-                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                currentFpsBuf = fps_from_rational(low, high);
-            }
-
-            PropVariantClear(&var);
-
-            // When the output media type of the source reader matches our specs, set it!
-            if (widthBuf == width &&
-                    heightBuf == height &&
-                    pixelFormatBuf == pixelFormat &&
-                    currentFpsBuf == fps) {
-
-                hr = reader->SetCurrentMediaType(0, NULL, type);
-
-                if (FAILED(hr)) {
-                    DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
-                } else {
-                    hr = S_OK;
-                    result = 1;        //TODO Err code
-                }
-            }
-        } else {
+            safeReleaseMediaFoundation(&type);
             break;
         }
 
         safeReleaseMediaFoundation(&type);
-
-        ++media_type_index;
     }
 
     return result;
@@ -755,6 +727,8 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
             int minFps = 0;
             int maxFps = 0;
             int currentFps = 0;
+            UINT32 high = 0;
+            UINT32 low =  0;
 
             hr = media_handler->GetMediaTypeByIndex(i, &type);
 
@@ -790,24 +764,16 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
                     if (guid == MF_MT_SUBTYPE && var.vt == VT_CLSID) {
                         pixelFormat = media_foundation_video_format_to_capture_format(*var.puuid);
                     } else if (guid == MF_MT_FRAME_SIZE) {
-                        UINT32 high = 0;
-                        UINT32 low =  0;
                         Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
                         width = (int)high;
                         height = (int)low;
                     } else if (guid == MF_MT_FRAME_RATE_RANGE_MIN) {
-                        UINT32 high = 0;
-                        UINT32 low =  0;
                         Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
                         minFps = fps_from_rational(low, high);
                     } else if (guid == MF_MT_FRAME_RATE_RANGE_MAX) {
-                        UINT32 high = 0;
-                        UINT32 low =  0;
                         Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
                         maxFps = fps_from_rational(low, high);
                     } else if (guid == MF_MT_FRAME_RATE) {
-                        UINT32 high = 0;
-                        UINT32 low =  0;
                         Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
                         currentFps = fps_from_rational(low, high);
                     }
