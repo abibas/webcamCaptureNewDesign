@@ -20,14 +20,13 @@
 
 namespace webcam_capture {
 
-// FIXME(nurupo): rename, move into separate file?
-enum class WEBCAM_CAPTURE_EXPORT CameraPlugStatus {
-    CAMERA_CONNECTED,
-    CAMERA_DISCONNECTED
+enum class WEBCAM_CAPTURE_EXPORT CameraConnectionStatus {
+    Connected, // camera was connected to the system and it's available for use
+    Disconnected // camera was disconnected from the system and you should stop using it
 };
 
 // FIXME(nurupo): rename
-typedef std::function<void(CameraInformation information, CameraPlugStatus status)> notifications_callback;
+typedef std::function<void(CameraInformation information, CameraConnectionStatus status)> notifications_callback;
 
 /**
  * Common interface of backend implementations.

@@ -109,11 +109,11 @@ void MainWindow::on_deleteBackendBtn_clicked()
     backend.release();
 }
 
-void MainWindow::CameraEventCaptureCallback(CameraInformation information, CameraPlugStatus status)
+void MainWindow::CameraEventCaptureCallback(CameraInformation information, CameraConnectionStatus status)
 {
-    if (status == CameraPlugStatus::CAMERA_CONNECTED) {
+    if (status == CameraConnectionStatus::Connected) {
         cameraInfoList.push_back(information);
-    } else if (status == CameraPlugStatus::CAMERA_DISCONNECTED) {
+    } else if (status == CameraConnectionStatus::Disconnected) {
         for (int i = 0; i < cameraInfoList.size(); i++) {
             if (*information.getUniqueId() == *cameraInfoList.at(i).getUniqueId() &&
                     information.getCameraName() == cameraInfoList.at(i).getCameraName()) {

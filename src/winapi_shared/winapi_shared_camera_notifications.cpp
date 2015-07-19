@@ -217,7 +217,7 @@ void WinapiShared_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr)
 
     for (int i = 0; i < devicesVector.size(); i++) {
         if (uniqId == *devicesVector.at(i).getUniqueId()) {
-            notif_cb(devicesVector.at(i), CameraPlugStatus::CAMERA_DISCONNECTED);
+            notif_cb(devicesVector.at(i), CameraConnectionStatus::Disconnected);
             devicesVector.erase(devicesVector.begin() + i);
             break;
         }
@@ -247,7 +247,7 @@ void WinapiShared_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHd
 
     for (auto&& cameraInfo : camerasBuf) {
         if (*cameraInfo.getUniqueId() == uniqId) {
-            notif_cb(cameraInfo, CameraPlugStatus::CAMERA_CONNECTED);
+            notif_cb(cameraInfo, CameraConnectionStatus::Connected);
             devicesVector.push_back(cameraInfo);
             break;
         }
