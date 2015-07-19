@@ -247,14 +247,10 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
                 int width = pVHeader->bmiHeader.biWidth;
                 int height = pVHeader->bmiHeader.biHeight;
 
-                // FIXME(nurupo): store FPS as float and fix that FPS/100 thing.
                 float minFps = FPS_FROM_RATIONAL(10000000, scc.MaxFrameInterval);
                 float maxFps = FPS_FROM_RATIONAL(10000000, scc.MinFrameInterval);
                 float currentFps = FPS_FROM_RATIONAL(10000000, pVHeader->AvgTimePerFrame);
 
-                //to set frame rate - you need to set AvgTimePerFrame... LOL... it's really stupid...
-                //VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmtConfig->pbFormat;
-                //int currentFps = vih->AvgTimePerFrame / 30;
                 capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
             } else if (pmtConfig->formattype == FORMAT_VideoInfo2) {
                 VIDEOINFOHEADER2 *pVHeader = reinterpret_cast<VIDEOINFOHEADER2*>(pmtConfig->pbFormat);
