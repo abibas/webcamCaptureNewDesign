@@ -26,7 +26,7 @@ public:
      * @param fps List of FPS values a camera supports for captureing using the resolution and the format.
      * FPS values don't have to be unique, repeated values will be added once.
      */
-    void addCapability(Format pixelFormat, int width, int height, std::vector<int> fps);
+    void addCapability(Format pixelFormat, int width, int height, std::vector<float> fps);
 
     /**
      * Builds the capability tree-like structure out of added entries.
@@ -38,9 +38,9 @@ private:
     static std::size_t formatHash(const Format &f);
     static std::size_t resolutionHash(const std::pair<int, int> &p);
     static bool resolutionEquals(const std::pair<int, int> &p, const std::pair<int, int> &q);
+    static bool fpsEquals(const float &p, const float &q);
 
-    typedef std::unordered_map<int, bool>
-    FpsMap;
+    typedef std::unordered_map<float, bool> FpsMap;
 
     typedef std::unordered_map<std::pair<int, int>,
             FpsMap,

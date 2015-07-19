@@ -17,7 +17,7 @@ namespace webcam_capture {
 class WEBCAM_CAPTURE_EXPORT CapabilityFps
 {
 public:
-    CapabilityFps(int fps) :
+    CapabilityFps(float fps) :
         fps(fps) {}
 
     ~CapabilityFps() {}
@@ -25,13 +25,13 @@ public:
     /**
      * @return FPS supported by the camera for some resolution and pixel format.
      */
-    int getFps() const
+    float getFps() const
     {
         return fps;
     }
 
 private:
-    const int fps;
+    const float fps;
 };
 
 

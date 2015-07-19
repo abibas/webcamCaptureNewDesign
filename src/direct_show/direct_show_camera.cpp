@@ -46,7 +46,7 @@ DirectShow_Camera::~DirectShow_Camera()
 
 int DirectShow_Camera::start(Format pixelFormat,
                               int width,
-                              int height, int fps,
+                              int height, float fps,
                               frame_callback cb )
 {
     if (!cb) {
@@ -248,9 +248,9 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
                 int height = pVHeader->bmiHeader.biHeight;
 
                 // FIXME(nurupo): store FPS as float and fix that FPS/100 thing.
-                int minFps = 1000000000 / scc.MaxFrameInterval;
-                int maxFps = 1000000000 / scc.MinFrameInterval;
-                int currentFps = 1000000000 / pVHeader->AvgTimePerFrame;
+                float minFps = FPS_FROM_RATIONAL(10000000, scc.MaxFrameInterval);
+                float maxFps = FPS_FROM_RATIONAL(10000000, scc.MinFrameInterval);
+                float currentFps = FPS_FROM_RATIONAL(10000000, pVHeader->AvgTimePerFrame);
 
                 //to set frame rate - you need to set AvgTimePerFrame... LOL... it's really stupid...
                 //VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmtConfig->pbFormat;
@@ -264,9 +264,9 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
                 int width = pVHeader->bmiHeader.biWidth;
                 int height = pVHeader->bmiHeader.biHeight;
 
-                int minFps = 1000000000 / scc.MaxFrameInterval;
-                int maxFps = 1000000000 / scc.MinFrameInterval;
-                int currentFps = 1000000000 / pVHeader->AvgTimePerFrame;
+                float minFps = FPS_FROM_RATIONAL(10000000, scc.MaxFrameInterval);
+                float maxFps = FPS_FROM_RATIONAL(10000000, scc.MinFrameInterval);
+                float currentFps = FPS_FROM_RATIONAL(10000000, pVHeader->AvgTimePerFrame);
 
                 capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
             }
@@ -510,7 +510,7 @@ IMoniker* DirectShow_Camera::getIMonikerByUniqueId(std::shared_ptr<UniqueId> &un
 }
 
 int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pVCap, Format pixelFormat,
-                                       int width, int height, int fps)
+                                       int width, int height, float fps)
 {
     CComPtr<IAMStreamConfig> pConfig;
     HRESULT hr = pBuild->FindInterface(
@@ -533,52 +533,79 @@ int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilte
         return -2;
     }
 
+    bool setFormat = false;
+
     for (DWORD capId = 0; capId < iCount; capId++) {
         VIDEO_STREAM_CONFIG_CAPS scc;
         AM_MEDIA_TYPE *pmtConfig;
 
         hr = pConfig->GetStreamCaps(capId, &pmtConfig, (BYTE*)&scc);
 
-        if (SUCCEEDED(hr)) {
-            if (pmtConfig->formattype == FORMAT_VideoInfo) {
-                VIDEOINFOHEADER *pVHeader = reinterpret_cast<VIDEOINFOHEADER*>(pmtConfig->pbFormat);
+        if (FAILED(hr)) {
+            continue;
+        }
 
-                Format pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
-                int widthBuf = pVHeader->bmiHeader.biWidth;
-                int heightBuf = pVHeader->bmiHeader.biHeight;
-                if ( pixelFormatBuf == pixelFormat &&
-                     widthBuf == width &&
-                     heightBuf == height ) {
+        if (pmtConfig->formattype == FORMAT_VideoInfo) {
+            VIDEOINFOHEADER *pVHeader = reinterpret_cast<VIDEOINFOHEADER*>(pmtConfig->pbFormat);
 
-                    // FIXME(nurupo): store FPS as float and fix that FPS/100 thing.
-                    pVHeader->AvgTimePerFrame = 1000000000 / fps;
-                    pConfig->SetFormat(pmtConfig);
-                    if (FAILED(hr)) {
-                        return -4;
-                    }
-                    break;
+            Format pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+            int widthBuf = pVHeader->bmiHeader.biWidth;
+            int heightBuf = pVHeader->bmiHeader.biHeight;
+            if ( pixelFormatBuf != pixelFormat || widthBuf != width || heightBuf != height ) {
+                continue;
+            }
+
+            auto trySetFps = [&pVHeader, &fps](REFERENCE_TIME timePerFrame)
+            {
+                if (FPS_EQUAL(fps, FPS_FROM_RATIONAL(10000000, timePerFrame))) {
+                    pVHeader->AvgTimePerFrame = timePerFrame;
+                    return true;
                 }
-            } else if (pmtConfig->formattype == FORMAT_VideoInfo2) {
-                VIDEOINFOHEADER2 *pVHeader = reinterpret_cast<VIDEOINFOHEADER2*>(pmtConfig->pbFormat);
+                return false;
+            };
 
-                Format pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
-                int widthBuf = pVHeader->bmiHeader.biWidth;
-                int heightBuf = pVHeader->bmiHeader.biHeight;
-                if ( pixelFormatBuf == pixelFormat &&
-                     widthBuf == width &&
-                     heightBuf == height ) {
-
-                    // FIXME(nurupo): store FPS as float and fix that FPS/100 thing.
-                    pVHeader->AvgTimePerFrame = 1000000000 / fps;
-                    pConfig->SetFormat(pmtConfig);
-                    if (FAILED(hr)) {
-                        return -4;
-                    }
-                    break;
+            if (trySetFps(scc.MaxFrameInterval) || trySetFps(scc.MinFrameInterval) || trySetFps(pVHeader->AvgTimePerFrame)) {
+                pConfig->SetFormat(pmtConfig);
+                if (FAILED(hr)) {
+                    return -4;
                 }
+                setFormat = true;
+                break;
+            }
+        } else if (pmtConfig->formattype == FORMAT_VideoInfo2) {
+            VIDEOINFOHEADER2 *pVHeader = reinterpret_cast<VIDEOINFOHEADER2*>(pmtConfig->pbFormat);
+
+            Format pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+            int widthBuf = pVHeader->bmiHeader.biWidth;
+            int heightBuf = pVHeader->bmiHeader.biHeight;
+            if ( pixelFormatBuf != pixelFormat || widthBuf != width || heightBuf != height ) {
+                continue;
+            }
+
+            auto trySetFps = [&pVHeader, &fps](REFERENCE_TIME timePerFrame)
+            {
+                if (FPS_EQUAL(fps, FPS_FROM_RATIONAL(10000000, timePerFrame))) {
+                    pVHeader->AvgTimePerFrame = timePerFrame;
+                    return true;
+                }
+                return false;
+            };
+
+            if (trySetFps(scc.MaxFrameInterval) || trySetFps(scc.MinFrameInterval) || trySetFps(pVHeader->AvgTimePerFrame)) {
+                pConfig->SetFormat(pmtConfig);
+                if (FAILED(hr)) {
+                    return -4;
+                }
+                setFormat = true;
+                break;
             }
         }
     }
+
+    if (!setFormat) {
+        return -5;
+    }
+
     return 1;
 }
 

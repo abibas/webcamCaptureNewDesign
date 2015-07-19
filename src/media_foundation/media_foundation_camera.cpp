@@ -46,7 +46,7 @@ MediaFoundation_Camera::~MediaFoundation_Camera()
 
 int MediaFoundation_Camera::start(Format pixelFormat,
                                   int width,
-                                  int height, int fps,
+                                  int height, float fps,
                                   frame_callback cb)
 {
     if (!cb) {
@@ -331,7 +331,7 @@ bool MediaFoundation_Camera::setProperty(const VideoProperty property, const int
 /* -------------------------------------- */
 
 int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int width, const int height,
-        const Format pixelFormat, const int fps) const
+        const Format pixelFormat, const float fps) const
 {
 
     IMFPresentationDescriptor *pres_desc = NULL;
@@ -443,9 +443,9 @@ int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int wi
                 hr = type->GetItem(GUID, &var);
                 if (SUCCEEDED(hr)) {
                     Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                    int fpsBuf = fps_from_rational(low, high);
+                    float fpsBuf = FPS_FROM_RATIONAL(high, low);
 
-                    if (fpsBuf == fps) {
+                    if (FPS_EQUAL(fps, fpsBuf)) {
                         hr = type->SetItem(MF_MT_FRAME_RATE, var);
                         setFps = SUCCEEDED(hr);
                     }
@@ -457,11 +457,13 @@ int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int wi
 
             // if we found the fps we are looking for and set it on the type
             if (trySetFps(MF_MT_FRAME_RATE) || trySetFps(MF_MT_FRAME_RATE_RANGE_MAX) || trySetFps(MF_MT_FRAME_RATE_RANGE_MIN)) {
-                setType = true;
+
                 hr = media_handler->SetCurrentMediaType(type);
                 if (FAILED(hr)) {
                     result = -7;
                     DEBUG_PRINT("Error: Failed to set the current media type for the given settings.\n");
+                } else {
+                    setType = true;
                 }
                 safeReleaseMediaFoundation(&type);
                 break;
@@ -542,13 +544,12 @@ done:
 }
 
 int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int width, const int height,
-        const Format pixelFormat, const int fps) const
+        const Format pixelFormat, const float fps) const
 {
 
-    DWORD media_type_index = 0;
     int result = -1;        //TODO Err code
     HRESULT hr = S_OK;
-    int currentFpsBuf;
+    float currentFpsBuf = 0;
 
     for (DWORD media_type_index = 0; true; ++media_type_index) {
         Format pixelFormatBuf = Format::UNKNOWN;
@@ -592,7 +593,7 @@ int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int w
 
         if (SUCCEEDED(hr)) {
             Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-            currentFpsBuf = fps_from_rational(low, high);
+            currentFpsBuf = FPS_FROM_RATIONAL(high, low);
         }
 
         PropVariantClear(&var);
@@ -601,7 +602,7 @@ int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int w
         if (widthBuf == width &&
                 heightBuf == height &&
                 pixelFormatBuf == pixelFormat &&
-                currentFpsBuf == fps) {
+                FPS_EQUAL(currentFpsBuf, fps)) {
 
             hr = reader->SetCurrentMediaType(0, NULL, type);
 
@@ -724,9 +725,9 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
             Format pixelFormat = Format::UNKNOWN;
             int width = 0;
             int height = 0;
-            int minFps = 0;
-            int maxFps = 0;
-            int currentFps = 0;
+            float minFps = 0;
+            float maxFps = 0;
+            float currentFps = 0;
             UINT32 high = 0;
             UINT32 low =  0;
 
@@ -769,13 +770,13 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
                         height = (int)low;
                     } else if (guid == MF_MT_FRAME_RATE_RANGE_MIN) {
                         Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                        minFps = fps_from_rational(low, high);
+                        minFps = FPS_FROM_RATIONAL(high, low);
                     } else if (guid == MF_MT_FRAME_RATE_RANGE_MAX) {
                         Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                        maxFps = fps_from_rational(low, high);
+                        maxFps = FPS_FROM_RATIONAL(high, low);
                     } else if (guid == MF_MT_FRAME_RATE) {
                         Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                        currentFps = fps_from_rational(low, high);
+                        currentFps = FPS_FROM_RATIONAL(high, low);
                     }
 
                     PropVariantClear(&var);

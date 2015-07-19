@@ -69,7 +69,7 @@ void CameraForm::on_resolutionComboBox_currentIndexChanged(int index)
 
     for (int k = 0; k < fpsVector.size(); k++) {
         QString str = QString("%1").
-                      arg(fpsVector.at(k).getFps() / 100);
+                      arg(fpsVector.at(k).getFps());
         this->ui->fpsComboBox->addItem(str);
     }
 }

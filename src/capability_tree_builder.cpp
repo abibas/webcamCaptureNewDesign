@@ -1,5 +1,7 @@
 #include "capability_tree_builder.h"
 
+#include "utils.h"
+
 namespace webcam_capture {
 
 const size_t CapabilityTreeBuilder::FORMAT_MAP_INITIAL_BUCKET_COUNT = 5;
@@ -25,7 +27,12 @@ bool CapabilityTreeBuilder::resolutionEquals(const std::pair<int, int> &p, const
     return p.first == q.first && p.second == q.second;
 }
 
-void CapabilityTreeBuilder::addCapability(Format pixelFormat, int width, int height, std::vector<int> fps)
+bool CapabilityTreeBuilder::fpsEquals(const float &p, const float &q)
+{
+    return FPS_EQUAL(p, q);
+}
+
+void CapabilityTreeBuilder::addCapability(Format pixelFormat, int width, int height, std::vector<float> fps)
 {
     // create a format key-value pair of it doesn't already exist.
     // since the value (ResolutionMap) is not default constuctable (because it's map of a custom type),
@@ -39,7 +46,7 @@ void CapabilityTreeBuilder::addCapability(Format pixelFormat, int width, int hei
 
     FpsMap &fpsMap = formatMap[pixelFormat][std::pair<int, int>(width, height)];
 
-    for (const int &f : fps) {
+    for (const float &f : fps) {
         fpsMap[f] = true;
     }
 }

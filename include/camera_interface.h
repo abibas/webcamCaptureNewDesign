@@ -41,7 +41,7 @@ public:
      * @param cb Callback with the captured video frame data.
      * @return TODO(nurupo): add enum for: already in use, already started, invalid combination of capabilities, unknown error.
      */
-    virtual int start(Format pixelFormat, int width, int height, int fps, frame_callback cb) = 0;
+    virtual int start(Format pixelFormat, int width, int height, float fps, frame_callback cb) = 0;
 
     /**
      * Stops video capture.
