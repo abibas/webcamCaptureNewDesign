@@ -34,7 +34,7 @@ public:
     int stop();
     std::unique_ptr<PixelBuffer> CaptureFrame();
     // ---- Capabilities ----
-    bool getPropertyRange(VideoProperty property, VideoPropertyRange *videoPropRange);
+    bool getPropertyRange(VideoProperty property, VideoPropertyRange &videoPropRange);
     int getProperty(VideoProperty property);
     bool setProperty(const VideoProperty property, const int value);
     std::vector<CapabilityFormat> getCapabilities();

@@ -176,7 +176,7 @@ std::vector<CapabilityFormat> MediaFoundation_Camera::getCapabilities()
 
 
 
-bool MediaFoundation_Camera::getPropertyRange(VideoProperty property, VideoPropertyRange *videoPropRange)
+bool MediaFoundation_Camera::getPropertyRange(VideoProperty property, VideoPropertyRange &videoPropRange)
 {
     IAMVideoProcAmp *pProcAmp = NULL;
     VideoProcAmpProperty ampProperty;
@@ -218,10 +218,7 @@ bool MediaFoundation_Camera::getPropertyRange(VideoProperty property, VideoPrope
         return false;
     }
 
-    videoPropRange->setMaxValue(lMax);
-    videoPropRange->setMinValue(lMin);
-    videoPropRange->setStepValue(lStep);
-    videoPropRange->setDefaultValue(lDefault);
+    videoPropRange = VideoPropertyRange(lMin, lMax, lStep, lDefault);
 
     return true;
 }

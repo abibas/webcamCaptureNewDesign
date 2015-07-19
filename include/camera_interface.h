@@ -58,9 +58,10 @@ public:
     /**
      * Gets information about a video property range.
      * @param property Property you want to look up the range of.
+     * @param range Property range that will be set on success.
      * @return true on success, false on failure.
      */
-    virtual bool getPropertyRange(VideoProperty property, VideoPropertyRange *videoPropRange) = 0;  // TODO
+    virtual bool getPropertyRange(VideoProperty property, VideoPropertyRange &range) = 0;  // TODO
 
     /**
      * Gets value of a property.

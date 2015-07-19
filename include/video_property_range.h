@@ -62,44 +62,12 @@ public:
         return defaultValue;
     }
 
-    /**
-     * @param minVal Set minimum video property value.
-     */
-    void setMinValue(const int minVal)
-    {
-        minValue = minVal;
-    }
-
-    /**
-     * @param maxVal Set maximum video property value.
-     */
-    void setMaxValue(const int maxVal)
-    {
-        maxValue = maxVal;
-    }
-
-    /**
-     * @param stepVal Set step size value.
-     */
-    void setStepValue(const int stepVal)
-    {
-        stepValue = stepVal;
-    }
-
-    /**
-     * @param defaultVal Set defuaut video property value.
-     */
-    void setDefaultValue(const int defaultVal)
-    {
-        defaultValue = defaultVal;
-    }
-
 private:
     int minValue;
     int maxValue;
     int stepValue;
     int defaultValue;
-}; //FIXME(nurupo): make immutable, remove "Value" endings in methods.
+};
 
 } // namespace webcam_capture
 

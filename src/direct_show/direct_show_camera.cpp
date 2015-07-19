@@ -275,7 +275,7 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
 
 
 
-bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRange *videoPropRange)
+bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRange &videoPropRange)
 {
     IAMVideoProcAmp *pProcAmp = NULL;
     VideoProcAmpProperty ampProperty;
@@ -325,10 +325,7 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
         return false;
     }
 
-    videoPropRange->setMaxValue(lMax);
-    videoPropRange->setMinValue(lMin);
-    videoPropRange->setStepValue(lStep);
-    videoPropRange->setDefaultValue(lDefault);
+    videoPropRange = VideoPropertyRange(lMin, lMax, lStep, lDefault);
 
     return true;
 }
