@@ -5,15 +5,15 @@
 
 namespace webcam_capture {
 /**
- * Provides range information of a property.
+ * Provides range information of a video property.
  */
 class WEBCAM_CAPTURE_EXPORT VideoPropertyRange
 {
 public:
     VideoPropertyRange():
-        minValue(0),
-        maxValue(0),
-        stepValue(0),
+        minimum(0),
+        maximum(0),
+        stepSize(0),
         defaultValue(0) {}
 
     /**
@@ -23,49 +23,47 @@ public:
      * @param defaultValue Default video property value.
      */
     VideoPropertyRange(int min, int max, int step, int defaultValue) :
-        minValue(min),
-        maxValue(max),
-        stepValue(step),
+        minimum(min),
+        maximum(max),
+        stepSize(step),
         defaultValue(defaultValue) {}
-
-    ~VideoPropertyRange() {}
 
     /**
      * @return Minimum video property value.
      */
-    int getMinValue() const
+    int getMinimum() const
     {
-        return minValue;
+        return minimum;
     }
 
     /**
      * @return Maximum video property value.
      */
-    int getMaxValue() const
+    int getMaximum() const
     {
-        return maxValue;
+        return maximum;
     }
 
     /**
-     * @return Step size value.
+     * @return Step size.
      */
-    int getStepValue() const
+    int getStepSize() const
     {
-        return stepValue;
+        return stepSize;
     }
 
     /**
      * @return Default video property value.
      */
-    int getDefaultValue() const
+    int getDefault() const
     {
         return defaultValue;
     }
 
 private:
-    int minValue;
-    int maxValue;
-    int stepValue;
+    int minimum;
+    int maximum;
+    int stepSize;
     int defaultValue;
 };
 
