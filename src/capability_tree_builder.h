@@ -40,10 +40,12 @@ private:
     static bool resolutionEquals(const std::pair<int, int> &p, const std::pair<int, int> &q);
     static bool fpsEquals(const float &p, const float &q);
 
-    typedef std::unordered_map<float, bool> FpsMap;
+    typedef std::unordered_map<float, bool,
+            std::hash<float>,
+            std::function<bool(const float&, const float&)>>
+            FpsMap;
 
-    typedef std::unordered_map<std::pair<int, int>,
-            FpsMap,
+    typedef std::unordered_map<std::pair<int, int>, FpsMap,
             std::function<std::size_t(const std::pair<int, int>&)>,
             std::function<bool(const std::pair<int, int>&, const std::pair<int, int>&)>>
             ResolutionMap;
@@ -56,6 +58,7 @@ private:
 
     static const size_t FORMAT_MAP_INITIAL_BUCKET_COUNT;
     static const size_t RESOLUTION_MAP_INITIAL_BUCKET_COUNT;
+    static const size_t FPS_MAP_INITIAL_BUCKET_COUNT;
 };
 
 } // namespace webcam_capture

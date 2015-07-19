@@ -6,6 +6,7 @@ namespace webcam_capture {
 
 const size_t CapabilityTreeBuilder::FORMAT_MAP_INITIAL_BUCKET_COUNT = 5;
 const size_t CapabilityTreeBuilder::RESOLUTION_MAP_INITIAL_BUCKET_COUNT = 7;
+const size_t CapabilityTreeBuilder::FPS_MAP_INITIAL_BUCKET_COUNT = 4;
 
 CapabilityTreeBuilder::CapabilityTreeBuilder() :
     formatMap(FORMAT_MAP_INITIAL_BUCKET_COUNT, formatHash)
@@ -34,19 +35,32 @@ bool CapabilityTreeBuilder::fpsEquals(const float &p, const float &q)
 
 void CapabilityTreeBuilder::addCapability(Format pixelFormat, int width, int height, std::vector<float> fps)
 {
-    // create a format key-value pair of it doesn't already exist.
-    // since the value (ResolutionMap) is not default constuctable (because it's map of a custom type),
-    // we can't just use [] and have it constructed for us, as we do below for fpsMap.
+    // because we want our maps to use custom hash/equals functions,
+    // we have to manually check if they already exist and if not -- construct them with the right functions
+
+    // construct resolution map if not exist
     auto formatMapItem = formatMap.find(pixelFormat);
 
     if (formatMapItem == formatMap.end()) {
-        // no such format found, explicitly insert it.
+        // no resolution map for such format found, explicitly insert it.
         formatMap[pixelFormat] = ResolutionMap(RESOLUTION_MAP_INITIAL_BUCKET_COUNT, resolutionHash, resolutionEquals);
     }
 
-    FpsMap &fpsMap = formatMap[pixelFormat][std::pair<int, int>(width, height)];
+    ResolutionMap &resolutionMap = formatMap[pixelFormat];
 
-    for (const float &f : fps) {
+    std::pair<int, int> resolution(width, height);
+
+    // construct fps map if not exist
+    auto resolutionMapItem = resolutionMap.find(resolution);
+
+    if (resolutionMapItem == resolutionMap.end()) {
+        // no fps map for such resolution found, explicitly insert it.
+        resolutionMap[resolution] = FpsMap(3, std::hash<float>(), fpsEquals);
+    }
+
+    FpsMap &fpsMap = resolutionMap[resolution];
+
+    for (auto&& f : fps) {
         fpsMap[f] = true;
     }
 }
