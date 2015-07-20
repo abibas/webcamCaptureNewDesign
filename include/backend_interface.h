@@ -7,18 +7,18 @@
 #ifndef BACKEND_INTERFACE_H
 #define BACKEND_INTERFACE_H
 
-#include <functional>
-#include <string>
-#include <vector>
-#include <memory>
-
-#include <stdio.h>
-
 #include <camera_information.h>
-#include <camera_interface.h>
+#include <backend_implementation.h>
+
 #include <webcam_capture_export.h>
 
+#include <functional>
+#include <memory>
+#include <vector>
+
 namespace webcam_capture {
+
+class CameraInterface;
 
 enum class WEBCAM_CAPTURE_EXPORT CameraConnectionStatus {
     Connected, // camera was connected to the system and it's available for use

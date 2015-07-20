@@ -2,12 +2,15 @@
 #define BACKEND_FACTORY_H
 
 #include <backend_implementation.h>
-#include <backend_interface.h>
+
 #include <webcam_capture_export.h>
 
 #include <memory>
+#include <vector>
 
 namespace webcam_capture {
+
+class BackendInterface;
 
 /**
  * Provides access to backends and information of their availability.
@@ -26,6 +29,7 @@ public:
      * @return List of backends the library was built with support of.
      */
     static std::vector<BackendImplementation> getAvailableBackends();
+
 private:
     BackendFactory() = delete;
 };

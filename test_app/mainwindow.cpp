@@ -3,6 +3,8 @@
 #include "cameraform.h"
 
 #include <backend_factory.h>
+#include <unique_id.h>
+
 #include <memory>
 #include <functional>
 

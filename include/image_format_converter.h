@@ -2,6 +2,7 @@
 #define IMAGE_FORMAT_CONVERTER_H
 
 #include <pixel_buffer.h>
+
 #include <webcam_capture_export.h>
 
 namespace webcam_capture {

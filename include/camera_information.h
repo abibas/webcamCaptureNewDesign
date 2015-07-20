@@ -7,13 +7,14 @@
 #ifndef CAMERA_INFORMATION_H
 #define CAMERA_INFORMATION_H
 
+#include <webcam_capture_export.h>
+
 #include <memory>
 #include <string>
 
-#include <unique_id.h>
-#include <webcam_capture_export.h>
-
 namespace webcam_capture {
+
+class UniqueId;
 
 /**
  * Provides a brief description of a camera.

@@ -2,6 +2,7 @@
 #define UNIQUE_ID_H
 
 #include <backend_implementation.h>
+
 #include <webcam_capture_export.h>
 
 namespace webcam_capture {

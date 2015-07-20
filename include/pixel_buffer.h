@@ -7,10 +7,11 @@
 #ifndef PIXEL_BUFFER_H
 #define PIXEL_BUFFER_H
 
-#include <stdint.h>
-
 #include <format.h>
+
 #include <webcam_capture_export.h>
+
+#include <cstdint>
 
 namespace webcam_capture {
 /**

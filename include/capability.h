@@ -4,10 +4,11 @@
 // VC complains that it can't create assignment operator with data being const, but data being const is intended.
 #pragma warning(disable : 4512)
 
-#include <vector>
-
 #include <format.h>
+
 #include <webcam_capture_export.h>
+
+#include <vector>
 
 namespace webcam_capture {
 

@@ -7,16 +7,16 @@
 #ifndef CAMERA_INTERFACE_H
 #define CAMERA_INTERFACE_H
 
-#include <functional>
-#include <memory>
-#include <vector>
-
-#include <camera_information.h>
 #include <capability.h>
 #include <pixel_buffer.h>
 #include <video_property.h>
 #include <video_property_range.h>
+
 #include <webcam_capture_export.h>
+
+#include <functional>
+#include <memory>
+#include <vector>
 
 namespace webcam_capture {
 
