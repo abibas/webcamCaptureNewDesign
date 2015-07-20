@@ -40,7 +40,7 @@ public:
     ~MediaFoundation_Camera();
     static std::unique_ptr<CameraInterface> createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
 
-    int start(Format pixelFormat, int width, int height, float fps, FrameCallback cb);
+    int start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb);
     int stop();
     std::unique_ptr<PixelBuffer> CaptureFrame();  //TODO
     // ---- Capabilities ----
@@ -59,9 +59,9 @@ private:
     static int createVideoDeviceSource(const int device, IMFMediaSource **source); //TODO outdated method - to remove
     static int createVideoDeviceSource(const std::wstring &pszSymbolicLink, IMFMediaSource **ppSource);
     int getVideoCapabilities(IMFMediaSource *source, std::vector<CapabilityFormat> &capFormatVector) const;
-    int setDeviceFormat(IMFMediaSource *source, const int width, const int height, const Format pixelFormat,
+    int setDeviceFormat(IMFMediaSource *source, const int width, const int height, const PixelFormat pixelFormat,
                         const float fps) const;
-    int setReaderFormat(IMFSourceReader *reader, const int width, const int height, const Format pixelFormat, const float fps) const;
+    int setReaderFormat(IMFSourceReader *reader, const int width, const int height, const PixelFormat pixelFormat, const float fps) const;
 
 public:
     std::shared_ptr<void> mfDeinitializer;

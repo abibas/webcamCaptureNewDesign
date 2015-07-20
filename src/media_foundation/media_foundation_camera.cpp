@@ -44,7 +44,7 @@ MediaFoundation_Camera::~MediaFoundation_Camera()
     safeReleaseMediaFoundation(&imf_media_source);
 }
 
-int MediaFoundation_Camera::start(Format pixelFormat,
+int MediaFoundation_Camera::start(PixelFormat pixelFormat,
                                   int width,
                                   int height, float fps,
                                   FrameCallback cb)
@@ -76,7 +76,7 @@ int MediaFoundation_Camera::start(Format pixelFormat,
 
     //End of "to test comment this"
 
-    if (pixelFormat == Format::UNKNOWN) {
+    if (pixelFormat == PixelFormat::UNKNOWN) {
         DEBUG_PRINT("Error: cannot set a pixel format for UNKNOWN.\n");
         return -8;      //TODO Err code
     }
@@ -328,7 +328,7 @@ bool MediaFoundation_Camera::setProperty(const VideoProperty property, const int
 /* -------------------------------------- */
 
 int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int width, const int height,
-        const Format pixelFormat, const float fps) const
+        const PixelFormat pixelFormat, const float fps) const
 {
 
     IMFPresentationDescriptor *pres_desc = NULL;
@@ -376,7 +376,7 @@ int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int wi
     bool setType = false;
 
     for (DWORD i = 0; i < types_count; ++i) {
-        Format pixelFormatBuf = Format::UNKNOWN;
+        PixelFormat pixelFormatBuf = PixelFormat::UNKNOWN;
         int widthBuf = 0;
         int heightBuf = 0;
         UINT32 high = 0;
@@ -541,7 +541,7 @@ done:
 }
 
 int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int width, const int height,
-        const Format pixelFormat, const float fps) const
+        const PixelFormat pixelFormat, const float fps) const
 {
 
     int result = -1;        //TODO Err code
@@ -549,7 +549,7 @@ int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int w
     float currentFpsBuf = 0;
 
     for (DWORD media_type_index = 0; true; ++media_type_index) {
-        Format pixelFormatBuf = Format::UNKNOWN;
+        PixelFormat pixelFormatBuf = PixelFormat::UNKNOWN;
         int widthBuf = 0;
         int heightBuf = 0;
         UINT32 high = 0;
@@ -719,7 +719,7 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
 
         for (DWORD i = 0; i < types_count; ++i) {
 
-            Format pixelFormat = Format::UNKNOWN;
+            PixelFormat pixelFormat = PixelFormat::UNKNOWN;
             int width = 0;
             int height = 0;
             float minFps = 0;
@@ -780,7 +780,7 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
                 }
 
                 // check that all required fields were set
-                if (pixelFormat == Format::UNKNOWN || !width || !height || !minFps || !maxFps || !currentFps) {
+                if (pixelFormat == PixelFormat::UNKNOWN || !width || !height || !minFps || !maxFps || !currentFps) {
                     continue;
                 }
 

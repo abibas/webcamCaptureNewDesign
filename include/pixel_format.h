@@ -1,5 +1,5 @@
-#ifndef FORMAT_H
-#define FORMAT_H
+#ifndef PIXEL_FORMAT_H
+#define PIXEL_FORMAT_H
 
 #include <webcam_capture_export.h>
 
@@ -15,7 +15,7 @@ namespace webcam_capture {
 /**
  * Supported pixel formats.
  */
-enum class WEBCAM_CAPTURE_EXPORT Format {
+enum class WEBCAM_CAPTURE_EXPORT PixelFormat {
     //Uncompressed RGB Formats
     RGB1,           /* RGB, 1 bit per pixel (bpp), palettized*/
     RGB4,           /* RGB, 4 bpp, palettized*/
@@ -149,5 +149,5 @@ enum class WEBCAM_CAPTURE_EXPORT Format {
 
 } // namespace webcam_capture
 
-#endif // FORMAT_H
+#endif // PIXEL_FORMAT_H
 

@@ -4,7 +4,7 @@
 // VC complains that it can't create assignment operator with data being const, but data being const is intended.
 #pragma warning(disable : 4512)
 
-#include <format.h>
+#include <pixel_format.h>
 
 #include <webcam_capture_export.h>
 
@@ -88,7 +88,7 @@ private:
 class WEBCAM_CAPTURE_EXPORT CapabilityFormat
 {
 public:
-    CapabilityFormat(Format pixelFormat, std::vector<CapabilityResolution> resolutions):
+    CapabilityFormat(PixelFormat pixelFormat, std::vector<CapabilityResolution> resolutions):
         pixelFormat(pixelFormat),
         resolutions(resolutions) {}
 
@@ -97,7 +97,7 @@ public:
     /**
      * @return Pixel format supported by the camera.
      */
-    Format getPixelFormat() const
+    PixelFormat getPixelFormat() const
     {
         return pixelFormat;
     }
@@ -111,7 +111,7 @@ public:
     }
 
 private:
-    const Format pixelFormat;
+    const PixelFormat pixelFormat;
     const std::vector<CapabilityResolution> resolutions;
 };
 

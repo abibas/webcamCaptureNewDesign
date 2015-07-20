@@ -40,7 +40,7 @@ private slots:
 private:
     void fillFrameworkListCB();
     void fillCameraListCB();
-    std::string formatToString(Format format);
+    std::string formatToString(PixelFormat format);
 
 
     std::vector<BackendImplementation> backendList;

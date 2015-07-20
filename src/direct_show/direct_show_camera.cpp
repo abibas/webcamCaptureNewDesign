@@ -44,7 +44,7 @@ DirectShow_Camera::~DirectShow_Camera()
     }
 }
 
-int DirectShow_Camera::start(Format pixelFormat,
+int DirectShow_Camera::start(PixelFormat pixelFormat,
                               int width,
                               int height, float fps,
                               FrameCallback cb )
@@ -242,7 +242,7 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
             if (pmtConfig->formattype == FORMAT_VideoInfo) {
                 VIDEOINFOHEADER *pVHeader = reinterpret_cast<VIDEOINFOHEADER*>(pmtConfig->pbFormat);
 
-                Format pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+                PixelFormat pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
 
                 int width = pVHeader->bmiHeader.biWidth;
                 int height = pVHeader->bmiHeader.biHeight;
@@ -255,7 +255,7 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
             } else if (pmtConfig->formattype == FORMAT_VideoInfo2) {
                 VIDEOINFOHEADER2 *pVHeader = reinterpret_cast<VIDEOINFOHEADER2*>(pmtConfig->pbFormat);
 
-                Format pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+                PixelFormat pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
 
                 int width = pVHeader->bmiHeader.biWidth;
                 int height = pVHeader->bmiHeader.biHeight;
@@ -502,7 +502,7 @@ IMoniker* DirectShow_Camera::getIMonikerByUniqueId(std::shared_ptr<UniqueId> &un
     return pResult;
 }
 
-int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pVCap, Format pixelFormat,
+int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pVCap, PixelFormat pixelFormat,
                                        int width, int height, float fps)
 {
     CComPtr<IAMStreamConfig> pConfig;
@@ -541,7 +541,7 @@ int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilte
         if (pmtConfig->formattype == FORMAT_VideoInfo) {
             VIDEOINFOHEADER *pVHeader = reinterpret_cast<VIDEOINFOHEADER*>(pmtConfig->pbFormat);
 
-            Format pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+            PixelFormat pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
             int widthBuf = pVHeader->bmiHeader.biWidth;
             int heightBuf = pVHeader->bmiHeader.biHeight;
             if ( pixelFormatBuf != pixelFormat || widthBuf != width || heightBuf != height ) {
@@ -568,7 +568,7 @@ int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilte
         } else if (pmtConfig->formattype == FORMAT_VideoInfo2) {
             VIDEOINFOHEADER2 *pVHeader = reinterpret_cast<VIDEOINFOHEADER2*>(pmtConfig->pbFormat);
 
-            Format pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+            PixelFormat pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
             int widthBuf = pVHeader->bmiHeader.biWidth;
             int heightBuf = pVHeader->bmiHeader.biHeight;
             if ( pixelFormatBuf != pixelFormat || widthBuf != width || heightBuf != height ) {

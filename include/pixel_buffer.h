@@ -7,7 +7,7 @@
 #ifndef PIXEL_BUFFER_H
 #define PIXEL_BUFFER_H
 
-#include <format.h>
+#include <pixel_format.h>
 
 #include <webcam_capture_export.h>
 
@@ -23,7 +23,7 @@ struct WEBCAM_CAPTURE_EXPORT PixelBuffer {
      * @param h Sets the height of the frame.
      * @param fmt Sets the pixel format of the frame.
      */
-    void setup(int w, int h, Format fmt);
+    void setup(int w, int h, PixelFormat fmt);
 
     /**
      *  When data is one continuous block of member you can use this, otherwise it points to the same location as plane[0].
@@ -68,7 +68,7 @@ struct WEBCAM_CAPTURE_EXPORT PixelBuffer {
     /**
      * The pixel format of the frame.
      */
-    Format pixel_format;
+    PixelFormat pixel_format;
 };
 
 } // namespace webcam_capture

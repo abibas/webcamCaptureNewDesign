@@ -18,7 +18,7 @@ size_t CapabilityTreeBuilder::resolutionHash(const std::pair<int, int> &p)
     return std::hash<int>()(p.first + p.second);
 }
 
-size_t CapabilityTreeBuilder::formatHash(const Format &f)
+size_t CapabilityTreeBuilder::formatHash(const PixelFormat &f)
 {
     return static_cast<std::size_t>(f);
 }
@@ -33,7 +33,7 @@ bool CapabilityTreeBuilder::fpsEquals(const float &p, const float &q)
     return FPS_EQUAL(p, q);
 }
 
-void CapabilityTreeBuilder::addCapability(Format pixelFormat, int width, int height, std::vector<float> fps)
+void CapabilityTreeBuilder::addCapability(PixelFormat pixelFormat, int width, int height, std::vector<float> fps)
 {
     // because we want our maps to use custom hash/equals functions,
     // we have to manually check if they already exist and if not -- construct them with the right functions
@@ -71,7 +71,7 @@ std::vector<CapabilityFormat> CapabilityTreeBuilder::build() const
     capFormat.reserve(formatMap.size());
 
     for (auto formatMapItem : formatMap) {
-        const Format &format               = formatMapItem.first;
+        const PixelFormat &format               = formatMapItem.first;
         const ResolutionMap &resolutionMap = formatMapItem.second;
 
         std::vector<CapabilityResolution> capResolutions;
