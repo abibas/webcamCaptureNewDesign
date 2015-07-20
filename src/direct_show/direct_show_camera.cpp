@@ -70,6 +70,10 @@ int DirectShow_Camera::start(Format pixelFormat,
     HRESULT hr;
     /// 1 step get IMoniker.
     IMoniker *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
+    if (!pVideoSel) {
+        return -12;
+    }
+
 
     /// 2 step Device binding with connection
     IBaseFilter *pVCap;
@@ -195,7 +199,6 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
 
     IMoniker *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
     if (!pVideoSel) {
-        pVideoSel->Release();
         return result;
     }
 
@@ -303,11 +306,14 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
 
     /// get IMoniker.
     IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
+    if (!pVideoSel) {
+        return false;
+    }
+
     /// Device binding with connection
     IBaseFilter             *pVCap;
     HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
     if (FAILED(hr)) {
-        pVCap->Release();
         pVideoSel->Release();
         return false;
     }
@@ -338,6 +344,7 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
 
         default: {
             DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+            pProcAmp->Release();
             pVCap->Release();
             pVideoSel->Release();
             return false;
@@ -348,6 +355,7 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+        pProcAmp->Release();
         pVCap->Release();
         pVideoSel->Release();
         return false;
@@ -358,6 +366,7 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
     videoPropRange->setStepValue(lStep);
     videoPropRange->setDefaultValue(lDefault);
 
+    pProcAmp->Release();
     pVCap->Release();
     pVideoSel->Release();
     return true;
@@ -373,11 +382,14 @@ int DirectShow_Camera::getProperty(VideoProperty property)
 
     /// get IMoniker.
     IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
+    if (!pVideoSel) {
+        return -1111;
+    }
+
     /// Device binding with connection
     IBaseFilter             *pVCap;
     HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
     if (FAILED(hr)) {
-        pVCap->Release();
         pVideoSel->Release();
         return -111;
     }
@@ -408,6 +420,7 @@ int DirectShow_Camera::getProperty(VideoProperty property)
 
         default: {
             DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+            pProcAmp->Release();
             pVCap->Release();
             pVideoSel->Release();
             return -111;
@@ -419,11 +432,13 @@ int DirectShow_Camera::getProperty(VideoProperty property)
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
+        pProcAmp->Release();
         pVCap->Release();
         pVideoSel->Release();
         return -99999;
     }
 
+    pProcAmp->Release();
     pVCap->Release();
     pVideoSel->Release();
     return value;
@@ -439,6 +454,9 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
 
     /// get IMoniker.
     IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
+    if (!pVideoSel) {
+        return false;
+    }
     /// Device binding with connection
     IBaseFilter             *pVCap;
     HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
@@ -474,6 +492,7 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
 
         default: {
             DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+            pProcAmp->Release();
             pVCap->Release();
             pVideoSel->Release();
             return false;
@@ -485,6 +504,7 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
+        pProcAmp->Release();
         pVCap->Release();
         pVideoSel->Release();
         return false;
@@ -494,10 +514,12 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Error during IAMVideoProcAmp->Set. SetProperty failed.\n");
+        pProcAmp->Release();
         pVCap->Release();
         pVideoSel->Release();
         return false;
     }
+    pProcAmp->Release();
     pVCap->Release();
     pVideoSel->Release();
     return true;
