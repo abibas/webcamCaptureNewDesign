@@ -106,7 +106,7 @@ void MainWindow::on_deleteBackendBtn_clicked()
     this->ui->startNotificationsButton->setDisabled(true);
     this->ui->stopNotificationsButton->setDisabled(true);
 
-    backend.release();
+    backend.reset();
 }
 
 void MainWindow::CameraEventCaptureCallback(CameraInformation information, CameraConnectionStatus status)
