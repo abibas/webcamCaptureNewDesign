@@ -44,16 +44,26 @@ private:
 
     /***** SDK FUNCTIONS *****/
     IMoniker* getIMonikerByUniqueId(std::shared_ptr<UniqueId> &uniqueId);    
-    int setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pVCap, Format pixelFormat, int width, int height, float fps);
+    int setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pBaseFilter, Format pixelFormat, int width, int height, float fps);
 
 public:
     std::shared_ptr<void> mfDeinitializer;
     PixelBuffer pixel_buffer;
     DirectShow_Callback *ds_callback;
-    IMediaControl *pControl;
     int state;
     CameraInformation information;
     frame_callback cb_frame;
+
+    IMoniker *pVideoSel;
+    IBaseFilter *pVCap;
+    ICaptureGraphBuilder2 *pBuild;
+    IGraphBuilder *pGraph;
+    IMediaControl *pControl;
+    IMediaEvent *pEvent;
+    IBaseFilter *pGrabberFilter;
+    ISampleGrabber *pSampleGrabber;
+    ISampleGrabberCB *pGrabberCB;
+    IBaseFilter *pNullRenderer;
 };
 
 } // namespace webcam_capture

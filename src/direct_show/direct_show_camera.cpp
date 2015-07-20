@@ -69,36 +69,41 @@ int DirectShow_Camera::start(Format pixelFormat,
 
     HRESULT hr;
     /// 1 step get IMoniker.
-    IMoniker *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
+    pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
     if (!pVideoSel) {
         return -12;
     }
 
-
     /// 2 step Device binding with connection
-    IBaseFilter *pVCap;
     hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
     if (FAILED(hr)) {
+        pVideoSel->Release();
         return -99;
     }
 
     /// 3 step Create the Capture Graph Builder.
-    ICaptureGraphBuilder2 *pBuild;
     hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL, CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&pBuild );
     if (FAILED(hr)) {
+        pVCap->Release();
+        pVideoSel->Release();
         return -99;
     }
 
     /// 4 step Set capabilities
     int setCapRes = setCapabilities(pBuild, pVCap, pixelFormat, width, height, fps);
     if ( setCapRes < 0 ) {
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return setCapRes;
     }
 
     /// 5 step Create the Filter Graph Manager.
-    IGraphBuilder *pGraph;
     hr = CoCreateInstance(CLSID_FilterGraph, 0, CLSCTX_INPROC, IID_IGraphBuilder, (void**)&pGraph);
     if (FAILED(hr)) {
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return -99;
     }
 
@@ -108,62 +113,143 @@ int DirectShow_Camera::start(Format pixelFormat,
     /// 7 step Attach the graph control
     hr = pGraph->QueryInterface(IID_IMediaControl, (void **)&pControl);
     if (FAILED(hr)) {
+        pGraph->Release();
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return -99;
     }    
 
     /// 8 step  Attach the graph events
-    IMediaEvent *pEvent;
     hr = pGraph->QueryInterface(IID_IMediaEvent, (void **)&pEvent);
     if (FAILED(hr)) {
+        pControl->Release();
+        pGraph->Release();
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return -99;
     }
 
     /// 9 Add the Device Filter to the Graph
     hr = pGraph->AddFilter(pVCap, L"Video Capture");
     if (FAILED(hr)) {
+        pEvent->Release();
+        pControl->Release();
+        pGraph->Release();
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return -99;
     }
     /// 10 Creates Grabber Filter and adds it to the Filter Graph
     /// Once connected, Grabber Filter will capture still images
-    IBaseFilter *pGrabberFilter;
     hr = CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pGrabberFilter));
     if (FAILED(hr)) {
+        pEvent->Release();
+        pControl->Release();
+        pGraph->Release();
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return -99;
     }
 
     /// 11 Create Sample grabber
     hr = pGraph->AddFilter(pGrabberFilter, L"Sample Grabber");
-    ISampleGrabber *pSampleGrabber;
+    if (FAILED(hr)) {
+        pGrabberFilter->Release();
+        pEvent->Release();
+        pControl->Release();
+        pGraph->Release();
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
+        return -99;
+    }
+
     hr = pGrabberFilter->QueryInterface(IID_ISampleGrabber, (void**)&pSampleGrabber);
     if (FAILED(hr)) {
+        pGrabberFilter->Release();
+        pEvent->Release();
+        pControl->Release();
+        pGraph->Release();
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return -99;
     }
 
     /// 12 set callback
-    ISampleGrabberCB *pGrabberCB = new DirectShow_Callback(this);
+    pGrabberCB = new DirectShow_Callback(this);
 
     /// 13 set callback to the ISampleGrabber
     pSampleGrabber->SetCallback(pGrabberCB, 0);
 
     hr = pSampleGrabber->SetOneShot(FALSE);
     if (FAILED(hr)) {
+        pGrabberCB->Release();
+        pSampleGrabber->Release();
+        pGrabberFilter->Release();
+        pEvent->Release();
+        pControl->Release();
+        pGraph->Release();
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return -99;
     }
     hr = pSampleGrabber->SetBufferSamples(TRUE); // To comment and check
     if (FAILED(hr)) {
+        pGrabberCB->Release();
+        pGrabberFilter->Release();
+        pEvent->Release();
+        pControl->Release();
+        pGraph->Release();
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return -99;
     }
 
     ///create NULL renderer - to disable ActiveMovie Window
-    IBaseFilter *pNullRenderer;
     hr = CoCreateInstance(CLSID_NullRenderer, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pNullRenderer);
     if (FAILED(hr)) {
+        pGrabberCB->Release();
+        pGrabberFilter->Release();
+        pEvent->Release();
+        pControl->Release();
+        pGraph->Release();
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return -99;
     }
     hr = pGraph->AddFilter(pNullRenderer, L"NullRender");
+    if (FAILED(hr)) {
+        pNullRenderer->Release();
+        pGrabberCB->Release();
+        pGrabberFilter->Release();
+        pEvent->Release();
+        pControl->Release();
+        pGraph->Release();
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
+        return -99;
+    }
 
     hr = pBuild->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, pVCap, pGrabberFilter, pNullRenderer);
     if (FAILED(hr)) {
+        pNullRenderer->Release();
+        pGrabberCB->Release();
+        pGrabberFilter->Release();
+        pEvent->Release();
+        pControl->Release();
+        pGraph->Release();
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return -99;
     }
 
@@ -183,6 +269,17 @@ int DirectShow_Camera::stop()
     state &= ~CA_STATE_CAPTURING;
 
     pControl->Stop();
+
+    pNullRenderer->Release();
+    pGrabberCB->Release();
+    pGrabberFilter->Release();
+    pEvent->Release();
+    pControl->Release();
+    pGraph->Release();
+    pBuild->Release();
+    pVCap->Release();
+    pVideoSel->Release();
+
     return 1;   //TODO Err code
 }
 
@@ -197,16 +294,16 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
 {
     std::vector<CapabilityFormat> result;
 
-    IMoniker *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
-    if (!pVideoSel) {
+    IMoniker *pMoniker = getIMonikerByUniqueId(information.getUniqueId());
+    if (!pMoniker) {
         return result;
     }
 
-    IBaseFilter *pVCap;
-    HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
+    IBaseFilter *pBaseFilter;
+    HRESULT hr = pMoniker->BindToObject(0, 0, IID_IBaseFilter, (void**)&pBaseFilter);
     if (FAILED(hr)) {
-        pVCap->Release();
-        pVideoSel->Release();
+        pBaseFilter->Release();
+        pMoniker->Release();
         return result;
     }
 
@@ -214,8 +311,8 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
     hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL, CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&pBuild );
     if (FAILED(hr)) {
         pBuild->Release();
-        pVCap->Release();
-        pVideoSel->Release();
+        pBaseFilter->Release();
+        pMoniker->Release();
         return result;
     }
 
@@ -223,14 +320,14 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
     hr = pBuild->FindInterface(
                 NULL,
                 &MEDIATYPE_Video,
-                pVCap,
+                pBaseFilter,
                 IID_IAMStreamConfig,
                 (void**)&pConfig);
 
     if (FAILED(hr)) {
         pBuild->Release();
-        pVCap->Release();
-        pVideoSel->Release();
+        pBaseFilter->Release();
+        pMoniker->Release();
         return result;
     }
 
@@ -241,8 +338,8 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
     hr = pConfig->GetNumberOfCapabilities(&iCount, &iSize);
     if (FAILED(hr)) {
         pBuild->Release();
-        pVCap->Release();
-        pVideoSel->Release();
+        pBaseFilter->Release();
+        pMoniker->Release();
         return result;
     }    
 
@@ -291,8 +388,8 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
     result = capabilityBuilder.build();
 
     pBuild->Release();
-    pVCap->Release();
-    pVideoSel->Release();
+    pBaseFilter->Release();
+    pMoniker->Release();
     return result;
 }
 
@@ -305,24 +402,24 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
     long lMin, lMax, lStep, lDefault, lCaps;
 
     /// get IMoniker.
-    IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
-    if (!pVideoSel) {
+    IMoniker *pMoniker = getIMonikerByUniqueId(information.getUniqueId());
+    if (!pMoniker) {
         return false;
     }
 
     /// Device binding with connection
-    IBaseFilter             *pVCap;
-    HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
+    IBaseFilter *pBaseFilter;
+    HRESULT hr = pMoniker->BindToObject(0, 0, IID_IBaseFilter, (void**)&pBaseFilter);
     if (FAILED(hr)) {
-        pVideoSel->Release();
+        pMoniker->Release();
         return false;
     }
 
-    hr = pVCap->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
+    hr = pBaseFilter->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
     if (FAILED(hr)) {
         DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
-        pVCap->Release();
-        pVideoSel->Release();
+        pBaseFilter->Release();
+        pMoniker->Release();
         return false;
     }
 
@@ -345,8 +442,8 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
         default: {
             DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
             pProcAmp->Release();
-            pVCap->Release();
-            pVideoSel->Release();
+            pBaseFilter->Release();
+            pMoniker->Release();
             return false;
         }
     }
@@ -356,8 +453,8 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
     if (FAILED(hr)) {
         DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
         pProcAmp->Release();
-        pVCap->Release();
-        pVideoSel->Release();
+        pBaseFilter->Release();
+        pMoniker->Release();
         return false;
     }
 
@@ -367,8 +464,8 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
     videoPropRange->setDefaultValue(lDefault);
 
     pProcAmp->Release();
-    pVCap->Release();
-    pVideoSel->Release();
+    pBaseFilter->Release();
+    pMoniker->Release();
     return true;
 }
 
@@ -381,24 +478,24 @@ int DirectShow_Camera::getProperty(VideoProperty property)
     long value, flags;
 
     /// get IMoniker.
-    IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
-    if (!pVideoSel) {
+    IMoniker *pMoniker = getIMonikerByUniqueId(information.getUniqueId());
+    if (!pMoniker) {
         return -1111;
     }
 
     /// Device binding with connection
-    IBaseFilter             *pVCap;
-    HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
+    IBaseFilter *pBaseFilter;
+    HRESULT hr = pMoniker->BindToObject(0, 0, IID_IBaseFilter, (void**)&pBaseFilter);
     if (FAILED(hr)) {
-        pVideoSel->Release();
+        pMoniker->Release();
         return -111;
     }
 
-    hr = pVCap->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
+    hr = pBaseFilter->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
     if (FAILED(hr)) {
         DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
-        pVCap->Release();
-        pVideoSel->Release();
+        pBaseFilter->Release();
+        pMoniker->Release();
         return -111;
     }
 
@@ -421,8 +518,8 @@ int DirectShow_Camera::getProperty(VideoProperty property)
         default: {
             DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
             pProcAmp->Release();
-            pVCap->Release();
-            pVideoSel->Release();
+            pBaseFilter->Release();
+            pMoniker->Release();
             return -111;
         }
     }
@@ -433,14 +530,14 @@ int DirectShow_Camera::getProperty(VideoProperty property)
     if (FAILED(hr)) {
         DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
         pProcAmp->Release();
-        pVCap->Release();
-        pVideoSel->Release();
+        pBaseFilter->Release();
+        pMoniker->Release();
         return -99999;
     }
 
     pProcAmp->Release();
-    pVCap->Release();
-    pVideoSel->Release();
+    pBaseFilter->Release();
+    pMoniker->Release();
     return value;
 }
 
@@ -453,24 +550,24 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
     long val, flags;
 
     /// get IMoniker.
-    IMoniker                *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
-    if (!pVideoSel) {
+    IMoniker *pMoniker = getIMonikerByUniqueId(information.getUniqueId());
+    if (!pMoniker) {
         return false;
     }
     /// Device binding with connection
-    IBaseFilter             *pVCap;
-    HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
+    IBaseFilter *pBaseFilter;
+    HRESULT hr = pMoniker->BindToObject(0, 0, IID_IBaseFilter, (void**)&pBaseFilter);
     if (FAILED(hr)) {
-        pVCap->Release();
-        pVideoSel->Release();
+        pBaseFilter->Release();
+        pMoniker->Release();
         return false;
     }
 
-    hr = pVCap->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
+    hr = pBaseFilter->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
     if (FAILED(hr)) {
         DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
-        pVCap->Release();
-        pVideoSel->Release();
+        pBaseFilter->Release();
+        pMoniker->Release();
         return false;
     }
 
@@ -493,8 +590,8 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
         default: {
             DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
             pProcAmp->Release();
-            pVCap->Release();
-            pVideoSel->Release();
+            pBaseFilter->Release();
+            pMoniker->Release();
             return false;
         }
     }
@@ -505,8 +602,8 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
     if (FAILED(hr)) {
         DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
         pProcAmp->Release();
-        pVCap->Release();
-        pVideoSel->Release();
+        pBaseFilter->Release();
+        pMoniker->Release();
         return false;
     }
 
@@ -515,13 +612,13 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
     if (FAILED(hr)) {
         DEBUG_PRINT("Error during IAMVideoProcAmp->Set. SetProperty failed.\n");
         pProcAmp->Release();
-        pVCap->Release();
-        pVideoSel->Release();
+        pBaseFilter->Release();
+        pMoniker->Release();
         return false;
     }
     pProcAmp->Release();
-    pVCap->Release();
-    pVideoSel->Release();
+    pBaseFilter->Release();
+    pMoniker->Release();
     return true;
 }
 
@@ -578,14 +675,14 @@ IMoniker* DirectShow_Camera::getIMonikerByUniqueId(std::shared_ptr<UniqueId> &un
     return pResult;
 }
 
-int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pVCap, Format pixelFormat,
+int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pBaseFilter, Format pixelFormat,
                                        int width, int height, float fps)
 {
     CComPtr<IAMStreamConfig> pConfig;
     HRESULT hr = pBuild->FindInterface(
                 NULL,
                 &MEDIATYPE_Video,
-                pVCap,
+                pBaseFilter,
                 IID_IAMStreamConfig,
                 (void**)&pConfig);
 
