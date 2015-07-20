@@ -165,6 +165,7 @@ int DirectShow_Camera::start(Format pixelFormat,
 
     pControl->Run();    
 
+    state |= CA_STATE_CAPTURING;
     return 1;      //TODO Err code
 }
 
@@ -194,18 +195,24 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
 
     IMoniker *pVideoSel = getIMonikerByUniqueId(information.getUniqueId());
     if (!pVideoSel) {
+        pVideoSel->Release();
         return result;
     }
 
     IBaseFilter *pVCap;
     HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
     if (FAILED(hr)) {
+        pVCap->Release();
+        pVideoSel->Release();
         return result;
     }
 
     ICaptureGraphBuilder2 *pBuild;
     hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL, CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&pBuild );
     if (FAILED(hr)) {
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return result;
     }
 
@@ -218,6 +225,9 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
                 (void**)&pConfig);
 
     if (FAILED(hr)) {
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return result;
     }
 
@@ -227,6 +237,9 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
     // get the number of different resolutions possible
     hr = pConfig->GetNumberOfCapabilities(&iCount, &iSize);
     if (FAILED(hr)) {
+        pBuild->Release();
+        pVCap->Release();
+        pVideoSel->Release();
         return result;
     }    
 
@@ -274,6 +287,9 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
     }
     result = capabilityBuilder.build();
 
+    pBuild->Release();
+    pVCap->Release();
+    pVideoSel->Release();
     return result;
 }
 
@@ -291,12 +307,16 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
     IBaseFilter             *pVCap;
     HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
     if (FAILED(hr)) {
+        pVCap->Release();
+        pVideoSel->Release();
         return false;
     }
 
     hr = pVCap->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
     if (FAILED(hr)) {
         DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
+        pVCap->Release();
+        pVideoSel->Release();
         return false;
     }
 
@@ -318,6 +338,8 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
 
         default: {
             DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+            pVCap->Release();
+            pVideoSel->Release();
             return false;
         }
     }
@@ -326,6 +348,8 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+        pVCap->Release();
+        pVideoSel->Release();
         return false;
     }
 
@@ -334,6 +358,8 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
     videoPropRange->setStepValue(lStep);
     videoPropRange->setDefaultValue(lDefault);
 
+    pVCap->Release();
+    pVideoSel->Release();
     return true;
 }
 
@@ -351,12 +377,16 @@ int DirectShow_Camera::getProperty(VideoProperty property)
     IBaseFilter             *pVCap;
     HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
     if (FAILED(hr)) {
+        pVCap->Release();
+        pVideoSel->Release();
         return -111;
     }
 
     hr = pVCap->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
     if (FAILED(hr)) {
         DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
+        pVCap->Release();
+        pVideoSel->Release();
         return -111;
     }
 
@@ -378,6 +408,8 @@ int DirectShow_Camera::getProperty(VideoProperty property)
 
         default: {
             DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+            pVCap->Release();
+            pVideoSel->Release();
             return -111;
         }
     }
@@ -387,9 +419,13 @@ int DirectShow_Camera::getProperty(VideoProperty property)
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
+        pVCap->Release();
+        pVideoSel->Release();
         return -99999;
     }
 
+    pVCap->Release();
+    pVideoSel->Release();
     return value;
 }
 
@@ -407,12 +443,16 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
     IBaseFilter             *pVCap;
     HRESULT hr = pVideoSel->BindToObject(0, 0, IID_IBaseFilter, (void**)&pVCap);
     if (FAILED(hr)) {
+        pVCap->Release();
+        pVideoSel->Release();
         return false;
     }
 
     hr = pVCap->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
     if (FAILED(hr)) {
         DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
+        pVCap->Release();
+        pVideoSel->Release();
         return false;
     }
 
@@ -434,6 +474,8 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
 
         default: {
             DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+            pVCap->Release();
+            pVideoSel->Release();
             return false;
         }
     }
@@ -443,6 +485,8 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
+        pVCap->Release();
+        pVideoSel->Release();
         return false;
     }
 
@@ -450,9 +494,12 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Error during IAMVideoProcAmp->Set. SetProperty failed.\n");
+        pVCap->Release();
+        pVideoSel->Release();
         return false;
     }
-
+    pVCap->Release();
+    pVideoSel->Release();
     return true;
 }
 
@@ -601,7 +648,6 @@ int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilte
             }
         }
     }
-
     if (!setFormat) {
         return -5;
     }
