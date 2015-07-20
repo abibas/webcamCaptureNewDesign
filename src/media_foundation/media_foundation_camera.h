@@ -34,15 +34,13 @@
 
 namespace webcam_capture {
 
-typedef std::function<void(PixelBuffer &buffer)> frame_callback;
-
 class MediaFoundation_Camera : public CameraInterface
 {
 public:
     ~MediaFoundation_Camera();
     static std::unique_ptr<CameraInterface> createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
 
-    int start(Format pixelFormat, int width, int height, float fps, frame_callback cb);
+    int start(Format pixelFormat, int width, int height, float fps, FrameCallback cb);
     int stop();
     std::unique_ptr<PixelBuffer> CaptureFrame();  //TODO
     // ---- Capabilities ----
@@ -73,7 +71,7 @@ public:
     IMFSourceReader *imf_source_reader;
     int state;
     CameraInformation information;
-    frame_callback cb_frame;
+    FrameCallback cb_frame;
 };
 
 } // namespace webcam_capture

@@ -9,8 +9,6 @@
 
 using namespace std::placeholders; //for std::bind _1
 
-typedef std::function<void(PixelBuffer &buffer)> frame_callback;
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),

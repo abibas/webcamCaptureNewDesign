@@ -20,7 +20,7 @@
 
 namespace webcam_capture {
 
-typedef std::function<void(PixelBuffer &buffer)> frame_callback;
+typedef std::function<void(PixelBuffer &buffer)> FrameCallback;
 
 /**
  * Common interface of backend implementations.
@@ -33,15 +33,21 @@ public:
     virtual ~CameraInterface() {}
 
     /**
+     * Gets information about camera's capabilities, i.e. supported pixel formats, resolutions and FPS.
+     * @return Capabilities the camera supports.
+     */
+    virtual std::vector<CapabilityFormat> getCapabilities() = 0;
+
+    /**
      * Starts video capture in specified format, resolution and frame rate.
      * @param pixelFormat Pixel format in which you want to capture the video frames.
      * @param width Width part of resolution of the captured video frames.
      * @param height Height part of resolution of the captured video frames.
      * @param fps Frame rate of capturing.
-     * @param cb Callback with the captured video frame data.
+     * @param callback Callback with the captured video frame data.
      * @return TODO(nurupo): add enum for: already in use, already started, invalid combination of capabilities, unknown error.
      */
-    virtual int start(Format pixelFormat, int width, int height, float fps, frame_callback cb) = 0;
+    virtual int start(Format pixelFormat, int width, int height, float fps, FrameCallback callback) = 0;
 
     /**
      * Stops video capture.
@@ -77,12 +83,6 @@ public:
      * @return true on success, false on failure.
      */
     virtual bool setProperty(const VideoProperty property, const int value) = 0; //TODO
-
-    /**
-     * Gets information about camera's capabilities, i.e. supported pixel formats, resolutions and FPS.
-     * @return Capabilities the camera supports.
-     */
-    virtual std::vector<CapabilityFormat> getCapabilities() = 0;
 };
 
 } // namespace webcam_capture
