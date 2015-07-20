@@ -20,7 +20,7 @@ class WEBCAM_CAPTURE_EXPORT BackendFactory
 public:
     /**
      * Creates a backend instance backed by a certain backend implementation.
-     * @param Implementation backing the backend.
+     * @param implementation Implementation backing the backend.
      * @return BackentInterface instance backed by specified backend implementation on success, null on failure.
      */
     static std::unique_ptr<BackendInterface> getBackend(BackendImplementation implementation);

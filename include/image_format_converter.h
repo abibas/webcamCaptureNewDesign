@@ -15,17 +15,17 @@ class WEBCAM_CAPTURE_EXPORT ImageFormatConverter
 public:
     /**
      * Converts a video frame to RGB pixel format.
-     * @param Frame to convert.
+     * @param frame Frame to convert.
      * @return RGB version of the frame.
      */
-    static PixelBuffer convertToRGB(const PixelBuffer &);
+    static PixelBuffer convertToRGB(const PixelBuffer &frame);
 
     /**
      * Converts a video frame to YUV pixel format.
-     * @param Frame to convert.
+     * @param frame Frame to convert.
      * @return YUV version of the frame.
      */
-    static PixelBuffer convertToYUV(const PixelBuffer &);
+    static PixelBuffer convertToYUV(const PixelBuffer &frame);
 
 private:
     ImageFormatConverter();
