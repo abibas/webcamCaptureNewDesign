@@ -102,7 +102,7 @@ WinapiShared_CameraNotifications::~WinapiShared_CameraNotifications()
     stop();
 }
 
-bool WinapiShared_CameraNotifications::start(notifications_callback cb)
+bool WinapiShared_CameraNotifications::start(ConnectionStatusCallback cb)
 {
     if (threadIsRunning) {
         return false;

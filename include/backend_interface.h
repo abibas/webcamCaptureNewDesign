@@ -25,8 +25,7 @@ enum class WEBCAM_CAPTURE_EXPORT CameraConnectionStatus {
     Disconnected // camera was disconnected from the system and you should stop using it
 };
 
-// FIXME(nurupo): rename
-typedef std::function<void(CameraInformation information, CameraConnectionStatus status)> notifications_callback;
+typedef std::function<void(CameraInformation information, CameraConnectionStatus status)> ConnectionStatusCallback;
 
 /**
  * Common interface of backend implementations.
@@ -64,7 +63,7 @@ public:
      * @param Callback function.
      * @return FIXME(nurupo): the return value should be wither an enum or bool.
      */
-    virtual int setAvaliableCamerasChangedCallback(notifications_callback n_callback) = 0;
+    virtual int setAvaliableCamerasChangedCallback(ConnectionStatusCallback callback) = 0;
 
 protected:
     const BackendImplementation implementation;
