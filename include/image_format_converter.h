@@ -1,7 +1,7 @@
 #ifndef IMAGE_FORMAT_CONVERTER_H
 #define IMAGE_FORMAT_CONVERTER_H
 
-#include <pixel_buffer.h>
+#include <frame.h>
 
 #include <webcam_capture_export.h>
 
@@ -18,14 +18,14 @@ public:
      * @param frame Frame to convert.
      * @return RGB version of the frame.
      */
-    static PixelBuffer convertToRGB(const PixelBuffer &frame);
+    static Frame convertToRGB(const Frame &frame);
 
     /**
      * Converts a video frame to YUV pixel format.
      * @param frame Frame to convert.
      * @return YUV version of the frame.
      */
-    static PixelBuffer convertToYUV(const PixelBuffer &frame);
+    static Frame convertToYUV(const Frame &frame);
 
 private:
     ImageFormatConverter();

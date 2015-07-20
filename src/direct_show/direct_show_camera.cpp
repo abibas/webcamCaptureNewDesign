@@ -62,9 +62,9 @@ int DirectShow_Camera::start(PixelFormat pixelFormat,
     cb_frame = cb;
 
 
-    pixel_buffer.width[0] = width;
-    pixel_buffer.height[0] = height;
-    pixel_buffer.pixel_format = pixelFormat;
+    frame.width[0] = width;
+    frame.height[0] = height;
+    frame.pixel_format = pixelFormat;
 
 
     HRESULT hr;
@@ -181,7 +181,7 @@ int DirectShow_Camera::stop()
     return 1;   //TODO Err code
 }
 
-std::unique_ptr<PixelBuffer> DirectShow_Camera::CaptureFrame()
+std::unique_ptr<Frame> DirectShow_Camera::CaptureFrame()
 {
     //TODO to realise method
     return nullptr;

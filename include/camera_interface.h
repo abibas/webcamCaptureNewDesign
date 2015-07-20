@@ -2,7 +2,7 @@
 #define CAMERA_INTERFACE_H
 
 #include <capability.h>
-#include <pixel_buffer.h>
+#include <frame.h>
 #include <video_property.h>
 #include <video_property_range.h>
 
@@ -14,7 +14,7 @@
 
 namespace webcam_capture {
 
-typedef std::function<void(PixelBuffer &buffer)> FrameCallback;
+typedef std::function<void(Frame &frame)> FrameCallback;
 
 /**
  * Common interface of backend implementations.
@@ -53,7 +53,7 @@ public:
      * Takes a still photo.
      * @return Photo image data.
      */
-    virtual std::unique_ptr<PixelBuffer> CaptureFrame() = 0;  //TODO
+    virtual std::unique_ptr<Frame> CaptureFrame() = 0;  //TODO
 
     /**
      * Gets information about a video property range.

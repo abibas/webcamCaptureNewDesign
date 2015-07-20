@@ -32,9 +32,9 @@ VideoForm::~VideoForm()
     delete ui;
 }
 
-void VideoForm::FrameCaptureCallback(PixelBuffer &buffer)
+void VideoForm::FrameCaptureCallback(Frame &frame)
 {
-    this->ui->videoLabel->setPixmap(QPixmap::fromImage(YUV422toRGBA32(buffer)));
+    this->ui->videoLabel->setPixmap(QPixmap::fromImage(YUV422toRGBA32(frame)));
 
 //    //TO SAVE mjpg to file
 //    /// Test of mjpeg writing.
@@ -55,13 +55,13 @@ void VideoForm::setCapturingStatus(bool isCapturing)
     this->isCapturing = isCapturing;
 }
 
-QImage VideoForm::YUV422toRGBA32(PixelBuffer &buffer)
+QImage VideoForm::YUV422toRGBA32(Frame &frame)
 {
-    const unsigned char *frame = buffer.plane[0];
-    size_t frameSize = buffer.nbytes;
+    const unsigned char *plane = frame.plane[0];
+    size_t frameSize = frame.nbytes;
 
-    size_t height = buffer.height[0];
-    size_t width = buffer.width[0];
+    size_t height = frame.height[0];
+    size_t width = frame.width[0];
 
     std::vector<int> redContainer;
     std::vector<int> greenContainer;
@@ -72,10 +72,10 @@ QImage VideoForm::YUV422toRGBA32(PixelBuffer &buffer)
 
     for (unsigned int i = 0 ; i <= frameSize - 4 ; i += 4) {
         // Extract yuv components
-        int y1  = (int)frame[i];
-        int u = (int)frame[i + 1];
-        int y2  = (int)frame[i + 2];
-        int v = (int)frame[i + 3];
+        int y1  = (int)plane[i];
+        int u = (int)plane[i + 1];
+        int y2  = (int)plane[i + 2];
+        int v = (int)plane[i + 3];
 
         // Define the RGB
         int r1 = 0 , g1 = 0 , b1 = 0;
@@ -123,7 +123,7 @@ QImage VideoForm::YUV422toRGBA32(PixelBuffer &buffer)
     return rgbImage;
 }
 
-std::function<void(PixelBuffer &buffer)> VideoForm::getFrameCallback()
+FrameCallback VideoForm::getFrameCallback()
 {
     return std::bind(&VideoForm::FrameCaptureCallback, this, _1);
 }

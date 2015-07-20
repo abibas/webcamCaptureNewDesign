@@ -4,8 +4,8 @@
     http://www.apache.org/licenses/LICENSE-2.0
   */
 
-#ifndef PIXEL_BUFFER_H
-#define PIXEL_BUFFER_H
+#ifndef FRAME_H
+#define FRAME_H
 
 #include <pixel_format.h>
 
@@ -17,7 +17,7 @@ namespace webcam_capture {
 /**
  *  Provides video frame data.
  */
-struct WEBCAM_CAPTURE_EXPORT PixelBuffer {
+struct WEBCAM_CAPTURE_EXPORT Frame {
     /**
      * @param w Sets the width of the frame.
      * @param h Sets the height of the frame.
@@ -73,5 +73,5 @@ struct WEBCAM_CAPTURE_EXPORT PixelBuffer {
 
 } // namespace webcam_capture
 
-#endif // PIXEL_BUFFER_H
+#endif // FRAME_H
 

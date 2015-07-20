@@ -2,7 +2,7 @@
 #define VIDEOFORM_H
 
 #include <QWidget>
-#include <pixel_buffer.h>
+#include <frame.h>
 #include <functional>
 #include <camera_interface.h>
 
@@ -20,9 +20,9 @@ public:
     explicit VideoForm(CameraInterface &camera, int width, int height, QWidget *parent = 0);
     ~VideoForm();
 
-    void FrameCaptureCallback(PixelBuffer &buffer);
-    std::function<void(PixelBuffer &buffer)> getFrameCallback();
-    QImage YUV422toRGBA32(PixelBuffer &buffer);
+    void FrameCaptureCallback(Frame &frame);
+    FrameCallback getFrameCallback();
+    QImage YUV422toRGBA32(Frame &frame);
 
     void setCapturingStatus(bool isCapturing);
 

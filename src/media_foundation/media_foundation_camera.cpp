@@ -109,9 +109,9 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat,
         return -11;      //TODO Err code
     }
 
-    pixel_buffer.width[0] = width;
-    pixel_buffer.height[0] = height;
-    pixel_buffer.pixel_format = pixelFormat;
+    frame.width[0] = width;
+    frame.height[0] = height;
+    frame.pixel_format = pixelFormat;
 
     // Kick off the capture stream.
     HRESULT hr = imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
@@ -159,7 +159,7 @@ int MediaFoundation_Camera::stop()
     return 1;   //TODO Err code
 }
 
-std::unique_ptr<PixelBuffer> MediaFoundation_Camera::CaptureFrame()
+std::unique_ptr<Frame> MediaFoundation_Camera::CaptureFrame()
 {
     //TODO to realise method
     return nullptr;

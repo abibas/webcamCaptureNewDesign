@@ -14,7 +14,7 @@
 #include "../include/camera_interface.h"
 #include "../include/camera_information.h"
 #include "../include/capability.h"
-#include "../include/pixel_buffer.h"
+#include "../include/frame.h"
 #include "../include/video_property.h"
 #include "../include/video_property_range.h"
 //#include "media_foundation_utils.h"
@@ -30,7 +30,7 @@ public:
 
     int start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb);
     int stop();
-    std::unique_ptr<PixelBuffer> CaptureFrame();
+    std::unique_ptr<Frame> CaptureFrame();
     // ---- Capabilities ----
     bool getPropertyRange(VideoProperty property, VideoPropertyRange &videoPropRange);
     int getProperty(VideoProperty property);
@@ -46,7 +46,7 @@ private:
 
 public:
     std::shared_ptr<void> mfDeinitializer;
-    PixelBuffer pixel_buffer;
+    Frame frame;
     DirectShow_Callback *ds_callback;
     IMediaControl *pControl;
     int state;
