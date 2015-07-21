@@ -1,5 +1,5 @@
-#ifndef IMAGE_FORMAT_CONVERTER_H
-#define IMAGE_FORMAT_CONVERTER_H
+#ifndef PIXEL_FORMAT_CONVERTER_H
+#define PIXEL_FORMAT_CONVERTER_H
 
 #include <frame.h>
 
@@ -8,9 +8,9 @@
 namespace webcam_capture {
 
 /**
- * Handles conversion of pixel formats.
+ * Handles conversion of frames' pixel formats.
  */
-class WEBCAM_CAPTURE_EXPORT ImageFormatConverter
+class WEBCAM_CAPTURE_EXPORT PixelFormatConverter
 {
 public:
     /**
@@ -28,10 +28,10 @@ public:
     static Frame convertToYUV(const Frame &frame);
 
 private:
-    ImageFormatConverter();
+    PixelFormatConverter();
 };
 
 } // namespace webcam_capture
 
-#endif // IMAGE_FORMAT_CONVERTER_H
+#endif // PIXEL_FORMAT_CONVERTER_H
 
