@@ -22,13 +22,13 @@ public:
 protected:
     UniqueId(BackendImplementation implementation);
 
-    virtual bool equals(const UniqueId& other) const;
+    virtual bool equals(const UniqueId &other) const;
 
     const BackendImplementation implementation;
 
 private:
-    UniqueId & operator=(const UniqueId&) = delete;
-    UniqueId(const UniqueId&) = delete;
+    UniqueId &operator=(const UniqueId &) = delete;
+    UniqueId(const UniqueId &) = delete;
 };
 
 } // namespace webcam_capture

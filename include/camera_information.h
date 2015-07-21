@@ -16,7 +16,8 @@ class UniqueId;
 class WEBCAM_CAPTURE_EXPORT CameraInformation
 {
 public:
-    CameraInformation(std::shared_ptr<UniqueId> uniqueId, std::string cameraName) : uniqueId(uniqueId), cameraName(cameraName) {}
+    CameraInformation(std::shared_ptr<UniqueId> uniqueId, std::string cameraName) : uniqueId(uniqueId),
+        cameraName(cameraName) {}
     ~CameraInformation() {}
 
     /**

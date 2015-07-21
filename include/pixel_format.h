@@ -29,7 +29,7 @@ enum class WEBCAM_CAPTURE_EXPORT PixelFormat {
     ARGB4444,       /* 16-bit RGB with alpha channel; 4 bits per channel*/
     A2R10G10B10,    /* 32-bit RGB with alpha channel; 10 bits per RGB channel plus 2 bits for alpha.*/
     A2B10G10R10,    /* 32-bit RGB with alpha channel; 10 bits per RGB channel plus 2 bits for alpha.*/
-    //YUV Formats: 8-Bit and Palettized    
+    //YUV Formats: 8-Bit and Palettized
     IA44,           /* For subpicture and text overlays. See previous description.*/
     AI44,           /* AI44, Sampling 4:4:4, Packed, Bits per channel - Palettized*/
     AYUV,           /* AYUV, Sampling 4:4:4, Packed, Bits per channel - 8*/

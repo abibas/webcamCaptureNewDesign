@@ -60,7 +60,7 @@ void CapabilityTreeBuilder::addCapability(PixelFormat pixelFormat, int width, in
 
     FpsMap &fpsMap = resolutionMap[resolution];
 
-    for (auto&& f : fps) {
+    for (auto && f : fps) {
         fpsMap[f] = true;
     }
 }

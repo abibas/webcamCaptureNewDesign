@@ -42,7 +42,7 @@ private:
 
     typedef std::unordered_map<float, bool,
             std::hash<float>,
-            std::function<bool(const float&, const float&)>>
+            std::function<bool(const float &, const float &)>>
             FpsMap;
 
     typedef std::unordered_map<std::pair<int, int>, FpsMap,

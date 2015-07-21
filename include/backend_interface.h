@@ -34,7 +34,10 @@ public:
     /**
      * @return Underlying implementation this backend uses.
      */
-    BackendImplementation getImplementation() const {return implementation;}
+    BackendImplementation getImplementation() const
+    {
+        return implementation;
+    }
 
     /**
      * @return Short information about available cameras.

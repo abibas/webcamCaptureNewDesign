@@ -59,8 +59,7 @@ std::unique_ptr<BackendInterface> BackendFactory::getBackend(BackendImplementati
 
 std::vector<BackendImplementation> BackendFactory::getAvailableBackends()
 {
-    return
-    {
+    return {
 
 #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
         BackendImplementation::MediaFoundation,
