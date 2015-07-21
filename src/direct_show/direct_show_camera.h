@@ -42,7 +42,7 @@ private:
 
     /***** SDK FUNCTIONS *****/
     IMoniker* getIMonikerByUniqueId(std::shared_ptr<UniqueId> &uniqueId);    
-    int setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pBaseFilter, Format pixelFormat, int width, int height, float fps);
+    int setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pBaseFilter, PixelFormat pixelFormat, int width, int height, float fps);
 
 public:
     std::shared_ptr<void> mfDeinitializer;

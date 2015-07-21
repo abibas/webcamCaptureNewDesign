@@ -668,7 +668,7 @@ IMoniker* DirectShow_Camera::getIMonikerByUniqueId(std::shared_ptr<UniqueId> &un
     return pResult;
 }
 
-int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pBaseFilter, Format pixelFormat,
+int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pBaseFilter, PixelFormat pixelFormat,
                                        int width, int height, float fps)
 {
     CComPtr<IAMStreamConfig> pConfig;
