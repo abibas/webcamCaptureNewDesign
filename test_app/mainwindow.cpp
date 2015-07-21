@@ -3,13 +3,13 @@
 #include "cameraform.h"
 
 #include <backend_factory.h>
+#include <unique_id.h>
+
 #include <memory>
 #include <functional>
 
 
 using namespace std::placeholders; //for std::bind _1
-
-typedef std::function<void(PixelBuffer &buffer)> frame_callback;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -106,14 +106,14 @@ void MainWindow::on_deleteBackendBtn_clicked()
     this->ui->startNotificationsButton->setDisabled(true);
     this->ui->stopNotificationsButton->setDisabled(true);
 
-    backend.release();
+    backend.reset();
 }
 
-void MainWindow::CameraEventCaptureCallback(CameraInformation information, CameraPlugStatus status)
+void MainWindow::CameraEventCaptureCallback(CameraInformation information, CameraConnectionStatus status)
 {
-    if (status == CameraPlugStatus::CAMERA_CONNECTED) {
+    if (status == CameraConnectionStatus::Connected) {
         cameraInfoList.push_back(information);
-    } else if (status == CameraPlugStatus::CAMERA_DISCONNECTED) {
+    } else if (status == CameraConnectionStatus::Disconnected) {
         for (int i = 0; i < cameraInfoList.size(); i++) {
             if (*information.getUniqueId() == *cameraInfoList.at(i).getUniqueId() &&
                     information.getCameraName() == cameraInfoList.at(i).getCameraName()) {

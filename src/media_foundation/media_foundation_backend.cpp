@@ -121,15 +121,15 @@ std::unique_ptr<webcam_capture::CameraInterface> MediaFoundation_Backend::getCam
     return MediaFoundation_Camera::createCamera(mfDeinitializer, information);
 }
 
-int MediaFoundation_Backend::setAvaliableCamerasChangedCallback(notifications_callback n_callback)
+int MediaFoundation_Backend::setAvaliableCamerasChangedCallback(ConnectionStatusCallback callback)
 {
     //IF n_callback is null_ptr or n_callback function is empty
-    if (!n_callback) {
+    if (!callback) {
         notificationManager.stop();
         return -1;      //TODO Err code
     }
 
-    notificationManager.start(n_callback);
+    notificationManager.start(callback);
     return 1; //TODO ERR code (success)
 }
 

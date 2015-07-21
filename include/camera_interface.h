@@ -1,26 +1,20 @@
-/**
-    This header is using code from the https://github.com/roxlu/video_capture
-    distributed under the Apache 2.0 license
-    http://www.apache.org/licenses/LICENSE-2.0
-  */
-
 #ifndef CAMERA_INTERFACE_H
 #define CAMERA_INTERFACE_H
+
+#include <capability.h>
+#include <frame.h>
+#include <video_property.h>
+#include <video_property_range.h>
+
+#include <webcam_capture_export.h>
 
 #include <functional>
 #include <memory>
 #include <vector>
 
-#include <camera_information.h>
-#include <capability.h>
-#include <pixel_buffer.h>
-#include <video_property.h>
-#include <video_property_range.h>
-#include <webcam_capture_export.h>
-
 namespace webcam_capture {
 
-typedef std::function<void(PixelBuffer &buffer)> frame_callback;
+typedef std::function<void(Frame &frame)> FrameCallback;
 
 /**
  * Common interface of backend implementations.
@@ -33,15 +27,21 @@ public:
     virtual ~CameraInterface() {}
 
     /**
+     * Gets information about camera's capabilities, i.e. supported pixel formats, resolutions and FPS.
+     * @return Capabilities the camera supports.
+     */
+    virtual std::vector<CapabilityFormat> getCapabilities() = 0;
+
+    /**
      * Starts video capture in specified format, resolution and frame rate.
      * @param pixelFormat Pixel format in which you want to capture the video frames.
      * @param width Width part of resolution of the captured video frames.
      * @param height Height part of resolution of the captured video frames.
      * @param fps Frame rate of capturing.
-     * @param cb Callback with the captured video frame data.
+     * @param callback Callback with the captured video frame data.
      * @return TODO(nurupo): add enum for: already in use, already started, invalid combination of capabilities, unknown error.
      */
-    virtual int start(Format pixelFormat, int width, int height, float fps, frame_callback cb) = 0;
+    virtual int start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback callback) = 0;
 
     /**
      * Stops video capture.
@@ -53,14 +53,15 @@ public:
      * Takes a still photo.
      * @return Photo image data.
      */
-    virtual std::unique_ptr<PixelBuffer> CaptureFrame() = 0;  //TODO
+    virtual std::unique_ptr<Frame> CaptureFrame() = 0;  //TODO
 
     /**
      * Gets information about a video property range.
      * @param property Property you want to look up the range of.
+     * @param range Property range that will be set on success.
      * @return true on success, false on failure.
      */
-    virtual bool getPropertyRange(VideoProperty property, VideoPropertyRange *videoPropRange) = 0;  // TODO
+    virtual bool getPropertyRange(VideoProperty property, VideoPropertyRange &range) = 0;  // TODO
 
     /**
      * Gets value of a property.
@@ -76,12 +77,6 @@ public:
      * @return true on success, false on failure.
      */
     virtual bool setProperty(const VideoProperty property, const int value) = 0; //TODO
-
-    /**
-     * Gets information about camera's capabilities, i.e. supported pixel formats, resolutions and FPS.
-     * @return Capabilities the camera supports.
-     */
-    virtual std::vector<CapabilityFormat> getCapabilities() = 0;
 };
 
 } // namespace webcam_capture

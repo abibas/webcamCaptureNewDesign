@@ -14,7 +14,7 @@
 #include "../include/camera_interface.h"
 #include "../include/camera_information.h"
 #include "../include/capability.h"
-#include "../include/pixel_buffer.h"
+#include "../include/frame.h"
 #include "../include/video_property.h"
 #include "../include/video_property_range.h"
 //#include "media_foundation_utils.h"
@@ -22,19 +22,17 @@
 
 namespace webcam_capture {
 
-typedef std::function<void(PixelBuffer &buffer)> frame_callback;
-
 class DirectShow_Camera : public CameraInterface
 {
 public:
     ~DirectShow_Camera();
     static std::unique_ptr<CameraInterface> createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
 
-    int start(Format pixelFormat, int width, int height, float fps, frame_callback cb);
+    int start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb);
     int stop();
-    std::unique_ptr<PixelBuffer> CaptureFrame();
+    std::unique_ptr<Frame> CaptureFrame();
     // ---- Capabilities ----
-    bool getPropertyRange(VideoProperty property, VideoPropertyRange *videoPropRange);
+    bool getPropertyRange(VideoProperty property, VideoPropertyRange &videoPropRange);
     int getProperty(VideoProperty property);
     bool setProperty(const VideoProperty property, const int value);
     std::vector<CapabilityFormat> getCapabilities();
@@ -48,11 +46,10 @@ private:
 
 public:
     std::shared_ptr<void> mfDeinitializer;
-    PixelBuffer pixel_buffer;
+    Frame frame;
     DirectShow_Callback *ds_callback;
     int state;
     CameraInformation information;
-    frame_callback cb_frame;
 
     IMoniker *pVideoSel;
     IBaseFilter *pVCap;
@@ -64,6 +61,8 @@ public:
     ISampleGrabber *pSampleGrabber;
     ISampleGrabberCB *pGrabberCB;
     IBaseFilter *pNullRenderer;
+
+    FrameCallback cb_frame;
 };
 
 } // namespace webcam_capture

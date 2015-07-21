@@ -44,10 +44,10 @@ DirectShow_Camera::~DirectShow_Camera()
     }
 }
 
-int DirectShow_Camera::start(Format pixelFormat,
+int DirectShow_Camera::start(PixelFormat pixelFormat,
                               int width,
                               int height, float fps,
-                              frame_callback cb )
+                              FrameCallback cb )
 {
     if (!cb) {
         DEBUG_PRINT("Error: The callback function is empty. Capturing was not started.\n");
@@ -62,9 +62,9 @@ int DirectShow_Camera::start(Format pixelFormat,
     cb_frame = cb;
 
 
-    pixel_buffer.width[0] = width;
-    pixel_buffer.height[0] = height;
-    pixel_buffer.pixel_format = pixelFormat;
+    frame.width[0] = width;
+    frame.height[0] = height;
+    frame.pixel_format = pixelFormat;
 
 
     HRESULT hr;
@@ -283,7 +283,7 @@ int DirectShow_Camera::stop()
     return 1;   //TODO Err code
 }
 
-std::unique_ptr<PixelBuffer> DirectShow_Camera::CaptureFrame()
+std::unique_ptr<Frame> DirectShow_Camera::CaptureFrame()
 {
     //TODO to realise method
     return nullptr;
@@ -355,24 +355,20 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
             if (pmtConfig->formattype == FORMAT_VideoInfo) {
                 VIDEOINFOHEADER *pVHeader = reinterpret_cast<VIDEOINFOHEADER*>(pmtConfig->pbFormat);
 
-                Format pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+                PixelFormat pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
 
                 int width = pVHeader->bmiHeader.biWidth;
                 int height = pVHeader->bmiHeader.biHeight;
 
-                // FIXME(nurupo): store FPS as float and fix that FPS/100 thing.
                 float minFps = FPS_FROM_RATIONAL(10000000, scc.MaxFrameInterval);
                 float maxFps = FPS_FROM_RATIONAL(10000000, scc.MinFrameInterval);
                 float currentFps = FPS_FROM_RATIONAL(10000000, pVHeader->AvgTimePerFrame);
 
-                //to set frame rate - you need to set AvgTimePerFrame... LOL... it's really stupid...
-                //VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmtConfig->pbFormat;
-                //int currentFps = vih->AvgTimePerFrame / 30;
                 capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
             } else if (pmtConfig->formattype == FORMAT_VideoInfo2) {
                 VIDEOINFOHEADER2 *pVHeader = reinterpret_cast<VIDEOINFOHEADER2*>(pmtConfig->pbFormat);
 
-                Format pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+                PixelFormat pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
 
                 int width = pVHeader->bmiHeader.biWidth;
                 int height = pVHeader->bmiHeader.biHeight;
@@ -395,7 +391,7 @@ std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
 
 
 
-bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRange *videoPropRange)
+bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRange &videoPropRange)
 {
     IAMVideoProcAmp *pProcAmp = NULL;
     VideoProcAmpProperty ampProperty;
@@ -458,10 +454,7 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
         return false;
     }
 
-    videoPropRange->setMaxValue(lMax);
-    videoPropRange->setMinValue(lMin);
-    videoPropRange->setStepValue(lStep);
-    videoPropRange->setDefaultValue(lDefault);
+    videoPropRange = VideoPropertyRange(lMin, lMax, lStep, lDefault);
 
     pProcAmp->Release();
     pBaseFilter->Release();
@@ -714,7 +707,7 @@ int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilte
         if (pmtConfig->formattype == FORMAT_VideoInfo) {
             VIDEOINFOHEADER *pVHeader = reinterpret_cast<VIDEOINFOHEADER*>(pmtConfig->pbFormat);
 
-            Format pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+            PixelFormat pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
             int widthBuf = pVHeader->bmiHeader.biWidth;
             int heightBuf = pVHeader->bmiHeader.biHeight;
             if ( pixelFormatBuf != pixelFormat || widthBuf != width || heightBuf != height ) {
@@ -741,7 +734,7 @@ int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilte
         } else if (pmtConfig->formattype == FORMAT_VideoInfo2) {
             VIDEOINFOHEADER2 *pVHeader = reinterpret_cast<VIDEOINFOHEADER2*>(pmtConfig->pbFormat);
 
-            Format pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
+            PixelFormat pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
             int widthBuf = pVHeader->bmiHeader.biWidth;
             int heightBuf = pVHeader->bmiHeader.biHeight;
             if ( pixelFormatBuf != pixelFormat || widthBuf != width || heightBuf != height ) {

@@ -4,25 +4,26 @@
     http://www.apache.org/licenses/LICENSE-2.0
   */
 
-#ifndef PIXEL_BUFFER_H
-#define PIXEL_BUFFER_H
+#ifndef FRAME_H
+#define FRAME_H
 
-#include <stdint.h>
+#include <pixel_format.h>
 
-#include <format.h>
 #include <webcam_capture_export.h>
+
+#include <cstdint>
 
 namespace webcam_capture {
 /**
  *  Provides video frame data.
  */
-struct WEBCAM_CAPTURE_EXPORT PixelBuffer {
+struct WEBCAM_CAPTURE_EXPORT Frame {
     /**
      * @param w Sets the width of the frame.
      * @param h Sets the height of the frame.
      * @param fmt Sets the pixel format of the frame.
      */
-    void setup(int w, int h, Format fmt);
+    void setup(int w, int h, PixelFormat fmt);
 
     /**
      *  When data is one continuous block of member you can use this, otherwise it points to the same location as plane[0].
@@ -67,10 +68,10 @@ struct WEBCAM_CAPTURE_EXPORT PixelBuffer {
     /**
      * The pixel format of the frame.
      */
-    Format pixel_format;
+    PixelFormat pixel_format;
 };
 
 } // namespace webcam_capture
 
-#endif // PIXEL_BUFFER_H
+#endif // FRAME_H
 

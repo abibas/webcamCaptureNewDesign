@@ -2,7 +2,7 @@
 #define CAPABILITY_TREE_BUILDER_H
 
 #include <capability.h>
-#include <format.h>
+#include <pixel_format.h>
 
 #include <functional>
 #include <unordered_map>
@@ -26,7 +26,7 @@ public:
      * @param fps List of FPS values a camera supports for captureing using the resolution and the format.
      * FPS values don't have to be unique, repeated values will be added once.
      */
-    void addCapability(Format pixelFormat, int width, int height, std::vector<float> fps);
+    void addCapability(PixelFormat pixelFormat, int width, int height, std::vector<float> fps);
 
     /**
      * Builds the capability tree-like structure out of added entries.
@@ -35,14 +35,14 @@ public:
     std::vector<CapabilityFormat> build() const;
 
 private:
-    static std::size_t formatHash(const Format &f);
+    static std::size_t formatHash(const PixelFormat &f);
     static std::size_t resolutionHash(const std::pair<int, int> &p);
     static bool resolutionEquals(const std::pair<int, int> &p, const std::pair<int, int> &q);
     static bool fpsEquals(const float &p, const float &q);
 
     typedef std::unordered_map<float, bool,
             std::hash<float>,
-            std::function<bool(const float&, const float&)>>
+            std::function<bool(const float &, const float &)>>
             FpsMap;
 
     typedef std::unordered_map<std::pair<int, int>, FpsMap,
@@ -50,8 +50,8 @@ private:
             std::function<bool(const std::pair<int, int>&, const std::pair<int, int>&)>>
             ResolutionMap;
 
-    typedef std::unordered_map<Format, ResolutionMap,
-            std::function<std::size_t(const Format &)>>
+    typedef std::unordered_map<PixelFormat, ResolutionMap,
+            std::function<std::size_t(const PixelFormat &)>>
             FormatMap;
 
     FormatMap formatMap;

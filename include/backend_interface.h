@@ -1,33 +1,25 @@
-/**
-    This header is using code from the https://github.com/roxlu/video_capture
-    distributed under the Apache 2.0 license
-    http://www.apache.org/licenses/LICENSE-2.0
-  */
-
 #ifndef BACKEND_INTERFACE_H
 #define BACKEND_INTERFACE_H
 
-#include <functional>
-#include <string>
-#include <vector>
-#include <memory>
-
-#include <stdio.h>
-
 #include <camera_information.h>
-#include <camera_interface.h>
+#include <backend_implementation.h>
+
 #include <webcam_capture_export.h>
+
+#include <functional>
+#include <memory>
+#include <vector>
 
 namespace webcam_capture {
 
-// FIXME(nurupo): rename, move into separate file?
-enum class WEBCAM_CAPTURE_EXPORT CameraPlugStatus {
-    CAMERA_CONNECTED,
-    CAMERA_DISCONNECTED
+class CameraInterface;
+
+enum class WEBCAM_CAPTURE_EXPORT CameraConnectionStatus {
+    Connected, // camera was connected to the system and it's available for use
+    Disconnected // camera was disconnected from the system and you should stop using it
 };
 
-// FIXME(nurupo): rename
-typedef std::function<void(CameraInformation information, CameraPlugStatus status)> notifications_callback;
+typedef std::function<void(CameraInformation information, CameraConnectionStatus status)> ConnectionStatusCallback;
 
 /**
  * Common interface of backend implementations.
@@ -42,7 +34,10 @@ public:
     /**
      * @return Underlying implementation this backend uses.
      */
-    BackendImplementation getImplementation() const {return implementation;}
+    BackendImplementation getImplementation() const
+    {
+        return implementation;
+    }
 
     /**
      * @return Short information about available cameras.
@@ -53,7 +48,7 @@ public:
      * Creates a camera instance representing a specific camera.
      * Camera instance will function properly with its backend instance deleted.
      * Backend and camera instances should be created in the same thread and can be used only within the thread.
-     * @param Previously received camera information for the camera you want to access.
+     * @param information Previously received camera information for the camera you want to access.
      * @return CameraInterface instance representing a specific camera on success, null on failure.
      */
     virtual std::unique_ptr<CameraInterface> getCamera(const CameraInformation &information) const = 0;
@@ -62,10 +57,10 @@ public:
      * Sets a callback function that is be called when a camera is connected/disconencted to/from the system.
      * You can use the UniqueId member of CameraInformation for comparison against your camera instances in order
      * to check if any of them was removed from the system.
-     * @param Callback function.
+     * @param callback Callback function.
      * @return FIXME(nurupo): the return value should be wither an enum or bool.
      */
-    virtual int setAvaliableCamerasChangedCallback(notifications_callback n_callback) = 0;
+    virtual int setAvaliableCamerasChangedCallback(ConnectionStatusCallback callback) = 0;
 
 protected:
     const BackendImplementation implementation;

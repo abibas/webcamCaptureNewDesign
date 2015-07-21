@@ -1,19 +1,14 @@
-/**
-    This header is using code from the https://github.com/roxlu/video_capture
-    distributed under the Apache 2.0 license
-    http://www.apache.org/licenses/LICENSE-2.0
-  */
-
 #ifndef CAMERA_INFORMATION_H
 #define CAMERA_INFORMATION_H
+
+#include <webcam_capture_export.h>
 
 #include <memory>
 #include <string>
 
-#include <unique_id.h>
-#include <webcam_capture_export.h>
-
 namespace webcam_capture {
+
+class UniqueId;
 
 /**
  * Provides a brief description of a camera.
@@ -21,7 +16,8 @@ namespace webcam_capture {
 class WEBCAM_CAPTURE_EXPORT CameraInformation
 {
 public:
-    CameraInformation(std::shared_ptr<UniqueId> uniqueId, std::string cameraName) : uniqueId(uniqueId), cameraName(cameraName) {}
+    CameraInformation(std::shared_ptr<UniqueId> uniqueId, std::string cameraName) : uniqueId(uniqueId),
+        cameraName(cameraName) {}
     ~CameraInformation() {}
 
     /**

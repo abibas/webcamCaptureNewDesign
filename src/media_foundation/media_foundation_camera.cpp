@@ -44,10 +44,10 @@ MediaFoundation_Camera::~MediaFoundation_Camera()
     safeReleaseMediaFoundation(&imf_media_source);
 }
 
-int MediaFoundation_Camera::start(Format pixelFormat,
+int MediaFoundation_Camera::start(PixelFormat pixelFormat,
                                   int width,
                                   int height, float fps,
-                                  frame_callback cb)
+                                  FrameCallback cb)
 {
     if (!cb) {
         DEBUG_PRINT("Error: The callback function is empty. Capturing was not started.\n");
@@ -76,7 +76,7 @@ int MediaFoundation_Camera::start(Format pixelFormat,
 
     //End of "to test comment this"
 
-    if (pixelFormat == Format::UNKNOWN) {
+    if (pixelFormat == PixelFormat::UNKNOWN) {
         DEBUG_PRINT("Error: cannot set a pixel format for UNKNOWN.\n");
         return -8;      //TODO Err code
     }
@@ -109,9 +109,9 @@ int MediaFoundation_Camera::start(Format pixelFormat,
         return -11;      //TODO Err code
     }
 
-    pixel_buffer.width[0] = width;
-    pixel_buffer.height[0] = height;
-    pixel_buffer.pixel_format = pixelFormat;
+    frame.width[0] = width;
+    frame.height[0] = height;
+    frame.pixel_format = pixelFormat;
 
     // Kick off the capture stream.
     HRESULT hr = imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
@@ -159,7 +159,7 @@ int MediaFoundation_Camera::stop()
     return 1;   //TODO Err code
 }
 
-std::unique_ptr<PixelBuffer> MediaFoundation_Camera::CaptureFrame()
+std::unique_ptr<Frame> MediaFoundation_Camera::CaptureFrame()
 {
     //TODO to realise method
     return nullptr;
@@ -176,7 +176,7 @@ std::vector<CapabilityFormat> MediaFoundation_Camera::getCapabilities()
 
 
 
-bool MediaFoundation_Camera::getPropertyRange(VideoProperty property, VideoPropertyRange *videoPropRange)
+bool MediaFoundation_Camera::getPropertyRange(VideoProperty property, VideoPropertyRange &videoPropRange)
 {
     IAMVideoProcAmp *pProcAmp = NULL;
     VideoProcAmpProperty ampProperty;
@@ -218,10 +218,7 @@ bool MediaFoundation_Camera::getPropertyRange(VideoProperty property, VideoPrope
         return false;
     }
 
-    videoPropRange->setMaxValue(lMax);
-    videoPropRange->setMinValue(lMin);
-    videoPropRange->setStepValue(lStep);
-    videoPropRange->setDefaultValue(lDefault);
+    videoPropRange = VideoPropertyRange(lMin, lMax, lStep, lDefault);
 
     return true;
 }
@@ -331,7 +328,7 @@ bool MediaFoundation_Camera::setProperty(const VideoProperty property, const int
 /* -------------------------------------- */
 
 int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int width, const int height,
-        const Format pixelFormat, const float fps) const
+        const PixelFormat pixelFormat, const float fps) const
 {
 
     IMFPresentationDescriptor *pres_desc = NULL;
@@ -379,7 +376,7 @@ int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int wi
     bool setType = false;
 
     for (DWORD i = 0; i < types_count; ++i) {
-        Format pixelFormatBuf = Format::UNKNOWN;
+        PixelFormat pixelFormatBuf = PixelFormat::UNKNOWN;
         int widthBuf = 0;
         int heightBuf = 0;
         UINT32 high = 0;
@@ -544,7 +541,7 @@ done:
 }
 
 int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int width, const int height,
-        const Format pixelFormat, const float fps) const
+        const PixelFormat pixelFormat, const float fps) const
 {
 
     int result = -1;        //TODO Err code
@@ -552,7 +549,7 @@ int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int w
     float currentFpsBuf = 0;
 
     for (DWORD media_type_index = 0; true; ++media_type_index) {
-        Format pixelFormatBuf = Format::UNKNOWN;
+        PixelFormat pixelFormatBuf = PixelFormat::UNKNOWN;
         int widthBuf = 0;
         int heightBuf = 0;
         UINT32 high = 0;
@@ -722,7 +719,7 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
 
         for (DWORD i = 0; i < types_count; ++i) {
 
-            Format pixelFormat = Format::UNKNOWN;
+            PixelFormat pixelFormat = PixelFormat::UNKNOWN;
             int width = 0;
             int height = 0;
             float minFps = 0;
@@ -783,7 +780,7 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
                 }
 
                 // check that all required fields were set
-                if (pixelFormat == Format::UNKNOWN || !width || !height || !minFps || !maxFps || !currentFps) {
+                if (pixelFormat == PixelFormat::UNKNOWN || !width || !height || !minFps || !maxFps || !currentFps) {
                     continue;
                 }
 

@@ -26,7 +26,7 @@ public:
     static void DeinitBackend(void *);
     std::vector<CameraInformation> getAvailableCameras() const;
     std::unique_ptr<CameraInterface> getCamera(const CameraInformation &information) const;
-    int setAvaliableCamerasChangedCallback(notifications_callback n_callback);
+    int setAvaliableCamerasChangedCallback(ConnectionStatusCallback callback);
 private:
     std::shared_ptr<void> mfDeinitializer;
     WinapiShared_CameraNotifications notificationManager;

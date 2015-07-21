@@ -86,7 +86,7 @@ void CameraForm::fillVideoPropertySettings()
 {
 
     //Brightness
-    VideoPropertyRange *vprBrightness = new VideoPropertyRange();
+    VideoPropertyRange vprBrightness;
 
     if (!camera->getPropertyRange(VideoProperty::Brightness, vprBrightness)) {
         //CAN'T get VideoPropertyRange
@@ -94,45 +94,45 @@ void CameraForm::fillVideoPropertySettings()
     }
 
     int value;
-    this->ui->brigtnessSlider->setRange(vprBrightness->getMinValue(),
-                                        vprBrightness->getMaxValue());
-    this->ui->brigtnessSlider->setTickInterval(vprBrightness->getStepValue());
-    this->ui->minBrightnessLabel->setText(QString::number(vprBrightness->getMinValue()));
-    this->ui->maxBrightnessLabel->setText(QString::number(vprBrightness->getMaxValue()));
+    this->ui->brigtnessSlider->setRange(vprBrightness.getMinimum(),
+                                        vprBrightness.getMaximum());
+    this->ui->brigtnessSlider->setTickInterval(vprBrightness.getStepSize());
+    this->ui->minBrightnessLabel->setText(QString::number(vprBrightness.getMinimum()));
+    this->ui->maxBrightnessLabel->setText(QString::number(vprBrightness.getMaximum()));
     value = camera->getProperty(VideoProperty::Brightness);
     this->ui->brigtnessSlider->setValue(value);
     this->changeBrightnessLabel(value);
 
     //Contrast
-    VideoPropertyRange *vprContrast = new VideoPropertyRange();
+    VideoPropertyRange vprContrast;
 
     if (!camera->getPropertyRange(VideoProperty::Contrast, vprContrast)) {
         //CAN'T get VideoPropertyRange
         return;
     }
 
-    this->ui->contrastSlider->setRange(vprContrast->getMinValue(),
-                                       vprContrast->getMaxValue());
-    this->ui->contrastSlider->setTickInterval(vprContrast->getStepValue());
-    this->ui->minContrastLabel->setText(QString::number(vprContrast->getMinValue()));
-    this->ui->maxContrastLabel->setText(QString::number(vprContrast->getMaxValue()));
+    this->ui->contrastSlider->setRange(vprContrast.getMinimum(),
+                                       vprContrast.getMaximum());
+    this->ui->contrastSlider->setTickInterval(vprContrast.getStepSize());
+    this->ui->minContrastLabel->setText(QString::number(vprContrast.getMinimum()));
+    this->ui->maxContrastLabel->setText(QString::number(vprContrast.getMaximum()));
     value = camera->getProperty(VideoProperty::Contrast);
     this->ui->contrastSlider->setValue(value);
     this->changeContrastLabel(value);
 
     //Saturation
-    VideoPropertyRange *vprSaturation = new VideoPropertyRange();
+    VideoPropertyRange vprSaturation;
 
     if (!camera->getPropertyRange(VideoProperty::Saturation, vprSaturation)) {
         //CAN'T get VideoPropertyRange
         return;
     }
 
-    this->ui->saturationSlider->setRange(vprSaturation->getMinValue(),
-                                         vprSaturation->getMaxValue());
-    this->ui->saturationSlider->setTickInterval(vprSaturation->getStepValue());
-    this->ui->minSaturationLabel->setText(QString::number(vprSaturation->getMinValue()));
-    this->ui->maxSaturationLabel->setText(QString::number(vprSaturation->getMaxValue()));
+    this->ui->saturationSlider->setRange(vprSaturation.getMinimum(),
+                                         vprSaturation.getMaximum());
+    this->ui->saturationSlider->setTickInterval(vprSaturation.getStepSize());
+    this->ui->minSaturationLabel->setText(QString::number(vprSaturation.getMinimum()));
+    this->ui->maxSaturationLabel->setText(QString::number(vprSaturation.getMaximum()));
     value = camera->getProperty(VideoProperty::Saturation);
     this->ui->saturationSlider->setValue(value);
     this->changeSaturationLabel(value);
@@ -181,177 +181,177 @@ void CameraForm::on_applyImageSettingsButton_clicked()
     camera->setProperty(VideoProperty::Saturation, this->ui->saturationSlider->value());
 }
 
-std::string  CameraForm::formatToString(Format format)
+std::string  CameraForm::formatToString(PixelFormat format)
 {
     switch (format) {
         ///Uncompressed RGB Formats
-        case Format::RGB8:
+        case PixelFormat::RGB8:
             return "RGB8";
 
-        case Format::RGB555:
+        case PixelFormat::RGB555:
             return "RGB555";
 
-        case Format::RGB565:
+        case PixelFormat::RGB565:
             return "RGB565";
 
-        case Format::RGB24:
+        case PixelFormat::RGB24:
             return "RGB24";
 
-        case Format::RGB32:
+        case PixelFormat::RGB32:
             return "RGB32";
 
-        case Format::ARGB32:
+        case PixelFormat::ARGB32:
             return "ARGB32";
 
         ///YUV Formats: 8-Bit and Palettized
-        case Format::AI44:
+        case PixelFormat::AI44:
             return "AI44";
 
-        case Format::AYUV:
+        case PixelFormat::AYUV:
             return "AYUV";
 
-        case Format::I420:
+        case PixelFormat::I420:
             return "I420";
 
-        case Format::IYUV:
+        case PixelFormat::IYUV:
             return "IYUV";
 
-        case Format::NV11:
+        case PixelFormat::NV11:
             return "NV11";
 
-        case Format::NV12:
+        case PixelFormat::NV12:
             return "NV12";
 
-        case Format::UYVY:
+        case PixelFormat::UYVY:
             return "UYVY";
 
-        case Format::Y41P:
+        case PixelFormat::Y41P:
             return "Y41P";
 
-        case Format::Y41T:
+        case PixelFormat::Y41T:
             return "Y41T";
 
-        case Format::Y42T:
+        case PixelFormat::Y42T:
             return "Y42T";
 
-        case Format::YUY2:
+        case PixelFormat::YUY2:
             return "YUY2";
 
-        case Format::YV12:
+        case PixelFormat::YV12:
             return "YV12";
             \
 
         ///YUV Formats: 10-Bit and 16-Bit
-        case Format::P010:
+        case PixelFormat::P010:
             return "P010";
 
-        case Format::P016:
+        case PixelFormat::P016:
             return "P016";
 
-        case Format::P210:
+        case PixelFormat::P210:
             return "P210";
 
-        case Format::P216:
+        case PixelFormat::P216:
             return "P216";
 
-        case Format::v210:
+        case PixelFormat::v210:
             return "v210";
 
-        case Format::v216:
+        case PixelFormat::v216:
             return "v216";
 
-        case Format::v40:
+        case PixelFormat::v40:
             return "v40";
 
-        case Format::Y210:
+        case PixelFormat::Y210:
             return "Y210";
 
-        case Format::Y216:
+        case PixelFormat::Y216:
             return "Y216";
 
-        case Format::Y40:
+        case PixelFormat::Y40:
             return "Y40";
 
-        case Format::Y416:
+        case PixelFormat::Y416:
             return "Y416";
 
         ///Encoded Video Types
-        case Format::DV25:
+        case PixelFormat::DV25:
             return "DV25";
 
-        case Format::DV50:
+        case PixelFormat::DV50:
             return "DV50";
 
-        case Format::DVC:
+        case PixelFormat::DVC:
             return "DVC";
 
-        case Format::DVH1:
+        case PixelFormat::DVH1:
             return "DVH1";
 
-        case Format::DVHD:
+        case PixelFormat::DVHD:
             return "DVHD";
 
-        case Format::DVSD:
+        case PixelFormat::DVSD:
             return "DVSD";
 
-        case Format::DVSL:
+        case PixelFormat::DVSL:
             return "DVSL";
 
-        case Format::H263:
+        case PixelFormat::H263:
             return "H263";
 
-        case Format::H264:
+        case PixelFormat::H264:
             return "H264";
 
-        case Format::H264_ES:
+        case PixelFormat::H264_ES:
             return "H264_ES";
 
-        case Format::HEVC:
+        case PixelFormat::HEVC:
             return "HEVC";
 
-        case Format::HEVC_ES:
+        case PixelFormat::HEVC_ES:
             return "HEVC_ES";
 
-        case Format::M4S2:
+        case PixelFormat::M4S2:
             return "M4S2";
 
-        case Format::MJPG:
+        case PixelFormat::MJPG:
             return "MJPG";
 
-        case Format::MP43:
+        case PixelFormat::MP43:
             return "MP43";
 
-        case Format::MP4S:
+        case PixelFormat::MP4S:
             return "MP4S";
 
-        case Format::MP4V:
+        case PixelFormat::MP4V:
             return "MP4V";
 
-        case Format::MPEG2:
+        case PixelFormat::MPEG2:
             return "MPEG2";
 
-        case Format::MPG1:
+        case PixelFormat::MPG1:
             return "MPG1";
 
-        case Format::MSS1:
+        case PixelFormat::MSS1:
             return "MSS1";
 
-        case Format::MSS2:
+        case PixelFormat::MSS2:
             return "MSS2";
 
-        case Format::WMV1:
+        case PixelFormat::WMV1:
             return "WMV1";
 
-        case Format::WMV2:
+        case PixelFormat::WMV2:
             return "WMV2";
 
-        case Format::WMV3:
+        case PixelFormat::WMV3:
             return "WMV3";
 
-        case Format::WVC1:
+        case PixelFormat::WVC1:
             return "WVC1";
 
-        case Format::O420:
+        case PixelFormat::O420:
             return "420O";
 
         default:

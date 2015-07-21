@@ -26,7 +26,7 @@
 #include "../include/camera_interface.h"
 #include "../include/camera_information.h"
 #include "../include/capability.h"
-#include "../include/pixel_buffer.h"
+#include "../include/frame.h"
 #include "../include/video_property.h"
 #include "../include/video_property_range.h"
 #include "media_foundation_utils.h"
@@ -34,19 +34,17 @@
 
 namespace webcam_capture {
 
-typedef std::function<void(PixelBuffer &buffer)> frame_callback;
-
 class MediaFoundation_Camera : public CameraInterface
 {
 public:
     ~MediaFoundation_Camera();
     static std::unique_ptr<CameraInterface> createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
 
-    int start(Format pixelFormat, int width, int height, float fps, frame_callback cb);
+    int start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb);
     int stop();
-    std::unique_ptr<PixelBuffer> CaptureFrame();  //TODO
+    std::unique_ptr<Frame> CaptureFrame();  //TODO
     // ---- Capabilities ----
-    bool getPropertyRange(VideoProperty property, VideoPropertyRange *videoPropRange);
+    bool getPropertyRange(VideoProperty property, VideoPropertyRange &videoPropRange);
     int getProperty(VideoProperty property);
     bool setProperty(const VideoProperty property, const int value);
     std::vector<CapabilityFormat> getCapabilities();
@@ -61,19 +59,19 @@ private:
     static int createVideoDeviceSource(const int device, IMFMediaSource **source); //TODO outdated method - to remove
     static int createVideoDeviceSource(const std::wstring &pszSymbolicLink, IMFMediaSource **ppSource);
     int getVideoCapabilities(IMFMediaSource *source, std::vector<CapabilityFormat> &capFormatVector) const;
-    int setDeviceFormat(IMFMediaSource *source, const int width, const int height, const Format pixelFormat,
+    int setDeviceFormat(IMFMediaSource *source, const int width, const int height, const PixelFormat pixelFormat,
                         const float fps) const;
-    int setReaderFormat(IMFSourceReader *reader, const int width, const int height, const Format pixelFormat, const float fps) const;
+    int setReaderFormat(IMFSourceReader *reader, const int width, const int height, const PixelFormat pixelFormat, const float fps) const;
 
 public:
     std::shared_ptr<void> mfDeinitializer;
-    PixelBuffer pixel_buffer;
+    Frame frame;
     MediaFoundation_Callback *mf_callback;
     IMFMediaSource *imf_media_source;
     IMFSourceReader *imf_source_reader;
     int state;
     CameraInformation information;
-    frame_callback cb_frame;
+    FrameCallback cb_frame;
 };
 
 } // namespace webcam_capture

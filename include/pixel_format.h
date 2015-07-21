@@ -1,5 +1,5 @@
-#ifndef FORMAT_H
-#define FORMAT_H
+#ifndef PIXEL_FORMAT_H
+#define PIXEL_FORMAT_H
 
 #include <webcam_capture_export.h>
 
@@ -15,7 +15,7 @@ namespace webcam_capture {
 /**
  * Supported pixel formats.
  */
-enum class WEBCAM_CAPTURE_EXPORT Format {
+enum class WEBCAM_CAPTURE_EXPORT PixelFormat {
     //Uncompressed RGB Formats
     RGB1,           /* RGB, 1 bit per pixel (bpp), palettized*/
     RGB4,           /* RGB, 4 bpp, palettized*/
@@ -29,7 +29,7 @@ enum class WEBCAM_CAPTURE_EXPORT Format {
     ARGB4444,       /* 16-bit RGB with alpha channel; 4 bits per channel*/
     A2R10G10B10,    /* 32-bit RGB with alpha channel; 10 bits per RGB channel plus 2 bits for alpha.*/
     A2B10G10R10,    /* 32-bit RGB with alpha channel; 10 bits per RGB channel plus 2 bits for alpha.*/
-    //YUV Formats: 8-Bit and Palettized    
+    //YUV Formats: 8-Bit and Palettized
     IA44,           /* For subpicture and text overlays. See previous description.*/
     AI44,           /* AI44, Sampling 4:4:4, Packed, Bits per channel - Palettized*/
     AYUV,           /* AYUV, Sampling 4:4:4, Packed, Bits per channel - 8*/
@@ -149,5 +149,5 @@ enum class WEBCAM_CAPTURE_EXPORT Format {
 
 } // namespace webcam_capture
 
-#endif // FORMAT_H
+#endif // PIXEL_FORMAT_H
 

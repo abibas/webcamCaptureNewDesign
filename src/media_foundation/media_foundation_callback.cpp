@@ -91,11 +91,11 @@ HRESULT MediaFoundation_Callback::OnReadSample(HRESULT hr, DWORD streamIndex, DW
                 BYTE *data = NULL;
                 buffer->Lock(&data, &max_length, &length);
 
-                cam->pixel_buffer.nbytes = (size_t)length;
-                cam->pixel_buffer.plane[0] = data;
-                cam->pixel_buffer.plane[1] = data + cam->pixel_buffer.offset[1];
-                cam->pixel_buffer.plane[2] = data + cam->pixel_buffer.offset[2];
-                cam->cb_frame(cam->pixel_buffer);
+                cam->frame.nbytes = (size_t)length;
+                cam->frame.plane[0] = data;
+                cam->frame.plane[1] = data + cam->frame.offset[1];
+                cam->frame.plane[2] = data + cam->frame.offset[2];
+                cam->cb_frame(cam->frame);
 
                 buffer->Unlock();
                 buffer->Release();
