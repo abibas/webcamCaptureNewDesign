@@ -4,11 +4,22 @@
     http://www.apache.org/licenses/LICENSE-2.0
   */
 
-#include "media_foundation_camera.h"
 #include "media_foundation_backend.h"
-#include "../winapi_shared/winapi_shared_unique_id.h"
 
-#include <functional>
+#include "../utils.h"
+#include "../winapi_shared/winapi_shared_unique_id.h"
+#include "media_foundation_camera.h"
+#include "media_foundation_utils.h"
+
+#include <string>
+
+#include <windows.h>
+#include <mfapi.h>
+#include <mferror.h>            /* MediaFoundation error codes, MF_E_* */
+#include <mfidl.h>              /* e.g. MFEnumDeviceSources */
+#include <mfplay.h>
+#include <mfreadwrite.h>
+#include <shlwapi.h>
 
 namespace webcam_capture {
 
@@ -28,12 +39,8 @@ MediaFoundation_Backend::MediaFoundation_Backend()
     hr = MFStartup(MF_VERSION);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot startup the Media Foundation.\n");
+        DEBUG_PRINT("Error: cannot start the Media Foundation.\n");
     }
-}
-
-MediaFoundation_Backend::~MediaFoundation_Backend()
-{
 }
 
 void MediaFoundation_Backend::DeinitBackend(void *)

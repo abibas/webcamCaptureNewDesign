@@ -23,8 +23,7 @@
 
 namespace webcam_capture {
 
-webcam_capture::PixelFormat media_foundation_video_format_to_capture_format(GUID
-        guid);        /* Convert a MF format to a capture format */
+webcam_capture::PixelFormat media_foundation_video_format_to_capture_format(GUID guid);
 
 // Convert a WCHAR to a std::string
 template<class T> T string_cast(const wchar_t *src, unsigned int codePage = CP_ACP)
