@@ -3,7 +3,7 @@
 
 #include <backend_implementation.h>
 
-#include <webcam_capture_export.h>
+//#include <webcam_capture_export.h>
 
 namespace webcam_capture {
 
@@ -11,7 +11,7 @@ namespace webcam_capture {
  * Uniquely identifies a camera.
  * While the actual data is hidden by the backend implementations, you can still use it for comparison.
  */
-class WEBCAM_CAPTURE_EXPORT UniqueId
+class /*WEBCAM_CAPTURE_EXPORT*/ UniqueId
 {
 public:
     virtual ~UniqueId();

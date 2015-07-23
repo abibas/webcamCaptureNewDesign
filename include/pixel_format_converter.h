@@ -3,14 +3,14 @@
 
 #include <frame.h>
 
-#include <webcam_capture_export.h>
+//#include <webcam_capture_export.h>
 
 namespace webcam_capture {
 
 /**
  * Handles conversion of frames' pixel formats.
  */
-class WEBCAM_CAPTURE_EXPORT PixelFormatConverter
+class /*WEBCAM_CAPTURE_EXPORT*/ PixelFormatConverter
 {
 public:
     /**

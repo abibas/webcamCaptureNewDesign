@@ -6,7 +6,7 @@
 #include <video_property.h>
 #include <video_property_range.h>
 
-#include <webcam_capture_export.h>
+//#include <webcam_capture_export.h>
 
 #include <functional>
 #include <memory>
@@ -20,7 +20,7 @@ typedef std::function<void(Frame &frame)> FrameCallback;
  * Common interface of backend implementations.
  * Provides access to video capturing and camera information.
  */
-class WEBCAM_CAPTURE_EXPORT CameraInterface
+class /*WEBCAM_CAPTURE_EXPORT*/ CameraInterface
 {
 public:
     CameraInterface() {}

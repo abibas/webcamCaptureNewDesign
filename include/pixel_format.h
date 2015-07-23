@@ -1,7 +1,7 @@
 #ifndef PIXEL_FORMAT_H
 #define PIXEL_FORMAT_H
 
-#include <webcam_capture_export.h>
+//#include <webcam_capture_export.h>
 
 /* Media Foundation
  *   - Formats: https://msdn.microsoft.com/en-us/library/windows/desktop/aa370819(v=vs.85).aspx
@@ -15,7 +15,7 @@ namespace webcam_capture {
 /**
  * Supported pixel formats.
  */
-enum class WEBCAM_CAPTURE_EXPORT PixelFormat {
+enum class /*WEBCAM_CAPTURE_EXPORT*/ PixelFormat {
     //Uncompressed RGB Formats
     RGB1,           /* RGB, 1 bit per pixel (bpp), palettized*/
     RGB4,           /* RGB, 4 bpp, palettized*/

@@ -6,7 +6,7 @@
 
 #include <pixel_format.h>
 
-#include <webcam_capture_export.h>
+//#include <webcam_capture_export.h>
 
 #include <vector>
 
@@ -15,7 +15,7 @@ namespace webcam_capture {
 /**
  * Provides FPS supported by the camera for some resolution and pixel format.
  */
-class WEBCAM_CAPTURE_EXPORT CapabilityFps
+class /*WEBCAM_CAPTURE_EXPORT*/ CapabilityFps
 {
 public:
     CapabilityFps(float fps) :
@@ -40,7 +40,7 @@ private:
  * Provides resolution (width and height) supported by the camera for some pixel format,
  * along with a list of supported FPS values for that resolution.
  */
-class WEBCAM_CAPTURE_EXPORT CapabilityResolution
+class /*WEBCAM_CAPTURE_EXPORT*/ CapabilityResolution
 {
 public:
     CapabilityResolution(int width, int height, std::vector<CapabilityFps> fpses) :
@@ -85,7 +85,7 @@ private:
  * Provides pixel format supported by the camera,
  * along with a list of supported resolutions for that pixel format.
  */
-class WEBCAM_CAPTURE_EXPORT CapabilityFormat
+class /*WEBCAM_CAPTURE_EXPORT*/ CapabilityFormat
 {
 public:
     CapabilityFormat(PixelFormat pixelFormat, std::vector<CapabilityResolution> resolutions):

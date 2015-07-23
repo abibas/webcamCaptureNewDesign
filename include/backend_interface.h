@@ -4,7 +4,7 @@
 #include <camera_information.h>
 #include <backend_implementation.h>
 
-#include <webcam_capture_export.h>
+//#include <webcam_capture_export.h>
 
 #include <functional>
 #include <memory>
@@ -14,7 +14,7 @@ namespace webcam_capture {
 
 class CameraInterface;
 
-enum class WEBCAM_CAPTURE_EXPORT CameraConnectionStatus {
+enum class /*WEBCAM_CAPTURE_EXPORT*/ CameraConnectionStatus {
     Connected, // camera was connected to the system and it's available for use
     Disconnected // camera was disconnected from the system and you should stop using it
 };
@@ -25,7 +25,7 @@ typedef std::function<void(CameraInformation information, CameraConnectionStatus
  * Common interface of backend implementations.
  * Provides access to cameras and information of their availability.
  */
-class WEBCAM_CAPTURE_EXPORT BackendInterface
+class /*WEBCAM_CAPTURE_EXPORT*/ BackendInterface
 {
 public:
     BackendInterface(BackendImplementation implementation) : implementation(implementation) {}

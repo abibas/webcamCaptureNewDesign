@@ -21,7 +21,7 @@ public:
 
 private slots:
     void on_captureVideoBtb_clicked();
-    std::string CameraForm::formatToString(PixelFormat format);
+    std::string formatToString(PixelFormat format);
     void fillCameraCapabilitiesCB();
     void fillVideoPropertySettings();
 

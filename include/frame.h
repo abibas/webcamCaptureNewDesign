@@ -9,15 +9,20 @@
 
 #include <pixel_format.h>
 
-#include <webcam_capture_export.h>
+//#include <webcam_capture_export.h>
 
-#include <cstdint>
+#ifdef __APPLE__
+    typedef uint8_t __u8;
+#elif _WIN32
+    #include <cstdint>
+#endif
+
 
 namespace webcam_capture {
 /**
  *  Provides video frame data.
  */
-struct WEBCAM_CAPTURE_EXPORT Frame {
+struct /*WEBCAM_CAPTURE_EXPORT*/ Frame {
     /**
      * @param w Sets the width of the frame.
      * @param h Sets the height of the frame.

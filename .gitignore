@@ -2,3 +2,4 @@ build/*
 test_app/*.pro.user
 *.autosave
 CMakeLists.txt.user
+/.project

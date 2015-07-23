@@ -1,13 +1,13 @@
 #ifndef VIDEO_PROPERTY_RANGE_H
 #define VIDEO_PROPERTY_RANGE_H
 
-#include <webcam_capture_export.h>
+//#include <webcam_capture_export.h>
 
 namespace webcam_capture {
 /**
  * Provides range information of a video property.
  */
-class WEBCAM_CAPTURE_EXPORT VideoPropertyRange
+class /*WEBCAM_CAPTURE_EXPORT*/ VideoPropertyRange
 {
 public:
     VideoPropertyRange():

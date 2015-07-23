@@ -1,7 +1,7 @@
 #ifndef CAMERA_INFORMATION_H
 #define CAMERA_INFORMATION_H
 
-#include <webcam_capture_export.h>
+//#include <webcam_capture_export.h>
 
 #include <memory>
 #include <string>
@@ -13,7 +13,7 @@ class UniqueId;
 /**
  * Provides a brief description of a camera.
  */
-class WEBCAM_CAPTURE_EXPORT CameraInformation
+class /*WEBCAM_CAPTURE_EXPORT*/ CameraInformation
 {
 public:
     CameraInformation(std::shared_ptr<UniqueId> uniqueId, std::string cameraName) : uniqueId(uniqueId),

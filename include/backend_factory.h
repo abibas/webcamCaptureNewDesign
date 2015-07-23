@@ -2,8 +2,9 @@
 #define BACKEND_FACTORY_H
 
 #include <backend_implementation.h>
+#include <backend_interface.h>
 
-#include <webcam_capture_export.h>
+//#include <webcam_capture_export.h>
 
 #include <memory>
 #include <vector>
@@ -15,7 +16,7 @@ class BackendInterface;
 /**
  * Provides access to backends and information of their availability.
  */
-class WEBCAM_CAPTURE_EXPORT BackendFactory
+class /*WEBCAM_CAPTURE_EXPORT*/ BackendFactory
 {
 public:
     /**
