@@ -19,7 +19,8 @@ SOURCES += \
     test_app/videoform.cpp \
     src/backend_factory.cpp \
     src/capability_tree_builder.cpp \
-    src/unique_id.cpp
+    src/unique_id.cpp \
+    src/av_foundation/av_foundation_backend.cpp
 
 HEADERS  += \
     include/backend_factory.h \
@@ -38,7 +39,10 @@ HEADERS  += \
     test_app/mainwindow.h \
     test_app/videoform.h \
     src/capability_tree_builder.h \
-    src/utils.h
+    src/utils.h \
+    src/av_foundation/av_foundation_backend.h \
+    src/av_foundation/av_foundation_implementation.h \
+    src/av_foundation/av_foundation_interface.h
 
 FORMS    += \
     test_app/cameraform.ui \
@@ -48,6 +52,17 @@ FORMS    += \
 INCLUDEPATH += ./include \
 
 QMAKE_CXXFLAGS += -std=c++11 \
+                  -std=c++1y \
                   -stdlib=libc++ \
 
-DEFINES += WEBCAM_CAPTURE_BACKEND_AV_FOUNDATION
+DEFINES += WEBCAM_CAPTURE_BACKEND_AV_FOUNDATION \
+           WEBCAM_CAPTURE_DEBUG
+
+OBJECTIVE_SOURCES += \
+    src/av_foundation/av_foundation_implementation.mm
+
+LIBS += -framework CoreFoundation
+LIBS += -framework AVFoundation
+LIBS += -framework Cocoa
+LIBS += -framework CoreVideo
+LIBS += -framework CoreMedia

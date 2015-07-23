@@ -9,7 +9,7 @@
 #endif
 
 #ifdef WEBCAM_CAPTURE_BACKEND_AV_FOUNDATION
-//
+#include "../src/av_foundation/av_foundation_backend.h"
 #endif
 
 #ifdef V4L
@@ -46,10 +46,10 @@ std::unique_ptr<BackendInterface> BackendFactory::getBackend(BackendImplementati
 
 #endif
 
-#ifdef AV_FOUNDATION
+#ifdef WEBCAM_CAPTURE_BACKEND_AV_FOUNDATION
 
         case BackendImplementation::AVFoundation : {
-            return std::make_unique<AV_Foundation_Backend>();
+            return std::make_unique<AVFoundation_Backend>();
         }
 
 #endif
@@ -75,7 +75,7 @@ std::vector<BackendImplementation> BackendFactory::getAvailableBackends()
         BackendImplementation::v4l,
 #endif
 
-#ifdef AV_FOUNDATION
+#ifdef WEBCAM_CAPTURE_BACKEND_AV_FOUNDATION
         BackendImplementation::AVFoundation,
 #endif
 
