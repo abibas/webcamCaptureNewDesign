@@ -12,12 +12,12 @@ UniqueId::~UniqueId()
     //empty
 }
 
-bool UniqueId::operator==(const UniqueId &other)
+bool UniqueId::operator==(const UniqueId &other) const
 {
     return equals(other);
 }
 
-bool UniqueId::operator!=(const UniqueId &other)
+bool UniqueId::operator!=(const UniqueId &other) const
 {
     return !equals(other);
 }

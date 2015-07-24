@@ -283,7 +283,7 @@ int DirectShow_Camera::stop()
     return 1;   //TODO Err code
 }
 
-std::unique_ptr<Frame> DirectShow_Camera::CaptureFrame()
+std::unique_ptr<Frame> DirectShow_Camera::captureFrame()
 {
     //TODO to realise method
     return nullptr;
@@ -617,7 +617,7 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
 
 
 /******** SDK FUNCTIONS ******/
-IMoniker* DirectShow_Camera::getIMonikerByUniqueId(std::shared_ptr<UniqueId> &uniqueId)
+IMoniker* DirectShow_Camera::getIMonikerByUniqueId(const std::shared_ptr<UniqueId> &uniqueId)
 {
     IEnumMoniker *pEnum;
     ICreateDevEnum *pDevEnum;

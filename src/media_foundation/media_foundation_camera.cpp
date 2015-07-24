@@ -159,7 +159,7 @@ int MediaFoundation_Camera::stop()
     return 1;   //TODO Err code
 }
 
-std::unique_ptr<Frame> MediaFoundation_Camera::CaptureFrame()
+std::unique_ptr<Frame> MediaFoundation_Camera::captureFrame()
 {
     //TODO to realise method
     return nullptr;

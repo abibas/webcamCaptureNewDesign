@@ -102,7 +102,7 @@ WinapiShared_CameraNotifications::~WinapiShared_CameraNotifications()
     stop();
 }
 
-bool WinapiShared_CameraNotifications::start(ConnectionStatusCallback cb)
+bool WinapiShared_CameraNotifications::start(CameraConnectionStateCallback cb)
 {
     if (threadIsRunning) {
         return false;
@@ -217,7 +217,7 @@ void WinapiShared_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr)
 
     for (int i = 0; i < devicesVector.size(); i++) {
         if (uniqId == *devicesVector.at(i).getUniqueId()) {
-            notif_cb(devicesVector.at(i), CameraConnectionStatus::Disconnected);
+            notif_cb(devicesVector.at(i), CameraConnectionState::Disconnected);
             devicesVector.erase(devicesVector.begin() + i);
             break;
         }
@@ -247,7 +247,7 @@ void WinapiShared_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHd
 
     for (auto&& cameraInfo : camerasBuf) {
         if (*cameraInfo.getUniqueId() == uniqId) {
-            notif_cb(cameraInfo, CameraConnectionStatus::Connected);
+            notif_cb(cameraInfo, CameraConnectionState::Connected);
             devicesVector.push_back(cameraInfo);
             break;
         }

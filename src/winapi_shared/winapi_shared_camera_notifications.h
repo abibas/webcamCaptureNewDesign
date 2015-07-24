@@ -23,7 +23,7 @@ public:
      * @param Callback to call when device state changes.
      * @return true on success, false if already running (was previously stated but wasn't stopped).
      */
-    bool start(ConnectionStatusCallback cb);
+    bool start(CameraConnectionStateCallback cb);
 
     /**
      * Stops listening for device state change events.
@@ -51,7 +51,7 @@ private:
     HWND messageWindow;
 
     bool threadIsRunning;
-    ConnectionStatusCallback notif_cb;    //TODO to make threads synchronization
+    CameraConnectionStateCallback notif_cb;    //TODO to make threads synchronization
     std::thread messageLoopThread;
 };
 }

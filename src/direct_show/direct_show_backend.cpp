@@ -98,7 +98,7 @@ std::unique_ptr<CameraInterface> DirectShow_Backend::getCamera(const CameraInfor
     return DirectShow_Camera::createCamera(mfDeinitializer, information);
 }
 
-int DirectShow_Backend::setAvaliableCamerasChangedCallback(ConnectionStatusCallback callback)
+int DirectShow_Backend::setCameraConnectionStateCallback(CameraConnectionStateCallback callback)
 {
     //IF n_callback is null_ptr or n_callback function is empty
     if (!callback) {

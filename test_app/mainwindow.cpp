@@ -109,11 +109,11 @@ void MainWindow::on_deleteBackendBtn_clicked()
     backend.reset();
 }
 
-void MainWindow::CameraEventCaptureCallback(CameraInformation information, CameraConnectionStatus status)
+void MainWindow::CameraEventCaptureCallback(CameraInformation information, CameraConnectionState status)
 {
-    if (status == CameraConnectionStatus::Connected) {
+    if (status == CameraConnectionState::Connected) {
         cameraInfoList.push_back(information);
-    } else if (status == CameraConnectionStatus::Disconnected) {
+    } else if (status == CameraConnectionState::Disconnected) {
         for (int i = 0; i < cameraInfoList.size(); i++) {
             if (*information.getUniqueId() == *cameraInfoList.at(i).getUniqueId() &&
                     information.getCameraName() == cameraInfoList.at(i).getCameraName()) {
@@ -128,10 +128,10 @@ void MainWindow::CameraEventCaptureCallback(CameraInformation information, Camer
 
 void MainWindow::on_stopNotificationsButton_clicked()
 {
-    backend->setAvaliableCamerasChangedCallback(nullptr); //deinit notifications callback
+    backend->setCameraConnectionStateCallback(nullptr); //deinit notifications callback
 }
 
 void MainWindow::on_startNotificationsButton_clicked()
 {
-    backend->setAvaliableCamerasChangedCallback(std::bind(&MainWindow::CameraEventCaptureCallback, this, _1, _2));
+    backend->setCameraConnectionStateCallback(std::bind(&MainWindow::CameraEventCaptureCallback, this, _1, _2));
 }

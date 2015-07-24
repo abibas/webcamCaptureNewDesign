@@ -30,7 +30,7 @@ public:
 
     int start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb);
     int stop();
-    std::unique_ptr<Frame> CaptureFrame();
+    std::unique_ptr<Frame> captureFrame();
     // ---- Capabilities ----
     bool getPropertyRange(VideoProperty property, VideoPropertyRange &videoPropRange);
     int getProperty(VideoProperty property);
@@ -41,7 +41,7 @@ private:
     DirectShow_Camera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
 
     /***** SDK FUNCTIONS *****/
-    IMoniker* getIMonikerByUniqueId(std::shared_ptr<UniqueId> &uniqueId);    
+    IMoniker* getIMonikerByUniqueId(const std::shared_ptr<UniqueId> &uniqueId);
     int setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pBaseFilter, PixelFormat pixelFormat, int width, int height, float fps);
 
 public:

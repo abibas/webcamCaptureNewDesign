@@ -14,12 +14,12 @@ namespace webcam_capture {
 
 class CameraInterface;
 
-enum class WEBCAM_CAPTURE_EXPORT CameraConnectionStatus {
+enum class WEBCAM_CAPTURE_EXPORT CameraConnectionState {
     Connected, // camera was connected to the system and it's available for use
     Disconnected // camera was disconnected from the system and you should stop using it
 };
 
-typedef std::function<void(CameraInformation information, CameraConnectionStatus status)> ConnectionStatusCallback;
+typedef std::function<void(CameraInformation information, CameraConnectionState state)> CameraConnectionStateCallback;
 
 /**
  * Common interface of backend implementations.
@@ -47,7 +47,8 @@ public:
     /**
      * Creates a camera instance representing a specific camera.
      * Camera instance will function properly with its backend instance deleted.
-     * Backend and camera instances should be created in the same thread and can be used only within the thread.
+     * Backend and camera instances should be created in the same thread and can be used only within that thread.
+     * If you use them in different threads, the behaviour is undefined.
      * @param information Previously received camera information for the camera you want to access.
      * @return CameraInterface instance representing a specific camera on success, null on failure.
      */
@@ -57,10 +58,11 @@ public:
      * Sets a callback function that is be called when a camera is connected/disconencted to/from the system.
      * You can use the UniqueId member of CameraInformation for comparison against your camera instances in order
      * to check if any of them was removed from the system.
-     * @param callback Callback function.
+     * @param callback Callback function. Use nullptr or a default-constructed ConnectionStateCallback to unset
+     * the previously set callback function.
      * @return FIXME(nurupo): the return value should be wither an enum or bool.
      */
-    virtual int setAvaliableCamerasChangedCallback(ConnectionStatusCallback callback) = 0;
+    virtual int setCameraConnectionStateCallback(CameraConnectionStateCallback callback) = 0;
 
 protected:
     const BackendImplementation implementation;
