@@ -16,14 +16,14 @@ class UniqueId;
 class /*WEBCAM_CAPTURE_EXPORT*/ CameraInformation
 {
 public:
-    CameraInformation(std::shared_ptr<UniqueId> uniqueId, std::string cameraName) : uniqueId(uniqueId),
+    CameraInformation(UniqueId *uniqueId, std::string cameraName) : uniqueId(uniqueId),
         cameraName(cameraName) {}
     ~CameraInformation() {}
 
     /**
      * @return Unique camera id identifying a camera.
      */
-    std::shared_ptr<UniqueId> getUniqueId() const
+    UniqueId* getUniqueId() const
     {
         return uniqueId;
     }
@@ -38,7 +38,7 @@ public:
 
 private:
     std::string cameraName;
-    std::shared_ptr<UniqueId> uniqueId;
+    UniqueId *uniqueId;
 };
 
 } // namespace webcam_capture

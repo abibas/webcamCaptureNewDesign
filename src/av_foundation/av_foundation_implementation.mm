@@ -1,5 +1,7 @@
 /* -*-C-*- */
 #import "av_foundation_implementation.h"
+#include "av_foundation_unique_id.h"
+#include <backend_implementation.h>
 
 @implementation AVFoundation_Implementation 
 
@@ -37,17 +39,23 @@
 
   
 // Get a list with all devices
-- (int) getDevices: (std::vector<webcam_capture::CameraInformation>&) result {
++ (int) getDevices: (std::vector<webcam_capture::CameraInformation>&) result {
 
-  int index = 0;
   NSArray* devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
 
   for(AVCaptureDevice* dev in devices) {
-    webcam_capture::CameraInformation found_device(nullptr, "aazaza");
-    int in = index;
+
     std::string name = [[dev localizedName] UTF8String];
+    std::string symbolicLink = [[dev uniqueID] UTF8String];
+
+    //TODO error - can't do "make_shared"
+//    std::shared_ptr<webcam_capture::AVFoundation_UniqueId> uniqueId =
+//            std::make_shared<webcam_capture::AVFoundation_UniqueId>(symbolicLink);
+
+    webcam_capture::AVFoundation_UniqueId *uniqueId =
+            new webcam_capture::AVFoundation_UniqueId(symbolicLink);
+    webcam_capture::CameraInformation found_device(uniqueId, name);
     result.push_back(found_device);
-    ++index;
   }
     
   return (int) result.size();
@@ -67,7 +75,7 @@ void webcam_capture_av_dealloc(void* cap) {
 }
 
 int webcam_capture_av_get_devices(std::vector<webcam_capture::CameraInformation>& result) {
-  return [(id)cap getDevices:result];
+  return [AVFoundation_Implementation getDevices:result];
 }
 
 @end
