@@ -31,7 +31,7 @@ MediaFoundation_Backend::MediaFoundation_Backend() :
     HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error: failed to initialize COM, code: " << std::hex << hr << "\n");
+        DEBUG_PRINT_HR_ERROR("Failed to initialize COM.", hr);
 
         // let RPC_E_CHANGED_MODE pass
         if (hr != RPC_E_CHANGED_MODE) {
@@ -53,7 +53,7 @@ MediaFoundation_Backend::MediaFoundation_Backend() :
                                                                std::placeholders::_1, deinitializeCom));
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error: failed to start Media Foundation, code: " << std::hex << hr << "\n");
+        DEBUG_PRINT_HR_ERROR("Failed to start Media Foundation.", hr);
         // TODO(nurupo): fatal error
     }
 }
@@ -64,7 +64,7 @@ void MediaFoundation_Backend::DeinitBackend(void *, bool deinitializeCom)
     HRESULT hr = MFShutdown();
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error: failed to shutdown the MediaFoundation.\n");
+        DEBUG_PRINT_HR_ERROR("Failed to shutdown the MediaFoundation.", hr);
     }
 
     /* Shutdown COM */

@@ -3,9 +3,9 @@
 
 #ifdef WEBCAM_CAPTURE_DEBUG
 #include <iostream>
-#define DEBUG_PRINT(x) std::cerr << x << std::endl << std::flush
+#define DEBUG_PRINT(msg) std::cerr << msg << std::endl << std::flush
 #else
-#define DEBUG_PRINT(x)
+#define DEBUG_PRINT(msg)
 #endif
 
 #define FPS_FROM_RATIONAL(x, y) (static_cast<float>(x)/(y))

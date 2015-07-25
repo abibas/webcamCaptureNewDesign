@@ -20,6 +20,13 @@
 #include <string>
 
 #include <pixel_format.h>
+#include "../utils.h"
+
+#ifdef WEBCAM_CAPTURE_DEBUG
+#define DEBUG_PRINT_HR_ERROR(msg, hr) DEBUG_PRINT("Error: " << msg << " Error code: " << std::hex << hr << ".")
+#else
+#define DEBUG_PRINT_HR_ERROR(msg, hr) DEBUG_PRINT(msg)
+#endif
 
 namespace webcam_capture {
 
