@@ -46,14 +46,14 @@
   for(AVCaptureDevice* dev in devices) {
 
     std::string name = [[dev localizedName] UTF8String];
-    std::string symbolicLink = [[dev uniqueID] UTF8String];
+    std::string uniqueIdLink = [[dev uniqueID] UTF8String];
 
-    //TODO error - can't do "make_shared"
+    //TODO fix error - can't do "make_shared"
 //    std::shared_ptr<webcam_capture::AVFoundation_UniqueId> uniqueId =
-//            std::make_shared<webcam_capture::AVFoundation_UniqueId>(symbolicLink);
+//            std::make_shared<webcam_capture::AVFoundation_UniqueId>(uniqueIdLink);
 
     webcam_capture::AVFoundation_UniqueId *uniqueId =
-            new webcam_capture::AVFoundation_UniqueId(symbolicLink);
+            new webcam_capture::AVFoundation_UniqueId(uniqueIdLink);
     webcam_capture::CameraInformation found_device(uniqueId, name);
     result.push_back(found_device);
   }
