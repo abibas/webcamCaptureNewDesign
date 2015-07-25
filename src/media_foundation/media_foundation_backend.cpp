@@ -23,27 +23,42 @@
 
 namespace webcam_capture {
 
-MediaFoundation_Backend::MediaFoundation_Backend()
-    : BackendInterface(BackendImplementation::MediaFoundation),
-      mfDeinitializer(this, MediaFoundation_Backend::DeinitBackend),
-      notificationManager(BackendImplementation::MediaFoundation)
+MediaFoundation_Backend::MediaFoundation_Backend() :
+    BackendInterface(BackendImplementation::MediaFoundation),
+    notificationManager(BackendImplementation::MediaFoundation)
 {
     // Initialize COM
     HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot intialize COM.\n");  //or The COM is already initialized.
+        DEBUG_PRINT("Error: failed to initialize COM, code: " << std::hex << hr << "\n");
+
+        // let RPC_E_CHANGED_MODE pass
+        if (hr != RPC_E_CHANGED_MODE) {
+            // TODO(nurupo): fatal error
+        }
     }
+
+    // "To close the COM library gracefully on a thread, each successful call to CoInitialize or CoInitializeEx,
+    // including any call that returns S_FALSE, must be balanced by a corresponding call to CoUninitialize." --msdn
+    bool deinitializeCom = hr == S_OK || hr == S_FALSE;
 
     // Initialize MediaFoundation
     hr = MFStartup(MF_VERSION);
 
+    // "Before your application quits, call MFShutdown once for every previous call to MFStartup." --msdn
+    // so assuming we need to shutdown it even on failures, thus no conditionals like `deinitializeCom`
+
+    mfDeinitializer = std::shared_ptr<void>(nullptr, std::bind(&MediaFoundation_Backend::DeinitBackend,
+                                                               std::placeholders::_1, deinitializeCom));
+
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot start the Media Foundation.\n");
+        DEBUG_PRINT("Error: failed to start Media Foundation, code: " << std::hex << hr << "\n");
+        // TODO(nurupo): fatal error
     }
 }
 
-void MediaFoundation_Backend::DeinitBackend(void *)
+void MediaFoundation_Backend::DeinitBackend(void *, bool deinitializeCom)
 {
     /* Shutdown MediaFoundation */
     HRESULT hr = MFShutdown();
@@ -53,7 +68,9 @@ void MediaFoundation_Backend::DeinitBackend(void *)
     }
 
     /* Shutdown COM */
-    CoUninitialize();
+    if (deinitializeCom) {
+        CoUninitialize();
+    }
     DEBUG_PRINT("MediaFoundation_Backend Successfully deinited.\n");
 }
 

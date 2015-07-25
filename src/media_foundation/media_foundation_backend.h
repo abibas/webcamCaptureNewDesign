@@ -16,7 +16,7 @@ class MediaFoundation_Backend : public BackendInterface
 {
 public:
     MediaFoundation_Backend();
-    static void DeinitBackend(void *);
+    static void DeinitBackend(void *, bool deinitializeCom);
     std::vector<CameraInformation> getAvailableCameras() const;
     std::unique_ptr<CameraInterface> getCamera(const CameraInformation &information) const;
     int setCameraConnectionStateCallback(CameraConnectionStateCallback callback);
