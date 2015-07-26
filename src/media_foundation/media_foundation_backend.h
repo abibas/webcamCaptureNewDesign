@@ -15,13 +15,19 @@ namespace webcam_capture {
 class MediaFoundation_Backend : public BackendInterface
 {
 public:
-    MediaFoundation_Backend();
+    /**
+     * Factory method because initialization might fail.
+     * @return BackendInterface pointer on success, null on failure.
+     */
+    static std::unique_ptr<BackendInterface> create();
     static void DeinitBackend(void *, bool deinitializeCom);
     std::vector<CameraInformation> getAvailableCameras() const;
     std::unique_ptr<CameraInterface> getCamera(const CameraInformation &information) const;
     int setCameraConnectionStateCallback(CameraConnectionStateCallback callback);
 
 private:
+    MediaFoundation_Backend(std::shared_ptr<void> &deinitializer);
+
     std::shared_ptr<void> mfDeinitializer;
     WinapiShared_CameraNotifications notificationManager;
 };

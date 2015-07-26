@@ -23,7 +23,7 @@ std::unique_ptr<BackendInterface> BackendFactory::getBackend(BackendImplementati
 #ifdef WEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION
 
         case BackendImplementation::MediaFoundation: {
-            return std::make_unique<MediaFoundation_Backend>();
+            return MediaFoundation_Backend::create();
         }
 
 #endif

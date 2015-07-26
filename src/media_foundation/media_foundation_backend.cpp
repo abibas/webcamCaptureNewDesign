@@ -23,9 +23,15 @@
 
 namespace webcam_capture {
 
-MediaFoundation_Backend::MediaFoundation_Backend() :
+MediaFoundation_Backend::MediaFoundation_Backend(std::shared_ptr<void> &deinitializer) :
     BackendInterface(BackendImplementation::MediaFoundation),
+    mfDeinitializer(deinitializer),
     notificationManager(BackendImplementation::MediaFoundation)
+{
+  // empty
+}
+
+std::unique_ptr<BackendInterface> MediaFoundation_Backend::create()
 {
     // Initialize COM
     HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
@@ -35,7 +41,7 @@ MediaFoundation_Backend::MediaFoundation_Backend() :
 
         // let RPC_E_CHANGED_MODE pass
         if (hr != RPC_E_CHANGED_MODE) {
-            // TODO(nurupo): fatal error
+            return nullptr;
         }
     }
 
@@ -49,13 +55,16 @@ MediaFoundation_Backend::MediaFoundation_Backend() :
     // "Before your application quits, call MFShutdown once for every previous call to MFStartup." --msdn
     // so assuming we need to shutdown it even on failures, thus no conditionals like `deinitializeCom`
 
-    mfDeinitializer = std::shared_ptr<void>(nullptr, std::bind(&MediaFoundation_Backend::DeinitBackend,
-                                                               std::placeholders::_1, deinitializeCom));
+    std::shared_ptr<void> deinitializer = std::shared_ptr<void>(nullptr,
+                                                                std::bind(&MediaFoundation_Backend::DeinitBackend,
+                                                                          std::placeholders::_1, deinitializeCom));
 
     if (FAILED(hr)) {
         DEBUG_PRINT_HR_ERROR("Failed to start Media Foundation.", hr);
-        // TODO(nurupo): fatal error
+        return nullptr;
     }
+
+    return std::unique_ptr<BackendInterface>(new MediaFoundation_Backend(deinitializer));
 }
 
 void MediaFoundation_Backend::DeinitBackend(void *, bool deinitializeCom)
