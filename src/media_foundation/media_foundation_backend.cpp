@@ -151,7 +151,7 @@ done:
 
 std::unique_ptr<webcam_capture::CameraInterface> MediaFoundation_Backend::getCamera(const CameraInformation &information) const
 {
-    return MediaFoundation_Camera::createCamera(mfDeinitializer, information);
+    return MediaFoundation_Camera::create(mfDeinitializer, information);
 }
 
 int MediaFoundation_Backend::setCameraConnectionStateCallback(CameraConnectionStateCallback callback)

@@ -16,7 +16,7 @@ MediaFoundation_Camera::MediaFoundation_Camera(std::shared_ptr<void> mfDeinitial
 
 }
 
-std::unique_ptr<CameraInterface> MediaFoundation_Camera::createCamera(std::shared_ptr<void> mfDeinitializer,
+std::unique_ptr<CameraInterface> MediaFoundation_Camera::create(std::shared_ptr<void> mfDeinitializer,
         const CameraInformation &information)
 {
     IMFMediaSource *mediaSource = NULL;
