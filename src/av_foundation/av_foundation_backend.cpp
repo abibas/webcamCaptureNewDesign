@@ -1,7 +1,7 @@
 #include "av_foundation_backend.h"
 #include "av_foundation_camera.h"
 #include "../utils.h"
-
+#include "av_foundation_unique_id.h"
 //#include "av_foundation_utils.h"
 
 #include <string>
@@ -21,8 +21,15 @@ void AVFoundation_Backend::DeinitBackend(void *)
 
 std::vector<CameraInformation> AVFoundation_Backend::getAvailableCameras() const
 {
+    std::vector<AVFoundationDeviceInfo> devicesInfo;
+    webcam_capture_av_get_devices(devicesInfo);
     std::vector<CameraInformation> result;
-    webcam_capture_av_get_devices(result);
+    for (int i = 0; i < devicesInfo.size(); i++) {
+        std::shared_ptr<webcam_capture::AVFoundation_UniqueId> uniqueId =
+                std::make_shared<webcam_capture::AVFoundation_UniqueId>(devicesInfo.at(i).deviceId);
+        CameraInformation found_device(uniqueId, devicesInfo.at(i).deviceName);
+        result.push_back(found_device);
+    }
     return result;
 }
 

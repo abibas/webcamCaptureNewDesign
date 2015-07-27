@@ -13,8 +13,8 @@ AVFoundation_Camera::AVFoundation_Camera(std::shared_ptr<void> mfDeinitializer,
     , state(CA_STATE_NONE)
     , avFoundationInterface(NULL)
 {
-    AVFoundation_UniqueId * avUniqId = (AVFoundation_UniqueId*) information.getUniqueId();
-    avFoundationInterface = webcam_capture_av_alloc(avUniqId->getId());
+    const std::string& deviceUniqueId = static_cast<AVFoundation_UniqueId *>(information.getUniqueId().get())->getId();
+    avFoundationInterface = webcam_capture_av_alloc(deviceUniqueId);
     if(!avFoundationInterface) {
         DEBUG_PRINT("Error: cannot create AVFoundation_Interface objective-c object.\n");
     }
@@ -81,14 +81,16 @@ std::unique_ptr<Frame> AVFoundation_Camera::CaptureFrame()
 // ---- Capabilities ----
 std::vector<CapabilityFormat> AVFoundation_Camera::getCapabilities()
 {
-    std::vector<AVCapabilityInfo> avCapInfos;
-    webcam_capture_av_get_capabilities(avFoundationInterface, avCapInfos);
+    std::vector<AVFoundationCapability> avFrameworkCaps;
+    webcam_capture_av_get_capabilities(avFoundationInterface, avFrameworkCaps);
     CapabilityTreeBuilder capabilityBuilder;
-    for (int i = 0; i < avCapInfos.size(); i++) {
-        capabilityBuilder.addCapability(avCapInfos.at(i).pixFormat,
-                                    avCapInfos.at(i).width,
-                                    avCapInfos.at(i).height,
-                                    {avCapInfos.at(i).minFps, avCapInfos.at(i).maxFps, avCapInfos.at(i).maxFps});
+    for (int i = 0; i < avFrameworkCaps.size(); i++) {
+        capabilityBuilder.addCapability(avFrameworkCaps.at(i).pixFormat,
+                                    avFrameworkCaps.at(i).width,
+                                    avFrameworkCaps.at(i).height,
+                                    {avFrameworkCaps.at(i).minFps,
+                                     avFrameworkCaps.at(i).maxFps,
+                                     avFrameworkCaps.at(i).maxFps});
     }
     return capabilityBuilder.build();
 }

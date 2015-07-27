@@ -43,5 +43,5 @@
 - (id) init: (std::string) deviceId;                                                                                   /* Initialize the AVImplementation object. */
 - (void) dealloc;                                                                              /* Deallocate all objects that we retained. */
 - (int) getDevices: (std::vector<webcam_capture::CameraInformation>&) result;                                         /* Get a list with all the found capture devices. */
-- (int) getCapabilities: (std::vector<webcam_capture::AVCapabilityInfo>&) result;
+- (int) getCapabilities: (std::vector<webcam_capture::AVFoundationCapability>&) result;
 @end
