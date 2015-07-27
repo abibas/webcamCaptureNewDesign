@@ -22,7 +22,8 @@ SOURCES += \
     src/unique_id.cpp \
     src/av_foundation/av_foundation_backend.cpp \
     src/av_foundation/av_foundation_unique_id.cpp \
-    src/av_foundation/av_foundation_camera.cpp
+    src/av_foundation/av_foundation_camera.cpp \
+    src/av_foundation/av_foundation_utils.cpp
 
 HEADERS  += \
     include/backend_factory.h \
@@ -46,7 +47,8 @@ HEADERS  += \
     src/av_foundation/av_foundation_implementation.h \
     src/av_foundation/av_foundation_interface.h \
     src/av_foundation/av_foundation_unique_id.h \
-    src/av_foundation/av_foundation_camera.h
+    src/av_foundation/av_foundation_camera.h \
+    src/av_foundation/av_foundation_utils.h
 
 FORMS    += \
     test_app/cameraform.ui \

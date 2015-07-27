@@ -200,6 +200,24 @@ std::string  CameraForm::formatToString(PixelFormat format)
         case PixelFormat::RGB32:
             return "RGB32";
 
+        case PixelFormat::BGRA32:
+            return "BGRA32";
+
+        case PixelFormat::BE16_555:
+            return "16BE565";
+
+        case PixelFormat::BE16_565:
+            return "16BE565";
+
+        case PixelFormat::LE16_555:
+            return "16LE555";
+
+        case PixelFormat::LE16_565:
+            return "16LE565";
+
+        case PixelFormat::LE16_5551:
+            return "16LE5551";
+
         case PixelFormat::ARGB32:
             return "ARGB32";
 
@@ -224,6 +242,9 @@ std::string  CameraForm::formatToString(PixelFormat format)
 
         case PixelFormat::UYVY:
             return "UYVY";
+
+        case PixelFormat::YUYV:
+            return "YUYV";
 
         case PixelFormat::Y41P:
             return "Y41P";
@@ -259,6 +280,15 @@ std::string  CameraForm::formatToString(PixelFormat format)
 
         case PixelFormat::v216:
             return "v216";
+
+        case PixelFormat::v308:
+            return "v308";
+
+        case PixelFormat::v408:
+            return "v408";
+
+        case PixelFormat::v410:
+            return "v410";
 
         case PixelFormat::v40:
             return "v40";
@@ -354,6 +384,8 @@ std::string  CameraForm::formatToString(PixelFormat format)
         case PixelFormat::O420:
             return "420O";
 
+        case PixelFormat::dmb1:
+            return "dmb1";
         default:
             return "Unknown format";
     }

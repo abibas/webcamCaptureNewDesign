@@ -2,7 +2,6 @@
 #include "av_foundation_camera.h"
 #include "../utils.h"
 
-//#include "av_foundation_camera.h"
 //#include "av_foundation_utils.h"
 
 #include <string>

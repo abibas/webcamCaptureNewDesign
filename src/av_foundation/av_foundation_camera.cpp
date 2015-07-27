@@ -2,6 +2,7 @@
 #include "av_foundation_camera.h"
 #include "av_foundation_interface.h"
 #include "av_foundation_unique_id.h"
+#include "../capability_tree_builder.h"
 
 namespace webcam_capture {
 
@@ -80,9 +81,16 @@ std::unique_ptr<Frame> AVFoundation_Camera::CaptureFrame()
 // ---- Capabilities ----
 std::vector<CapabilityFormat> AVFoundation_Camera::getCapabilities()
 {
-    std::vector<CapabilityFormat> caps;
-    //webcam_capture_av_get_capabilities(avFoundationInterface, device, caps);
-    return caps;
+    std::vector<AVCapabilityInfo> avCapInfos;
+    webcam_capture_av_get_capabilities(avFoundationInterface, avCapInfos);
+    CapabilityTreeBuilder capabilityBuilder;
+    for (int i = 0; i < avCapInfos.size(); i++) {
+        capabilityBuilder.addCapability(avCapInfos.at(i).pixFormat,
+                                    avCapInfos.at(i).width,
+                                    avCapInfos.at(i).height,
+                                    {avCapInfos.at(i).minFps, avCapInfos.at(i).maxFps, avCapInfos.at(i).maxFps});
+    }
+    return capabilityBuilder.build();
 }
 
 
@@ -106,4 +114,6 @@ bool AVFoundation_Camera::setProperty(const VideoProperty property, const int va
 {
     return true;
 }
+
+
 } // namespace webcam_capture

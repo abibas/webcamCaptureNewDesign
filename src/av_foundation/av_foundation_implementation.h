@@ -21,7 +21,7 @@
 #include <camera_information.h>
 #include <frame.h>
 #include <camera_interface.h>
-
+#include "av_foundation_utils.h"
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 
@@ -43,5 +43,5 @@
 - (id) init: (std::string) deviceId;                                                                                   /* Initialize the AVImplementation object. */
 - (void) dealloc;                                                                              /* Deallocate all objects that we retained. */
 - (int) getDevices: (std::vector<webcam_capture::CameraInformation>&) result;                                         /* Get a list with all the found capture devices. */
-
+- (int) getCapabilities: (std::vector<webcam_capture::AVCapabilityInfo>&) result;
 @end
