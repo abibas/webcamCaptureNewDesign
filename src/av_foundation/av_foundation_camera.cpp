@@ -1,6 +1,7 @@
 #include "../capability_tree_builder.h"
 #include "av_foundation_camera.h"
 #include "av_foundation_interface.h"
+#include "av_foundation_unique_id.h"
 
 namespace webcam_capture {
 
@@ -11,7 +12,8 @@ AVFoundation_Camera::AVFoundation_Camera(std::shared_ptr<void> mfDeinitializer,
     , state(CA_STATE_NONE)
     , avFoundationInterface(NULL)
 {
-    avFoundationInterface = webcam_capture_av_alloc();
+    AVFoundation_UniqueId * avUniqId = (AVFoundation_UniqueId*) information.getUniqueId();
+    avFoundationInterface = webcam_capture_av_alloc(avUniqId->getId());
     if(!avFoundationInterface) {
         DEBUG_PRINT("Error: cannot create AVFoundation_Interface objective-c object.\n");
     }
@@ -78,9 +80,9 @@ std::unique_ptr<Frame> AVFoundation_Camera::CaptureFrame()
 // ---- Capabilities ----
 std::vector<CapabilityFormat> AVFoundation_Camera::getCapabilities()
 {
-    std::vector<CapabilityFormat> result;
-
-    return result;
+    std::vector<CapabilityFormat> caps;
+    //webcam_capture_av_get_capabilities(avFoundationInterface, device, caps);
+    return caps;
 }
 
 

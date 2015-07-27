@@ -6,7 +6,7 @@
 @implementation AVFoundation_Implementation 
 
 // Initializes the capturer
-- (id) init {
+- (id) init: (std::string&) deviceId {
 
   self = [super init];
 
@@ -18,6 +18,9 @@
     pixel_format = 0;
     is_pixel_buffer_set = 0;
   }
+
+  NSString *devId = [NSString stringWithUTF8String:deviceId.c_str()];
+  currentDevice = [AVCaptureDevice deviceWithUniqueID:devId];
 
   return self;
 }
@@ -61,8 +64,8 @@
 /* C-interface */
 /* -------------------------------------- */
 
-void* webcam_capture_av_alloc() {
-  return (void*)[[AVFoundation_Implementation alloc] init];
+void* webcam_capture_av_alloc(std::string deviceId) {
+  return (void*)[[AVFoundation_Implementation alloc] init:deviceId];
 }
 
 void webcam_capture_av_dealloc(void* cap) {
