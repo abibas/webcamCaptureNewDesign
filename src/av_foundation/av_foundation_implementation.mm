@@ -11,8 +11,7 @@
   self = [super init];
 
   if(self) {
-//    cb_frame = nil;
-//    cb_user= nil;
+    cb_frame = nil;
     session = nil;
     input = nil;
     output = nil;
@@ -28,9 +27,7 @@
 
   [self closeDevice];
 
-//  cb_frame = nil;
-//  cb_user = nil;
-//  pixel_buffer.user = NULL;
+  cb_frame = nil;
 
   [super dealloc];
 }
