@@ -155,24 +155,6 @@
 
         [session addInput:input];
 
-        /* Set the AVCaptureDeviceFormat and minFrameDuration */
-        if(avFormat != nil) {
-            NSError* err = nil;
-            [currentDevice lockForConfiguration: &err];
-            if(err) {
-                DEBUG_PRINT("Error: cannot lock the capture device for configuration.\n");
-                return -7;
-            }
-            [currentDevice setActiveFormat: avFormat];
-//            [currentDevice setActiveVideoMinFrameDuration: [avFrameRate minFrameDuration]];
-            [currentDevice unlockForConfiguration];
-
-        }
-        else {
-            DEBUG_PRINT("Error: cannot find the capture format.\n");
-            return  -8;
-        }
-
         /* Create the output handler (needed for getOutputFormatormats) */
         if(output == nil) {
             output = [[AVCaptureVideoDataOutput alloc] init];
@@ -191,7 +173,7 @@
                                  [NSNumber numberWithInteger:h], (id)kCVPixelBufferHeightKey,
                                  nil]];
 
-      /*
+     /*
          Cache the currently used pixel format that is used to fill the PixelBuffer
          that we pass to the callback. We retrieve the pixel format from the current
          device to make sure that we're getting the one which is actually used.
@@ -210,6 +192,12 @@
 
         dispatch_release(queue);
         [session addOutput:output];
+
+        ///set FPS settings
+        AVCaptureConnection *conn = [output connectionWithMediaType:AVMediaTypeVideo];
+        if (conn.isVideoMinFrameDurationSupported) {
+            conn.videoMinFrameDuration = avFrameRate.minFrameDuration;
+        }
     }
 
     [session commitConfiguration];
@@ -367,58 +355,7 @@
     cb_frame(frame);
   }
 
-//  CVPixelBufferUnlockBaseAddress(buffer, kCVPixelBufferLock_ReadOnly);
-
-
-//  /* --------------------- OLD CODE LEAVING THIS HERE FOR REFERENCE -------------------------- */
-//#if 0
-//  CMFormatDescriptionRef desc_ref = CMSampleBufferGetFormatDescription(sampleBuffer);
-
-//  int pix_fmt = CMFormatDescriptionGetMediaSubType(desc_ref);
-//  if (kCVPixelFormatType_422YpCbCr8 == pix_fmt) {
-//    printf("> kCVPixelFormatType_422YpCbCr8 (CA_UYVY422).\n");
-//  }
-//  else if(kCVPixelFormatType_422YpCbCr8_yuvs == pix_fmt) {
-//    printf("> kCVPixelFormatType_422YpCbCr8_yuvs (CA_YUYV422).\n");
-//  }
-//  else if (kCVPixelFormatType_32BGRA == pix_fmt) {
-//    printf("> kCVPixelFormatType_32BGRA.\n");
-//  }
-//#endif
-
-//#if 0
-//  CVImageBufferRef img_ref = CMSampleBufferGetImageBuffer(sampleBuffer);
-//  CVPixelBufferLockBaseAddress(img_ref, 0);
-//  void* base_address = CVPixelBufferGetBaseAddress(img_ref);
-
-//  // get number of bytes in the image.
-//  size_t img_bytes_per_row = CVPixelBufferGetBytesPerRow(img_ref);
-//  size_t img_height = CVPixelBufferGetHeight(img_ref);
-//  size_t nbytes = img_bytes_per_row * img_height;
-
-//  if(cb_frame) {
-//    cb_frame((void*)base_address, nbytes, cb_user);
-//  }
-
-//  CVPixelBufferUnlockBaseAddress(img_ref, 0);
-//#endif
-
-//#if 0
-//  // Some debug info.
-//  CMFormatDescriptionRef format_desc_ref = CMSampleBufferGetFormatDescription(sampleBuffer);
-//  FourCharCode active_video_type = CMFormatDescriptionGetMediaSubType(format_desc_ref);
-//  int av_fmt = CMFormatDescriptionGetMediaSubType(format_desc_ref);
-//  if(av_fmt == kCVPixelFormatType_422YpCbCr8) {
-//    printf("> kCVPixelFormatType_422YpCbCr8 (CA_UYVY422).\n");
-//  }
-//  else if(av_fmt == kCVPixelFormatType_422YpCbCr8_yuvs) {
-//    printf("> kCVPixelFormatType_422YpCbCr8_yuvs (CA_YUYV422).\n");
-//  }
-//  else if (av_fmt == kCVPixelFormatType_32BGRA) {
-//    printf("> kCVPixelFormatType_32BGRA.\n");
-//  }
-//#endif
-
+  CVPixelBufferUnlockBaseAddress(buffer, kCVPixelBufferLock_ReadOnly);
 }
 
 - (int) stopCapturing {
