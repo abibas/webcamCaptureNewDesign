@@ -55,7 +55,7 @@ int AVFoundation_Camera::start(PixelFormat pixelFormat,
     }
 
     cb_frame = cb;
-
+    webcam_capture_av_start_capturing(avFoundationInterface, pixelFormat, width, height, fps, cb);
 
     return 1;      //TODO Err code
 }
@@ -68,6 +68,7 @@ int AVFoundation_Camera::stop()
     }
 
     state &= ~CA_STATE_CAPTURING;
+    //ca_av_close
 
     return 1;   //TODO Err code
 }
