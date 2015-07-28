@@ -24,7 +24,9 @@
 
 #ifdef WEBCAM_CAPTURE_DEBUG
 #include <iomanip>
-#define DEBUG_PRINT_HR_ERROR(msg, hr) DEBUG_PRINT("Error: " << msg << " Error code: " << "0x" << std::setfill('0') << std::setw(8) << std::hex << hr << ".")
+#define DEBUG_PRINT_HR_ERROR(msg, hr) DEBUG_PRINT("Error: " << msg << " " << \
+                                                  "Error code: " << \
+                                                  "0x" << std::setfill('0') << std::setw(8) << std::hex << hr << ".")
 #else
 #define DEBUG_PRINT_HR_ERROR(msg, hr) DEBUG_PRINT(msg)
 #endif
