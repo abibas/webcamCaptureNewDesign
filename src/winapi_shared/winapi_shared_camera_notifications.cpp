@@ -28,7 +28,7 @@ LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UI
             // initialize backend in new thread
             pThis->backend = BackendFactory::getBackend(pThis->implementation);
             if (!pThis->backend) {
-                DEBUG_PRINT("Couldn't initialize backend.\n");
+                DEBUG_PRINT("Couldn't initialize backend.");
                 break;
             }
 
@@ -42,22 +42,22 @@ LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UI
             pThis = reinterpret_cast<WinapiShared_CameraNotifications *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
             if (!pThis) {
-                DEBUG_PRINT("Couldn't get either this pointer or backend.\n");
+                DEBUG_PRINT("Couldn't get either this pointer or backend.");
                 break;
             }
 
             if (!pThis->backend) {
-                DEBUG_PRINT("Backend is still not initialized.\n");
+                DEBUG_PRINT("Backend is still not initialized.");
                 break;
             }
 
             if (wParam == DBT_DEVICEARRIVAL) {
-                DEBUG_PRINT("A webcam device has been inserted and is now available.\n");
+                DEBUG_PRINT("A webcam device has been inserted and is now available.");
                 pThis->CameraWasConnected(reinterpret_cast<PDEV_BROADCAST_HDR>(lParam));
             }
 
             if (wParam == DBT_DEVICEREMOVECOMPLETE) {
-                DEBUG_PRINT("A webcam device has been removed.\n");
+                DEBUG_PRINT("A webcam device has been removed.");
                 pThis->CameraWasRemoved(reinterpret_cast<PDEV_BROADCAST_HDR>(lParam));
             }
 
@@ -68,7 +68,7 @@ LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UI
         // the rest of void WinapiShared_CameraNotifications::MessageLoop is being executed after we PostQuitMessage.
         case WM_USER: {
             if (lParam == QUIT_FROM_NOTIFICATIONS_LOOP) {
-                DEBUG_PRINT("Received request to stop the loop.\n");
+                DEBUG_PRINT("Received request to stop the loop.");
                 PostQuitMessage(0);
                 break;
             }
@@ -80,7 +80,7 @@ LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UI
 
             pThis->backend.reset();
 
-            DEBUG_PRINT("Received destroy message.\n");
+            DEBUG_PRINT("Received destroy message.");
 
             break;
         }
@@ -111,7 +111,7 @@ bool WinapiShared_CameraNotifications::start(CameraConnectionStateCallback cb)
     notif_cb = cb;
     messageLoopThread = std::thread(&WinapiShared_CameraNotifications::MessageLoop, this);
     threadIsRunning = true;
-    DEBUG_PRINT("Notifications capturing was started.\n");
+    DEBUG_PRINT("Notifications capturing was started.");
 
     return true;
 }
@@ -133,7 +133,7 @@ bool WinapiShared_CameraNotifications::stop()
 
     devicesVector.clear();
 
-    DEBUG_PRINT("Notifications capturing was stopped.\n");
+    DEBUG_PRINT("Notifications capturing was stopped.");
 
     return true;
 }
@@ -147,14 +147,14 @@ void WinapiShared_CameraNotifications::MessageLoop()
     windowClass.lpszClassName = windowClassName;
 
     if (!RegisterClass(&windowClass)) {
-        DEBUG_PRINT("Failed to register window class.\n");
+        DEBUG_PRINT("Failed to register window class.");
         goto done;
     }
 
     messageWindow = CreateWindow(windowClassName, 0, 0, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, this);
 
     if (!messageWindow) {
-        DEBUG_PRINT("Failed to create message-only window.\n");
+        DEBUG_PRINT("Failed to create message-only window.");
         goto unregister_window_class;
     }
 
@@ -170,7 +170,7 @@ void WinapiShared_CameraNotifications::MessageLoop()
     hDevNotify = RegisterDeviceNotificationW(messageWindow, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
 
     if (!hDevNotify) {
-        DEBUG_PRINT("Failed to register for device notifications.\n");
+        DEBUG_PRINT("Failed to register for device notifications.");
         goto destroy_window;
     }
 
@@ -193,19 +193,19 @@ unregister_window_class:
 done:
     notif_cb = nullptr;
 
-    DEBUG_PRINT("MessageLoop exited.\n");
+    DEBUG_PRINT("MessageLoop exited.");
 }
 
 void WinapiShared_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr)
 {
     if (pHdr->dbch_devicetype != DBT_DEVTYP_DEVICEINTERFACE) {
-        DEBUG_PRINT("Unexpected device type.\n");
+        DEBUG_PRINT("Unexpected device type.");
         return;
     }
 
     //FIXME(nurupo): use _W version of the struct
 //    if (pHdr->dbch_size != sizeof(DEV_BROADCAST_DEVICEINTERFACE_W)) {
-//        DEBUG_PRINT("Unexpected struct.\n");
+//        DEBUG_PRINT("Unexpected struct.");
 //        return;
 //    }
 
@@ -227,13 +227,13 @@ void WinapiShared_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr)
 void WinapiShared_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHdr)
 {
     if (pHdr->dbch_devicetype != DBT_DEVTYP_DEVICEINTERFACE) {
-        DEBUG_PRINT("Unexpected device type.\n");
+        DEBUG_PRINT("Unexpected device type.");
         return;
     }
 
     //FIXME(nurupo): use _W version of the struct
 //    if (pHdr->dbch_size != sizeof(DEV_BROADCAST_DEVICEINTERFACE_W)) {
-//        DEBUG_PRINT("Unexpected struct.\n");
+//        DEBUG_PRINT("Unexpected struct.");
 //        return;
 //    }
 

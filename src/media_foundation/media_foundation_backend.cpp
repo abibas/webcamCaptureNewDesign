@@ -80,7 +80,7 @@ void MediaFoundation_Backend::DeinitBackend(void *, bool deinitializeCom)
     if (deinitializeCom) {
         CoUninitialize();
     }
-    DEBUG_PRINT("MediaFoundation_Backend Successfully deinited.\n");
+    DEBUG_PRINT("MediaFoundation_Backend Successfully deinited.");
 }
 
 std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() const

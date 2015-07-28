@@ -16,7 +16,7 @@ DirectShow_Backend::DirectShow_Backend()
     HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot intialize COM.\n");  //or The COM is already initialized.
+        DEBUG_PRINT("Error: cannot intialize COM.");  //or The COM is already initialized.
     }
 }
 
@@ -28,7 +28,7 @@ void DirectShow_Backend::DeinitBackend(void *)
 {
     /* Shutdown COM */
     CoUninitialize();
-    DEBUG_PRINT("DirectShow_Backend Successfully deinited.\n");
+    DEBUG_PRINT("DirectShow_Backend Successfully deinited.");
 }
 
 std::vector<CameraInformation> DirectShow_Backend::getAvailableCameras() const
@@ -42,14 +42,14 @@ std::vector<CameraInformation> DirectShow_Backend::getAvailableCameras() const
                                   CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pDevEnum));
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error during CoCreateInstance.\n");
+        DEBUG_PRINT("Error during CoCreateInstance.");
         return result;
     }
 
     // Create an enumerator for the category Video capture devices.
     hr = pDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, &pEnum, 0);
     if (hr == S_FALSE) {
-        DEBUG_PRINT("There is no available devices.\n");
+        DEBUG_PRINT("There is no available devices.");
         hr = VFW_E_NOT_FOUND;  // The category is empty. Treat as an error.
     }
     pDevEnum->Release();

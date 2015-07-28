@@ -50,12 +50,12 @@ int DirectShow_Camera::start(PixelFormat pixelFormat,
                               FrameCallback cb )
 {
     if (!cb) {
-        DEBUG_PRINT("Error: The callback function is empty. Capturing was not started.\n");
+        DEBUG_PRINT("Error: The callback function is empty. Capturing was not started.");
         return -1;      //TODO Err code
     }
 
     if (state & CA_STATE_CAPTURING) {
-        DEBUG_PRINT("Error: cannot start capture because we are already capturing.\n");
+        DEBUG_PRINT("Error: cannot start capture because we are already capturing.");
         return -2;      //TODO Err code
     }
 
@@ -262,7 +262,7 @@ int DirectShow_Camera::start(PixelFormat pixelFormat,
 int DirectShow_Camera::stop()
 {        
     if (!state & CA_STATE_CAPTURING) {
-        DEBUG_PRINT("Error: Cannot stop capture because we're not capturing yet.\n");
+        DEBUG_PRINT("Error: Cannot stop capture because we're not capturing yet.");
         return -1;    //TODO Err code
     }
 
@@ -413,7 +413,7 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
 
     hr = pBaseFilter->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
     if (FAILED(hr)) {
-        DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
+        DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.");
         pBaseFilter->Release();
         pMoniker->Release();
         return false;
@@ -436,7 +436,7 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
         }
 
         default: {
-            DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+            DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.");
             pProcAmp->Release();
             pBaseFilter->Release();
             pMoniker->Release();
@@ -447,7 +447,7 @@ bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRa
     hr = pProcAmp->GetRange(ampProperty, &lMin, &lMax, &lStep, &lDefault, &lCaps);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+        DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.");
         pProcAmp->Release();
         pBaseFilter->Release();
         pMoniker->Release();
@@ -486,7 +486,7 @@ int DirectShow_Camera::getProperty(VideoProperty property)
 
     hr = pBaseFilter->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
     if (FAILED(hr)) {
-        DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
+        DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.");
         pBaseFilter->Release();
         pMoniker->Release();
         return -111;
@@ -509,7 +509,7 @@ int DirectShow_Camera::getProperty(VideoProperty property)
         }
 
         default: {
-            DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+            DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.");
             pProcAmp->Release();
             pBaseFilter->Release();
             pMoniker->Release();
@@ -521,7 +521,7 @@ int DirectShow_Camera::getProperty(VideoProperty property)
     hr = pProcAmp->Get(ampProperty, &value, &flags);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
+        DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.");
         pProcAmp->Release();
         pBaseFilter->Release();
         pMoniker->Release();
@@ -558,7 +558,7 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
 
     hr = pBaseFilter->QueryInterface(IID_IAMVideoProcAmp, (void**)&pProcAmp);
     if (FAILED(hr)) {
-        DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.\n");
+        DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.");
         pBaseFilter->Release();
         pMoniker->Release();
         return false;
@@ -581,7 +581,7 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
         }
 
         default: {
-            DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.\n");
+            DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.");
             pProcAmp->Release();
             pBaseFilter->Release();
             pMoniker->Release();
@@ -593,7 +593,7 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
     hr = pProcAmp->Get(ampProperty, &val, &flags);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.\n");
+        DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.");
         pProcAmp->Release();
         pBaseFilter->Release();
         pMoniker->Release();
@@ -603,7 +603,7 @@ bool DirectShow_Camera::setProperty(const VideoProperty property, const int valu
     hr = pProcAmp->Set(ampProperty, value, flags);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error during IAMVideoProcAmp->Set. SetProperty failed.\n");
+        DEBUG_PRINT("Error during IAMVideoProcAmp->Set. SetProperty failed.");
         pProcAmp->Release();
         pBaseFilter->Release();
         pMoniker->Release();
@@ -625,14 +625,14 @@ IMoniker* DirectShow_Camera::getIMonikerByUniqueId(const std::shared_ptr<UniqueI
                                   CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pDevEnum));
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error during CoCreateInstance.\n");
+        DEBUG_PRINT("Error during CoCreateInstance.");
         return NULL;
     }
 
     // Create an enumerator for the category Video capture devices.
     hr = pDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, &pEnum, 0);
     if (hr == S_FALSE) {
-        DEBUG_PRINT("There is no available devices.\n");
+        DEBUG_PRINT("There is no available devices.");
         hr = VFW_E_NOT_FOUND;  // The category is empty. Treat as an error.
     }
     pDevEnum->Release();
