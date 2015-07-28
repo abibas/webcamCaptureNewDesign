@@ -49,4 +49,5 @@
                     height: (int) h fps: (float) fps frameCB: (webcam_capture::FrameCallback) cb;
 - (void) captureOutput: (AVCaptureOutput*) captureOutput didOutputSampleBuffer: (CMSampleBufferRef) sampleBuffer
       fromConnection: (AVCaptureConnection*) connection;
+- (int) stopCapturing;
 @end

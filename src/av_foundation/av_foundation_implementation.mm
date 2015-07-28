@@ -164,7 +164,7 @@
                 return -7;
             }
             [currentDevice setActiveFormat: avFormat];
-            [currentDevice setActiveVideoMinFrameDuration: [avFrameRate minFrameDuration]];
+//            [currentDevice setActiveVideoMinFrameDuration: [avFrameRate minFrameDuration]];
             [currentDevice unlockForConfiguration];
 
         }
@@ -421,6 +421,47 @@
 
 }
 
+- (int) stopCapturing {
+    if(output != nil) {
+      [output setSampleBufferDelegate:nil queue:dispatch_get_main_queue()];
+    }
+
+    if(session != nil) {
+
+      if([session isRunning] == YES) {
+        [session stopRunning];
+      }
+
+      if(input != nil) {
+        [session removeInput: input];
+      }
+
+      if(output != nil) {
+        [session removeOutput: output];
+      }
+
+      [session release];
+    }
+
+
+    if(input != nil) {
+      [input release];
+    }
+
+    if(output != nil) {
+      [output release];
+    }
+
+    input = nil;
+    output = nil;
+    session = nil;
+    pixel_format = 0;
+    is_pixel_buffer_set = 0;
+
+    [session stopRunning];
+    return 1;
+}
+
 /* C-interface */
 /* -------------------------------------- */
 
@@ -446,6 +487,10 @@ int webcam_capture_av_start_capturing(void *cap, webcam_capture::PixelFormat pix
                                       int width, int height, float fps,
                                       webcam_capture::FrameCallback cb) {
     return [(id)cap startCapturing:pixelFormat width:width height:height fps:fps frameCB:cb];
+}
+
+int webcam_capture_av_stop_capturing(void *cap) {
+    return [(id)cap stopCapturing];
 }
 
 @end

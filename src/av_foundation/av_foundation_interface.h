@@ -20,5 +20,5 @@ int webcam_capture_av_start_capturing(void *cap, webcam_capture::PixelFormat pix
                                       int width,
                                       int height, float fps,
                                       webcam_capture::FrameCallback cb);
-
+int webcam_capture_av_stop_capturing(void *cap);
 #endif
