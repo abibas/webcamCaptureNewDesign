@@ -50,4 +50,6 @@
 - (void) captureOutput: (AVCaptureOutput*) captureOutput didOutputSampleBuffer: (CMSampleBufferRef) sampleBuffer
       fromConnection: (AVCaptureConnection*) connection;
 - (int) stopCapturing;
+-(void)cameraAdded:(NSNotification *)notification;
+-(void)cameraRemoved:(NSNotification *)notification;
 @end

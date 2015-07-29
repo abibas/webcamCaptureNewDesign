@@ -20,10 +20,22 @@
         output = nil;
         pixel_format = 0;
         is_frame_capabilities_set = false;
+
+        NSString *devId = [NSString stringWithUTF8String:deviceId.c_str()];
+        currentDevice = [AVCaptureDevice deviceWithUniqueID:devId];
+
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                 selector:@selector(cameraAdded:)
+                     name:AVCaptureDeviceWasConnectedNotification
+                   object:nil];
+                [[NSNotificationCenter defaultCenter] addObserver:self
+                 selector:@selector(cameraRemoved:)
+                     name:AVCaptureDeviceWasDisconnectedNotification
+                   object:nil];
     }
 
-    NSString *devId = [NSString stringWithUTF8String:deviceId.c_str()];
-    currentDevice = [AVCaptureDevice deviceWithUniqueID:devId];
+
+
 
     return self;
 }
@@ -392,6 +404,17 @@
 
     [session stopRunning];
     return 1;
+}
+
+
+-(void)cameraAdded:(NSNotification *)notification
+{
+    NSLog(@"A camera was added");
+}
+
+-(void)cameraRemoved:(NSNotification *)notification
+{
+    NSLog(@"A camera was removed");
 }
 
 /* C-interface */
