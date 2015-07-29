@@ -19,7 +19,7 @@
         input = nil;
         output = nil;
         pixel_format = 0;
-        is_pixel_buffer_set = 0;
+        is_frame_capabilities_set = false;
     }
 
     NSString *devId = [NSString stringWithUTF8String:deviceId.c_str()];
@@ -207,193 +207,188 @@
     return 1;
 }
 
+
 /* Capture callback. */
 - (void) captureOutput: (AVCaptureOutput*) captureOutput
  didOutputSampleBuffer: (CMSampleBufferRef) sampleBuffer
         fromConnection: (AVCaptureConnection*) connection
 {
 
-  if (cb_frame == nullptr) {
-    DEBUG_PRINT("Error: capturing frames but the `cb_frame` callback is not set, not supposed to happen. Stopping\n");
-    ///TO STOP capturing
-  }
-
-  CMFormatDescriptionRef desc = CMSampleBufferGetFormatDescription(sampleBuffer);
-  FourCharCode fcc = CMFormatDescriptionGetMediaSubType(desc);
-  CMBlockBufferRef block_buffer = CMSampleBufferGetDataBuffer(sampleBuffer);
-  CMPixelFormatType pix_fmt = CMFormatDescriptionGetMediaSubType(desc);
-  /* ------------------------------------------------------------------------------------------ */
-  /* Compressed Formats                                                                         */
-  /* ------------------------------------------------------------------------------------------ */
-  if (kCMVideoCodecType_JPEG_OpenDML == fcc) {
-
-    if (NULL == block_buffer) {
-      printf("Error: failed to get access to the block buffer for JPEG data.\n");
-      return;
+    if (cb_frame == nullptr) {
+        DEBUG_PRINT("Error: capturing frames but the `cb_frame` callback is not set, not supposed to happen. Stopping\n");
+        [self stopCapturing];
     }
 
-    size_t len_at_offset = 0;
-    size_t total_length = 0;
-    char* data_pointer = NULL;
-    bool is_contiguous = false;
-    OSStatus status;
-
-    status = CMBlockBufferGetDataPointer(block_buffer, 0, &len_at_offset, &total_length, &data_pointer);
-
-    if (kCMBlockBufferNoErr != status) {
-      printf("Error: failed to get a pointer to the data pointer.\n");
-      return;
-    }
-
-    if (len_at_offset != total_length) {
-      printf("Error: the length at the offset of the data pointer is not the same as the total frame size. We're not handling this situation yet.\n");
-      return;
-    }
-
-    is_contiguous = CMBlockBufferIsRangeContiguous(block_buffer,  0, total_length);
-    if (false == is_contiguous) {
-      printf("Error: the received datablock is not contiguous which we expect it to be.\n");
-      return;
-    }
-
-    if (0 == is_pixel_buffer_set) {
-      CMFormatDescriptionRef desc = CMSampleBufferGetFormatDescription(sampleBuffer);
-      CMVideoDimensions dims = CMVideoFormatDescriptionGetDimensions(desc);
-
-      frame.width[0] = dims.width;
-      frame.height[0] = dims.height;
-      frame.nbytes = total_length;
-      frame.pixel_format = webcam_capture::av_foundation_video_format_to_capture_format(pix_fmt);
-
-      is_pixel_buffer_set = 1;
-    }
-
-    frame.plane[0] = (uint8_t*)data_pointer;
-
-    cb_frame(frame);
-
-    return;
-  }
-
-  /* ------------------------------------------------------------------------------------------ */
-  /* Uncompressed Formats                                                                       */
-  /* ------------------------------------------------------------------------------------------ */
-  CVPixelBufferRef buffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-  if (NULL == buffer) {
     CMFormatDescriptionRef desc = CMSampleBufferGetFormatDescription(sampleBuffer);
-    CMVideoDimensions dims = CMVideoFormatDescriptionGetDimensions(desc);
-    CMMediaType media_type = CMFormatDescriptionGetMediaType(desc);
     FourCharCode fcc = CMFormatDescriptionGetMediaSubType(desc);
-    char* fcc_ptr = (char*)&fcc;
-    printf("Error: the returned CVImageBufferRef is NULL. Stopping, sampleBuffer is %p.\n", sampleBuffer);
-    printf("Error: CMSampleBufferGetSampleSize() = %lu\n", CMSampleBufferGetTotalSampleSize(sampleBuffer));
-    printf("Error: CMVideoDimensions, width: %d, height: %d\n", dims.width, dims.height);
-    printf("Error: CMMediaType, is video: %c\n", media_type == kCMMediaType_Video ? 'y' : 'c');
-    printf("Error: FourCharCode: %c%c%c%c\n", fcc_ptr[3], fcc_ptr[2], fcc_ptr[1], fcc_ptr[1]);
-    return;
-  }
-
-  /* Fill the pixel_buffer member with some info that won't change per frame. */
-  if (0 == is_pixel_buffer_set) {
-
-    CMFormatDescriptionRef desc = CMSampleBufferGetFormatDescription(sampleBuffer);
     CMPixelFormatType pix_fmt = CMFormatDescriptionGetMediaSubType(desc);
-
-    if (true == CVPixelBufferIsPlanar(buffer)) {
-      size_t plane_count = CVPixelBufferGetPlaneCount(buffer);
-      if (plane_count > 3) {
-        printf("Error: we got a plane count bigger then 3, not supported yet. Stopping.\n");
-        exit(EXIT_FAILURE);
-      }
-      for (size_t i = 0; i < plane_count; ++i) {
-        frame.width[i] = CVPixelBufferGetWidthOfPlane(buffer, i);
-        frame.height[i] = CVPixelBufferGetHeightOfPlane(buffer, i);
-        frame.stride[i] = CVPixelBufferGetBytesPerRowOfPlane(buffer, i);
-        frame.nbytes += frame.stride[i] * frame.height[i];
-
-        printf("width: %lu, height: %lu, stride: %lu, nbytes: %lu, plane_count: %lu\n",
-             frame.width[i],
-             frame.height[i],
-             frame.stride[i],
-             frame.nbytes,
-             plane_count);
-      }
-    }
-    else {
-      frame.width[0] = CVPixelBufferGetWidth(buffer);
-      frame.height[0] = CVPixelBufferGetHeight(buffer);
-      frame.stride[0] = CVPixelBufferGetBytesPerRow(buffer);
-      frame.nbytes = frame.stride[0] * frame.height[0];
-    }
-
-    frame.pixel_format = webcam_capture::av_foundation_video_format_to_capture_format(pix_fmt);
-
-    is_pixel_buffer_set = 1;
-  }
-
-  CVPixelBufferLockBaseAddress(buffer, kCVPixelBufferLock_ReadOnly);
-  {
-    if (kCVPixelFormatType_422YpCbCr8_yuvs == pix_fmt ||
-        kCVPixelFormatType_422YpCbCr8 == pix_fmt ||
-        kCVPixelFormatType_32BGRA == pix_fmt   /* kCVPixelFormatType_32BGRA */
-    )
+    CMVideoDimensions dims = CMVideoFormatDescriptionGetDimensions(desc);
+/* ------------------------------------------------------------------------------------------ */
+/* Compressed Formats                                                                         */
+/* ------------------------------------------------------------------------------------------ */
+    if ( kCMVideoCodecType_JPEG_OpenDML == fcc ||
+            kCMVideoCodecType_Animation == fcc ||
+            kCMVideoCodecType_Cinepak == fcc ||
+            kCMVideoCodecType_JPEG == fcc ||
+            kCMVideoCodecType_SorensonVideo == fcc ||
+            kCMVideoCodecType_SorensonVideo3 == fcc ||
+            kCMVideoCodecType_H263 == fcc ||
+            kCMVideoCodecType_H264 == fcc ||
+            kCMVideoCodecType_MPEG4Video == fcc ||
+            kCMVideoCodecType_MPEG2Video == fcc ||
+            kCMVideoCodecType_MPEG1Video == fcc ||
+            kCMVideoCodecType_DVCNTSC == fcc ||
+            kCMVideoCodecType_DVCPAL == fcc ||
+            kCMVideoCodecType_DVCProPAL == fcc ||
+            kCMVideoCodecType_DVCPro50NTSC == fcc ||
+            kCMVideoCodecType_DVCPro50PAL == fcc ||
+            kCMVideoCodecType_DVCPROHD720p60 == fcc ||
+            kCMVideoCodecType_DVCPROHD720p50 == fcc ||
+            kCMVideoCodecType_DVCPROHD1080i60 == fcc ||
+            kCMVideoCodecType_DVCPROHD1080i50 == fcc ||
+            kCMVideoCodecType_DVCPROHD1080p30 == fcc ||
+            kCMVideoCodecType_DVCPROHD1080p25 == fcc )
     {
-      frame.plane[0] = (uint8_t*)CVPixelBufferGetBaseAddress(buffer);
+        CMBlockBufferRef block_buffer = CMSampleBufferGetDataBuffer(sampleBuffer);
+
+        if (NULL == block_buffer) {
+            DEBUG_PRINT("Error: failed to get access to the block buffer for JPEG data.\n");
+            return;
+        }
+
+        size_t len_at_offset = 0;
+        size_t total_length = 0;
+        char* data_pointer = NULL;
+        bool is_contiguous = false;
+        OSStatus status;
+
+        status = CMBlockBufferGetDataPointer(block_buffer, 0, &len_at_offset, &total_length, &data_pointer);
+
+        if (kCMBlockBufferNoErr != status) {
+            DEBUG_PRINT("Error: failed to get a pointer to the data pointer.\n");
+            return;
+        }
+
+        if (len_at_offset != total_length) {
+            DEBUG_PRINT("Error: the length at the offset of the data pointer is not the same as the total frame size. We're not handling this situation yet.\n");
+            return;
+        }
+
+        is_contiguous = CMBlockBufferIsRangeContiguous(block_buffer,  0, total_length);
+        if (false == is_contiguous) {
+            DEBUG_PRINT("Error: the received datablock is not contiguous which we expect it to be.\n");
+            return;
+        }
+
+        if (!is_frame_capabilities_set) {
+            frame.width[0] = dims.width;
+            frame.height[0] = dims.height;
+            frame.nbytes = total_length;
+            frame.pixel_format = webcam_capture::av_foundation_video_format_to_capture_format(pix_fmt);
+            is_frame_capabilities_set = true;
+        }
+
+        frame.plane[0] = (uint8_t*)data_pointer;
+
+        cb_frame(frame);
+
+        return;
     }
-    else if (kCVPixelFormatType_420YpCbCr8BiPlanarFullRange == pix_fmt ||   /* kCVPixelFormatType_420YpCbCr8BiPlanarFullRange */
-             kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange == pix_fmt) /* kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange */
+
+/* ------------------------------------------------------------------------------------------ */
+/* Uncompressed Formats                                                                       */
+/* ------------------------------------------------------------------------------------------ */
+    CVPixelBufferRef buffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+    if (NULL == buffer) {
+        DEBUG_PRINT("Error: the returned CVImageBufferRef is NULL.\n");
+        return;
+    }
+
+/* Fill the pixel_buffer member with some info that won't change per frame. */
+    if (!is_frame_capabilities_set) {
+        if (true == CVPixelBufferIsPlanar(buffer)) {
+            size_t plane_count = CVPixelBufferGetPlaneCount(buffer);
+            if (plane_count > 3) {
+                DEBUG_PRINT("Error: we got a plane count bigger then 3, not supported yet. Stopping.\n");
+                return;
+            }
+            for (size_t i = 0; i < plane_count; ++i) {
+                frame.width[i] = CVPixelBufferGetWidthOfPlane(buffer, i);
+                frame.height[i] = CVPixelBufferGetHeightOfPlane(buffer, i);
+                frame.stride[i] = CVPixelBufferGetBytesPerRowOfPlane(buffer, i);
+                frame.nbytes += frame.stride[i] * frame.height[i];
+            }
+        } else {
+            frame.width[0] = CVPixelBufferGetWidth(buffer);
+            frame.height[0] = CVPixelBufferGetHeight(buffer);
+            frame.stride[0] = CVPixelBufferGetBytesPerRow(buffer);
+            frame.nbytes = frame.stride[0] * frame.height[0];
+        }
+
+        frame.pixel_format = webcam_capture::av_foundation_video_format_to_capture_format(pix_fmt);
+
+        is_frame_capabilities_set = true;
+    }
+
+    CVPixelBufferLockBaseAddress(buffer, kCVPixelBufferLock_ReadOnly);
     {
-      frame.plane[0] = (uint8_t*)CVPixelBufferGetBaseAddressOfPlane(buffer, 0);
-      frame.plane[1] = (uint8_t*)CVPixelBufferGetBaseAddressOfPlane(buffer, 1);
-    }
-    else {
-      printf("Error: unhandled or unknown pixel format for the received buffer: %d.\n", pixel_format);
-      CVPixelBufferUnlockBaseAddress(buffer, kCVPixelBufferLock_ReadOnly);
-      return;
+        if (kCVPixelFormatType_422YpCbCr8_yuvs == pix_fmt ||
+            kCVPixelFormatType_422YpCbCr8 == pix_fmt ||
+            kCVPixelFormatType_32BGRA == pix_fmt )
+        {
+            frame.plane[0] = (uint8_t*)CVPixelBufferGetBaseAddress(buffer);
+        }
+        else if (kCVPixelFormatType_420YpCbCr8BiPlanarFullRange == pix_fmt ||
+                kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange == pix_fmt)
+        {
+            frame.plane[0] = (uint8_t*)CVPixelBufferGetBaseAddressOfPlane(buffer, 0);
+            frame.plane[1] = (uint8_t*)CVPixelBufferGetBaseAddressOfPlane(buffer, 1);
+        } else {
+            DEBUG_PRINT("Error: unhandled or unknown pixel format.\n");
+            CVPixelBufferUnlockBaseAddress(buffer, kCVPixelBufferLock_ReadOnly);
+            return;
+        }
+
+        cb_frame(frame);
     }
 
-    cb_frame(frame);
-  }
-
-  CVPixelBufferUnlockBaseAddress(buffer, kCVPixelBufferLock_ReadOnly);
+    CVPixelBufferUnlockBaseAddress(buffer, kCVPixelBufferLock_ReadOnly);
 }
 
+// stop video capturing
 - (int) stopCapturing {
+
     if(output != nil) {
-      [output setSampleBufferDelegate:nil queue:dispatch_get_main_queue()];
+        [output setSampleBufferDelegate:nil queue:dispatch_get_main_queue()];
     }
 
     if(session != nil) {
-
-      if([session isRunning] == YES) {
-        [session stopRunning];
-      }
-
-      if(input != nil) {
-        [session removeInput: input];
-      }
-
-      if(output != nil) {
-        [session removeOutput: output];
-      }
-
-      [session release];
+        if([session isRunning] == YES) {
+            [session stopRunning];
+        }
+        if(input != nil) {
+            [session removeInput: input];
+        }
+        if(output != nil) {
+            [session removeOutput: output];
+        }
+        [session release];
     }
 
 
     if(input != nil) {
-      [input release];
+        [input release];
     }
 
     if(output != nil) {
-      [output release];
+        [output release];
     }
 
     input = nil;
     output = nil;
     session = nil;
     pixel_format = 0;
-    is_pixel_buffer_set = 0;
+    is_frame_capabilities_set = false;
 
     [session stopRunning];
     return 1;

@@ -36,7 +36,7 @@
   AVCaptureVideoDataOutput* output;                                                           /* Concrete instance of `AVDeviceOutput`, used to get the video frames. */
   AVCaptureDevice* currentDevice;
   int pixel_format;                                                                           /* The pixel format in which we're capturing, is used in the callback to fill the PixelBuffer. This is a VideoCapture pixel format as defined in Types.h */
-  int is_pixel_buffer_set;                                                                    /* Some information of the `pixel_buffer` member can only be set in the frame callback, but we don't want to set it every time we get a new frame, this flag is used for that. */                                                                           /* User data that's will be passed into `cb_frame()` */
+  bool is_frame_capabilities_set;                                                                    /* Some information of the `pixel_buffer` member can only be set in the frame callback, but we don't want to set it every time we get a new frame, this flag is used for that. */                                                                           /* User data that's will be passed into `cb_frame()` */
   webcam_capture::FrameCallback cb_frame;
   webcam_capture::Frame frame;
 }
