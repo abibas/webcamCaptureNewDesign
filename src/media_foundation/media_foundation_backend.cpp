@@ -15,8 +15,8 @@
 
 #include <windows.h>
 #include <mfapi.h>
-#include <mferror.h>            /* MediaFoundation error codes, MF_E_* */
-#include <mfidl.h>              /* e.g. MFEnumDeviceSources */
+#include <mferror.h>
+#include <mfidl.h>
 #include <mfplay.h>
 #include <mfreadwrite.h>
 #include <shlwapi.h>
@@ -80,7 +80,8 @@ void MediaFoundation_Backend::DeinitBackend(void *, bool deinitializeCom)
     if (deinitializeCom) {
         CoUninitialize();
     }
-    DEBUG_PRINT("MediaFoundation_Backend Successfully deinited.");
+
+    DEBUG_PRINT("MediaFoundation_Backend successfully deinitilized");
 }
 
 std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() const
@@ -94,13 +95,15 @@ std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() co
     HRESULT hr = MFCreateAttributes(&config, 1);
 
     if (FAILED(hr)) {
+        DEBUG_PRINT_HR_ERROR("Failed to create attribute store.", hr);
         goto done;
     }
 
     // Filter capture devices.
-    hr = config->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE,  MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
+    hr = config->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
 
     if (FAILED(hr)) {
+        DEBUG_PRINT_HR_ERROR("Failed to set GUID on an attribute.", hr);
         goto done;
     }
 
@@ -108,10 +111,12 @@ std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() co
     hr = MFEnumDeviceSources(config, &devices, &count);
 
     if (FAILED(hr)) {
+        DEBUG_PRINT_HR_ERROR("Failed to get an enumeration of cameras.", hr);
         goto done;
     }
 
     if (count == 0) {
+        DEBUG_PRINT("No video capture devices found.");
         goto done;
     }
 
@@ -133,8 +138,18 @@ std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() co
                               name});
         }
 
-        CoTaskMemFree(symbolic_link);
-        CoTaskMemFree(friendly_name);
+        if (SUCCEEDED(hr1)) {
+            CoTaskMemFree(friendly_name);
+        } else {
+            DEBUG_PRINT_HR_ERROR("Failed to get name of a camera.", hr1);
+        }
+
+        if (SUCCEEDED(hr2)) {
+            CoTaskMemFree(symbolic_link);
+        } else {
+            DEBUG_PRINT_HR_ERROR("Failed to get unique id of a camera.", hr2);
+        }
+
     }
 
 done:
@@ -156,7 +171,7 @@ std::unique_ptr<webcam_capture::CameraInterface> MediaFoundation_Backend::getCam
 
 int MediaFoundation_Backend::setCameraConnectionStateCallback(CameraConnectionStateCallback callback)
 {
-    //IF n_callback is null_ptr or n_callback function is empty
+    // if callback is nullptr or callback has no function set
     if (!callback) {
         notificationManager.stop();
         return -1;      //TODO Err code
