@@ -48,7 +48,9 @@ HEADERS  += \
     src/av_foundation/av_foundation_interface.h \
     src/av_foundation/av_foundation_unique_id.h \
     src/av_foundation/av_foundation_camera.h \
-    src/av_foundation/av_foundation_utils.h
+    src/av_foundation/av_foundation_utils.h \
+    src/av_foundation/av_foundation_notifications_implementation.h \
+    src/av_foundation/av_foundation_notifications_interface.h
 
 FORMS    += \
     test_app/cameraform.ui \
@@ -65,7 +67,8 @@ DEFINES += WEBCAM_CAPTURE_BACKEND_AV_FOUNDATION \
            WEBCAM_CAPTURE_DEBUG
 
 OBJECTIVE_SOURCES += \
-    src/av_foundation/av_foundation_implementation.mm
+    src/av_foundation/av_foundation_implementation.mm \
+    src/av_foundation/av_foundation_notifications_implementation.mm
 
 LIBS += -framework CoreFoundation
 LIBS += -framework AVFoundation

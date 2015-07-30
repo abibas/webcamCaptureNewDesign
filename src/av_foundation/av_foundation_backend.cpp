@@ -6,12 +6,17 @@
 
 #include <string>
 
+using namespace std::placeholders; //for std::bind _1
+
 namespace webcam_capture {
 
 AVFoundation_Backend::AVFoundation_Backend()
     : BackendInterface(BackendImplementation::MediaFoundation),
-      mfDeinitializer(this, AVFoundation_Backend::DeinitBackend)
+      mfDeinitializer(this, AVFoundation_Backend::DeinitBackend),
+      avFoundationBackendObjectiveCInterface(NULL),
+      connectionStatusCallback(nullptr)
 {
+
 }
 
 void AVFoundation_Backend::DeinitBackend(void *)
@@ -40,7 +45,46 @@ std::unique_ptr<webcam_capture::CameraInterface> AVFoundation_Backend::getCamera
 
 int AVFoundation_Backend::setAvaliableCamerasChangedCallback(ConnectionStatusCallback callback)
 {
-    return 1;
+    connectionStatusCallback = callback;
+    //IF n_callback is null_ptr or n_callback function is empty
+    if (!callback) {
+        if (avFoundationBackendObjectiveCInterface) {
+            webcam_capture_av_stop_camera_notifications(avFoundationBackendObjectiveCInterface);
+            webcam_capture_backend_dealloc(avFoundationBackendObjectiveCInterface);
+            avFoundationBackendObjectiveCInterface = NULL;
+        }
+        return -1;      //TODO Err code
+    }
+
+    //notifications already started
+    if (avFoundationBackendObjectiveCInterface) {
+        DEBUG_PRINT("AVFoundation_Backend notification manager already started.\n");
+        return -2;
+    }
+    avFoundationBackendObjectiveCInterface = webcam_capture_backend_alloc();
+    webcam_capture_av_start_camera_notifications(avFoundationBackendObjectiveCInterface,
+                                                 std::bind(&AVFoundation_Backend::AVFoundationCameraConnected, this, _1, _2),
+                                                 std::bind(&AVFoundation_Backend::AVFoundationCameraDisconnected, this, _1, _2));
+    return 1; //TODO ERR code (success)
+}
+
+void AVFoundation_Backend::AVFoundationCameraConnected(std::string name, std::string id)
+{
+    if (connectionStatusCallback) {
+        std::shared_ptr<webcam_capture::AVFoundation_UniqueId> uniqueId =
+                std::make_shared<webcam_capture::AVFoundation_UniqueId>(id);
+        CameraInformation device(uniqueId, name);
+        connectionStatusCallback(device, CameraConnectionStatus::Connected);
+    }
+}
+
+void AVFoundation_Backend::AVFoundationCameraDisconnected(std::string name, std::string id) {
+    if (connectionStatusCallback) {
+        std::shared_ptr<webcam_capture::AVFoundation_UniqueId> uniqueId =
+                std::make_shared<webcam_capture::AVFoundation_UniqueId>(id);
+        CameraInformation device(uniqueId, name);
+        connectionStatusCallback(device, CameraConnectionStatus::Disconnected);
+    }
 }
 
 } // namespace webcam_capture

@@ -18,6 +18,7 @@
  */
 #include <TargetConditionals.h>
 #include <vector>
+#include <backend_interface.h>
 #include <camera_information.h>
 #include <frame.h>
 #include <camera_interface.h>
@@ -50,6 +51,5 @@
 - (void) captureOutput: (AVCaptureOutput*) captureOutput didOutputSampleBuffer: (CMSampleBufferRef) sampleBuffer
       fromConnection: (AVCaptureConnection*) connection;
 - (int) stopCapturing;
--(void)cameraAdded:(NSNotification *)notification;
--(void)cameraRemoved:(NSNotification *)notification;
+
 @end

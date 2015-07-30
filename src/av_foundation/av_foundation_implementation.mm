@@ -5,7 +5,6 @@
 #include "av_foundation_utils.h"
 #include "../utils.h"
 
-
 @implementation AVFoundation_Implementation 
 
 // Initializes the capturer
@@ -15,6 +14,7 @@
 
     if(self) {
         cb_frame = nil;
+//        cb_notifications = nil;
         session = nil;
         input = nil;
         output = nil;
@@ -23,15 +23,6 @@
 
         NSString *devId = [NSString stringWithUTF8String:deviceId.c_str()];
         currentDevice = [AVCaptureDevice deviceWithUniqueID:devId];
-
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                 selector:@selector(cameraAdded:)
-                     name:AVCaptureDeviceWasConnectedNotification
-                   object:nil];
-                [[NSNotificationCenter defaultCenter] addObserver:self
-                 selector:@selector(cameraRemoved:)
-                     name:AVCaptureDeviceWasDisconnectedNotification
-                   object:nil];
     }
 
 
@@ -59,11 +50,10 @@
     NSArray* devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
 
     for(AVCaptureDevice* dev in devices) {
-
         std::string name = [[dev localizedName] UTF8String];
         std::string uniqueId = [[dev uniqueID] UTF8String];
         result.push_back(webcam_capture::AVFoundationDeviceInfo(name, uniqueId));
-  }
+    }
     
     return (int) result.size();
 }
@@ -90,7 +80,7 @@
             }
         }
     }
-  return (int) result.size();
+    return (int) result.size();
 }
 
 // start video capturing
@@ -406,17 +396,6 @@
     return 1;
 }
 
-
--(void)cameraAdded:(NSNotification *)notification
-{
-    NSLog(@"A camera was added");
-}
-
--(void)cameraRemoved:(NSNotification *)notification
-{
-    NSLog(@"A camera was removed");
-}
-
 /* C-interface */
 /* -------------------------------------- */
 
@@ -447,5 +426,13 @@ int webcam_capture_av_start_capturing(void *cap, webcam_capture::PixelFormat pix
 int webcam_capture_av_stop_capturing(void *cap) {
     return [(id)cap stopCapturing];
 }
+
+//int webcam_capture_av_start_camera_notifications(webcam_capture::ConnectionStatusCallback cb_notifications) {
+//    return 1;
+//}
+
+//int webcam_capture_av_stop_camera_notifications() {
+//    return 1;
+//}
 
 @end
