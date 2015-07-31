@@ -7,20 +7,16 @@
 #ifndef MEDIA_FOUNDATION_UTILS_H
 #define MEDIA_FOUNDATION_UTILS_H
 
-#include <vector>
-#include <string>
-#include <cstring>
-#include <cwchar>
-#include <cassert>
-#include <mfapi.h>
-#include <mfplay.h>
-#include <mfidl.h>                                                                   /* e.g. MFEnumDeviceSources */
-#include <mfreadwrite.h>
-#include <shlwapi.h>
-#include <string>
+#include "../utils.h"
 
 #include <pixel_format.h>
-#include "../utils.h"
+
+#include <cassert>
+#include <cstring>
+#include <cwchar>
+#include <vector>
+
+#include <rpc.h>
 
 #ifdef WEBCAM_CAPTURE_DEBUG
 #include <iomanip>

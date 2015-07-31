@@ -1,5 +1,9 @@
 #include "media_foundation_utils.h"
+
 #include <pixel_format.h>
+
+#include <guiddef.h>
+#include <mfapi.h>
 
 namespace webcam_capture {
 
