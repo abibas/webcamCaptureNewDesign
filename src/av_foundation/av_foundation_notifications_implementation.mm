@@ -70,7 +70,7 @@
     }
 
     for (int i = 0; i < newDeviceList.size(); i++) {
-        for (int j = 0; j < deviceList.size(); i++) {
+        for (int j = 0; j < deviceList.size(); j++) {
             if ( deviceList.at(j).deviceId == newDeviceList.at(i).deviceId ) {
                 break;
             }
@@ -103,8 +103,8 @@
                 break;
             }
             if ( j == newDeviceList.size() - 1) {
-                std::string name = deviceList.at(j).deviceName;
-                std::string id = deviceList.at(j).deviceId;
+                std::string name = deviceList.at(i).deviceName;
+                std::string id = deviceList.at(i).deviceId;
                 cb_cameraDisconnected(name, id);
                 deviceList = newDeviceList;
                 return;
