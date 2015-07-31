@@ -31,7 +31,7 @@ bool MediaFoundation_Callback::createInstance(MediaFoundation_Camera *cam, Media
     *cb = media_cb;
     (*cb)->AddRef();
 
-    safeReleaseMediaFoundation(&media_cb);
+    MediaFoundation_Utils::safeRelease(&media_cb);
     return true;
 }
 

@@ -133,7 +133,7 @@ std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() co
                                              &symbolic_link, &symbolic_link_len);
 
         if (SUCCEEDED(hr1) && SUCCEEDED(hr2)) {
-            std::string name = string_cast<std::string>(friendly_name);
+            std::string name = MediaFoundation_Utils::string_cast<std::string>(friendly_name);
             result.push_back({std::make_shared<WinapiShared_UniqueId>(symbolic_link, BackendImplementation::MediaFoundation),
                               name});
         }
@@ -153,10 +153,10 @@ std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() co
     }
 
 done:
-    safeReleaseMediaFoundation(&config);
+    MediaFoundation_Utils::safeRelease(&config);
 
     for (DWORD i = 0; i < count; ++i) {
-        safeReleaseMediaFoundation(&devices[i]);
+        MediaFoundation_Utils::safeRelease(&devices[i]);
     }
 
     CoTaskMemFree(devices);

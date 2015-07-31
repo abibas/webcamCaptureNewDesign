@@ -41,7 +41,7 @@ MediaFoundation_Camera::~MediaFoundation_Camera()
     }
 
     //Release mediaSource
-    safeReleaseMediaFoundation(&imf_media_source);
+    MediaFoundation_Utils::safeRelease(&imf_media_source);
 }
 
 int MediaFoundation_Camera::start(PixelFormat pixelFormat,
@@ -65,7 +65,7 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat,
 /// FPS is 3000 1 time and second time 500 - in real time - it doesn't changes
 /// Looks like if you want to change FPS - we need to delete imm_media_source and create it again
     //"to test just comment this"
-    safeReleaseMediaFoundation(&imf_media_source);
+    MediaFoundation_Utils::safeRelease(&imf_media_source);
     // Create the MediaSource
     const std::wstring& symbolicLink = static_cast<WinapiShared_UniqueId *>(information.getUniqueId().get())->getId();
 
@@ -94,7 +94,7 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat,
 
     if (createSourceReader(imf_media_source, mf_callback, &imf_source_reader) < 0) {
         DEBUG_PRINT("Error: cannot create the source reader.");
-        safeReleaseMediaFoundation(&mf_callback);
+        MediaFoundation_Utils::safeRelease(&mf_callback);
         return -10;      //TODO Err code
     }
 
@@ -104,8 +104,8 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat,
                         pixelFormat,
                         fps) < 0) {
         DEBUG_PRINT("Error: cannot set the reader format.");
-        safeReleaseMediaFoundation(&mf_callback);
-        safeReleaseMediaFoundation(&imf_source_reader);
+        MediaFoundation_Utils::safeRelease(&mf_callback);
+        MediaFoundation_Utils::safeRelease(&imf_source_reader);
         return -11;      //TODO Err code
     }
 
@@ -153,8 +153,8 @@ int MediaFoundation_Camera::stop()
 
     state &= ~CA_STATE_CAPTURING;
 
-    safeReleaseMediaFoundation(&imf_source_reader);
-    safeReleaseMediaFoundation(&mf_callback);
+    MediaFoundation_Utils::safeRelease(&imf_source_reader);
+    MediaFoundation_Utils::safeRelease(&mf_callback);
 
     return 1;   //TODO Err code
 }
@@ -414,7 +414,7 @@ int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int wi
                 }
 
                 if (guid == MF_MT_SUBTYPE && var.vt == VT_CLSID) {
-                    pixelFormatBuf = media_foundation_video_format_to_capture_format(*var.puuid);
+                    pixelFormatBuf = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
                 } else if (guid == MF_MT_FRAME_SIZE) {
                     Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
                     widthBuf = (int)high;
@@ -426,7 +426,7 @@ int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int wi
 
             // Wait till we get the format and resolution we are looking for
             if (widthBuf != width || heightBuf != height || pixelFormatBuf != pixelFormat) {
-                safeReleaseMediaFoundation(&type);
+                MediaFoundation_Utils::safeRelease(&type);
                 continue;
             }
 
@@ -462,11 +462,11 @@ int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int wi
                 } else {
                     setType = true;
                 }
-                safeReleaseMediaFoundation(&type);
+                MediaFoundation_Utils::safeRelease(&type);
                 break;
             }
 
-            safeReleaseMediaFoundation(&type);
+            MediaFoundation_Utils::safeRelease(&type);
         }
     }
 
@@ -475,10 +475,10 @@ int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int wi
     }
 
 done:
-    safeReleaseMediaFoundation(&pres_desc);
-    safeReleaseMediaFoundation(&stream_desc);
-    safeReleaseMediaFoundation(&media_handler);
-    safeReleaseMediaFoundation(&type);
+    MediaFoundation_Utils::safeRelease(&pres_desc);
+    MediaFoundation_Utils::safeRelease(&stream_desc);
+    MediaFoundation_Utils::safeRelease(&media_handler);
+    MediaFoundation_Utils::safeRelease(&type);
 
     return result;
 }
@@ -536,7 +536,7 @@ int MediaFoundation_Camera::createSourceReader(IMFMediaSource *mediaSource,  IMF
     }
 
 done:
-    safeReleaseMediaFoundation(&attrs);
+    MediaFoundation_Utils::safeRelease(&attrs);
     return result;
 }
 
@@ -568,7 +568,7 @@ int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int w
         hr = type->GetItem(MF_MT_SUBTYPE, &var);
 
         if (SUCCEEDED(hr)) {
-            pixelFormatBuf = media_foundation_video_format_to_capture_format(*var.puuid);
+            pixelFormatBuf = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
         }
 
         PropVariantClear(&var);
@@ -609,11 +609,11 @@ int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int w
                 hr = S_OK;
                 result = 1;        //TODO Err code
             }
-            safeReleaseMediaFoundation(&type);
+            MediaFoundation_Utils::safeRelease(&type);
             break;
         }
 
-        safeReleaseMediaFoundation(&type);
+        MediaFoundation_Utils::safeRelease(&type);
     }
 
     return result;
@@ -732,7 +732,7 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
 
             if (FAILED(hr)) {
                 DEBUG_PRINT("Error: cannot get media type by index.");
-                safeReleaseMediaFoundation(&type);
+                MediaFoundation_Utils::safeRelease(&type);
                 continue;
             }
 
@@ -741,7 +741,7 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
 
             if (FAILED(hr)) {
                 DEBUG_PRINT("Error: cannot type param count.");
-                safeReleaseMediaFoundation(&type);
+                MediaFoundation_Utils::safeRelease(&type);
                 continue;
             }
 
@@ -760,7 +760,7 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
                     }
 
                     if (guid == MF_MT_SUBTYPE && var.vt == VT_CLSID) {
-                        pixelFormat = media_foundation_video_format_to_capture_format(*var.puuid);
+                        pixelFormat = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
                     } else if (guid == MF_MT_FRAME_SIZE) {
                         Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
                         width = (int)high;
@@ -787,7 +787,7 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
                 capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
             }
 
-            safeReleaseMediaFoundation(&type);
+            MediaFoundation_Utils::safeRelease(&type);
         }
 
 
@@ -795,9 +795,9 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
     }
 
 done:
-    safeReleaseMediaFoundation(&presentation_desc);
-    safeReleaseMediaFoundation(&stream_desc);
-    safeReleaseMediaFoundation(&media_handler);
+    MediaFoundation_Utils::safeRelease(&presentation_desc);
+    MediaFoundation_Utils::safeRelease(&stream_desc);
+    MediaFoundation_Utils::safeRelease(&media_handler);
 
     return result;
 }
@@ -824,7 +824,7 @@ int MediaFoundation_Camera::createVideoDeviceSource(const std::wstring &pszSymbo
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Error: cannot create MFCreateAttributes.");
-        safeReleaseMediaFoundation(&pAttributes);
+        MediaFoundation_Utils::safeRelease(&pAttributes);
         return -1;        //TODO Err code
     }
 
@@ -834,7 +834,7 @@ int MediaFoundation_Camera::createVideoDeviceSource(const std::wstring &pszSymbo
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Error: cannot set the device type to video.");
-        safeReleaseMediaFoundation(&pAttributes);
+        MediaFoundation_Utils::safeRelease(&pAttributes);
         return -2;        //TODO Err code
     }
 
@@ -844,7 +844,7 @@ int MediaFoundation_Camera::createVideoDeviceSource(const std::wstring &pszSymbo
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Error: cannot set the symbolic link.");
-        safeReleaseMediaFoundation(&pAttributes);
+        MediaFoundation_Utils::safeRelease(&pAttributes);
         return -3;        //TODO Err code
     }
 
@@ -852,11 +852,11 @@ int MediaFoundation_Camera::createVideoDeviceSource(const std::wstring &pszSymbo
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Error: cannot crete MF Device Source.");
-        safeReleaseMediaFoundation(&pAttributes);
+        MediaFoundation_Utils::safeRelease(&pAttributes);
         return -4;        //TODO Err code
     }
 
-    safeReleaseMediaFoundation(&pAttributes);
+    MediaFoundation_Utils::safeRelease(&pAttributes);
     return 1; //TODO Err code
 }
 } // namespace webcam_capture

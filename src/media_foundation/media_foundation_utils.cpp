@@ -1,5 +1,7 @@
 #include "media_foundation_utils.h"
 
+#include "../utils.h"
+
 #include <pixel_format.h>
 
 #include <guiddef.h>
@@ -8,7 +10,7 @@
 namespace webcam_capture {
 
 // Convert the MF format to one we can use.
-PixelFormat media_foundation_video_format_to_capture_format(GUID guid)
+PixelFormat MediaFoundation_Utils::videoFormatToCaptureFormat(const GUID &guid)
 {
     ///Uncompressed RGB Formats
     if (IsEqualGUID(guid, MFVideoFormat_RGB8))     {
@@ -137,4 +139,5 @@ PixelFormat media_foundation_video_format_to_capture_format(GUID guid)
         return PixelFormat::UNKNOWN;
     }
 }
+
 } // namespace webcam_capture
