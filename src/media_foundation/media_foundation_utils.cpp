@@ -7,6 +7,11 @@
 #include <guiddef.h>
 #include <mfapi.h>
 
+#ifdef WEBCAM_CAPTURE_DEBUG
+    #include <objbase.h>
+    #include <string>
+#endif
+
 namespace webcam_capture {
 
 // Convert the MF format to one we can use.
@@ -136,6 +141,20 @@ PixelFormat MediaFoundation_Utils::videoFormatToCaptureFormat(const GUID &guid)
     } else if (IsEqualGUID(guid, MFVideoFormat_420O)) {
         return PixelFormat::O420;
     } else {
+
+#ifdef WEBCAM_CAPTURE_DEBUG
+        LPOLESTR guidString = NULL;
+        HRESULT hr = StringFromCLSID(guid, &guidString);
+
+        if (SUCCEEDED(hr)) {
+            DEBUG_PRINT("Unknown pixel format, GUID: " << MediaFoundation_Utils::string_cast<std::string>(guidString));
+        } else {
+            DEBUG_PRINT("Unknown pixel format");
+        }
+
+        CoTaskMemFree(guidString);
+#endif
+
         return PixelFormat::UNKNOWN;
     }
 }
