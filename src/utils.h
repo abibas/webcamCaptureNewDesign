@@ -12,10 +12,24 @@
         #define FUNCTION "function-name-unavailable"
     #endif
 
-        #include <chrono>
-        #include <iomanip>
-        #include <iostream>
+    #include <chrono>
+    #include <iomanip>
+    #include <iostream>
 
+    // use localtime_s on Winodws to suppress MSVC warning
+    #if defined(_WIN32) || defined(__WIN32__) || defined (WIN32)
+        #define DEBUG_PRINT(msg) \
+                { \
+                    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); \
+                    struct tm *result = nullptr; \
+                    localtime_s(result, &now); \
+                    std::cerr << "[" << std::put_time(result, "%H:%M:%S") << "] " \
+                              << "(" << FUNCTION  << ")" << std::endl \
+                              << "-- " << msg \
+                              << std::endl << std::endl \
+                              << std::flush; \
+                }
+    #else
         #define DEBUG_PRINT(msg) \
                 { \
                     auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); \
@@ -25,6 +39,7 @@
                               << std::endl << std::endl \
                               << std::flush; \
                 }
+    #endif
 #else
     #define DEBUG_PRINT(msg)
 #endif
