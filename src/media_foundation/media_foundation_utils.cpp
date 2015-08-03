@@ -149,7 +149,7 @@ PixelFormat MediaFoundation_Utils::videoFormatToCaptureFormat(const GUID &guid)
         if (SUCCEEDED(hr)) {
             DEBUG_PRINT("Unknown pixel format, GUID: " << MediaFoundation_Utils::string_cast<std::string>(guidString));
         } else {
-            DEBUG_PRINT("Unknown pixel format");
+            DEBUG_PRINT("Unknown pixel format.");
         }
 
         CoTaskMemFree(guidString);

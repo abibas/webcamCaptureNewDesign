@@ -81,7 +81,7 @@ void MediaFoundation_Backend::DeinitBackend(void *, bool deinitializeCom)
         CoUninitialize();
     }
 
-    DEBUG_PRINT("MediaFoundation_Backend successfully deinitilized");
+    DEBUG_PRINT("Successfully deinitilized.");
 }
 
 std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() const
@@ -138,17 +138,16 @@ std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() co
                               name});
         }
 
-        if (SUCCEEDED(hr1)) {
-            CoTaskMemFree(friendly_name);
-        } else {
+        if (FAILED(hr1)) {
             DEBUG_PRINT_HR_ERROR("Failed to get name of a camera.", hr1);
         }
 
-        if (SUCCEEDED(hr2)) {
-            CoTaskMemFree(symbolic_link);
-        } else {
+        if (FAILED(hr2)) {
             DEBUG_PRINT_HR_ERROR("Failed to get unique id of a camera.", hr2);
         }
+
+        CoTaskMemFree(friendly_name);
+        CoTaskMemFree(symbolic_link);
 
     }
 
