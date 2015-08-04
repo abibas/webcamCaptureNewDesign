@@ -13,13 +13,13 @@
 
 #include <string>
 
-#include <windows.h>
 #include <mfapi.h>
 #include <mferror.h>
 #include <mfidl.h>
 #include <mfplay.h>
 #include <mfreadwrite.h>
 #include <shlwapi.h>
+#include <windows.h>
 
 namespace webcam_capture {
 

@@ -1,6 +1,18 @@
-#include "../capability_tree_builder.h"
 #include "media_foundation_camera.h"
+
+#include "../capability_tree_builder.h"
+#include "../utils.h"
 #include "../winapi_shared/winapi_shared_unique_id.h"
+#include "media_foundation_callback.h"
+#include "media_foundation_utils.h"
+
+#include <mfapi.h>
+#include <mferror.h>
+#include <mfidl.h>
+#include <mfplay.h>
+#include <mfreadwrite.h>
+#include <shlwapi.h>
+#include <windows.h>
 
 namespace webcam_capture {
 

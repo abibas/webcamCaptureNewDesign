@@ -4,6 +4,8 @@
     http://www.apache.org/licenses/LICENSE-2.0
   */
 
+#include "../utils.h"
+#include "media_foundation_utils.h"
 #include "media_foundation_callback.h"
 #include "media_foundation_camera.h"
 

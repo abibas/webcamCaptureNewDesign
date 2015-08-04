@@ -7,32 +7,27 @@
 #ifndef MEDIA_FOUNDATION_CAMERA_H
 #define MEDIA_FOUNDATION_CAMERA_H
 
-/* States (may be be used by implementations) */
-#define CA_STATE_NONE 0x00                                                         /* Default state */
-#define CA_STATE_CAPTURING 0x01                                                   /* The user started captureing */
+#define CA_STATE_NONE 0x00       /* Default state */
+#define CA_STATE_CAPTURING 0x01  /* The user started captureing */
 
-#include <windows.h>
-#include <mfapi.h>
-#include <mfplay.h>
-#include <mfidl.h>                                                                   /* e.g. MFEnumDeviceSources */
-#include <mfreadwrite.h>
-#include <mferror.h>                                                                 /* MediaFoundation error codes, MF_E_*  */
-#include <shlwapi.h>
+#include <camera_information.h>
+#include <camera_interface.h>
+#include <capability.h>
+#include <frame.h>
+#include <video_property.h>
+#include <video_property_range.h>
+
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>  //std::shared_ptr include
 
-#include "../utils.h"
-#include "../include/camera_interface.h"
-#include "../include/camera_information.h"
-#include "../include/capability.h"
-#include "../include/frame.h"
-#include "../include/video_property.h"
-#include "../include/video_property_range.h"
-#include "media_foundation_utils.h"
-#include "media_foundation_callback.h"
+struct IMFMediaSource;
+struct IMFSourceReader;
+struct IMFSourceReaderCallback;
 
 namespace webcam_capture {
+
+class MediaFoundation_Callback;
 
 class MediaFoundation_Camera : public CameraInterface
 {
