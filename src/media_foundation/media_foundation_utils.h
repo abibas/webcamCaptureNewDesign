@@ -74,4 +74,4 @@ public:
 
 } // namespace webcam_capture
 
-#endif
+#endif // MEDIA_FOUNDATION_UTILS_H

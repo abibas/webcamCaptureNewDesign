@@ -7,9 +7,6 @@
 #ifndef MEDIA_FOUNDATION_CAMERA_H
 #define MEDIA_FOUNDATION_CAMERA_H
 
-#define CA_STATE_NONE 0x00       /* Default state */
-#define CA_STATE_CAPTURING 0x01  /* The user started captureing */
-
 #include <camera_information.h>
 #include <camera_interface.h>
 #include <capability.h>
@@ -64,10 +61,11 @@ public:
     MediaFoundation_Callback *mf_callback;
     IMFMediaSource *imf_media_source;
     IMFSourceReader *imf_source_reader;
-    int state;
+    bool capturing;
     CameraInformation information;
     FrameCallback cb_frame;
 };
 
 } // namespace webcam_capture
-#endif
+
+#endif //MEDIA_FOUNDATION_CAMERA_H

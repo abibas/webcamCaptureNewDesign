@@ -20,7 +20,7 @@ MediaFoundation_Camera::MediaFoundation_Camera(std::shared_ptr<void> mfDeinitial
         const CameraInformation &information, IMFMediaSource *mediaSource)
     : information(information)
     , mfDeinitializer(mfDeinitializer)
-    , state(CA_STATE_NONE)
+    , capturing(false)
     , imf_media_source(mediaSource)
     , mf_callback(NULL)
     , imf_source_reader(NULL)
@@ -48,7 +48,7 @@ std::unique_ptr<CameraInterface> MediaFoundation_Camera::create(std::shared_ptr<
 MediaFoundation_Camera::~MediaFoundation_Camera()
 {
     // Stop capturing
-    if (state & CA_STATE_CAPTURING) {
+    if (capturing) {
         stop();
     }
 
@@ -66,7 +66,7 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat,
         return -1;      //TODO Err code
     }
 
-    if (state & CA_STATE_CAPTURING) {
+    if (capturing) {
         DEBUG_PRINT("Error: cannot start capture because we are already capturing.");
         return -2;      //TODO Err code
     }
@@ -147,13 +147,13 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat,
         return -4;      //TODO Err code
     }
 
-    state |= CA_STATE_CAPTURING;
+    capturing = true;
     return 1;      //TODO Err code
 }
 
 int MediaFoundation_Camera::stop()
 {
-    if (!state & CA_STATE_CAPTURING) {
+    if (!capturing) {
         DEBUG_PRINT("Error: Cannot stop capture because we're not capturing yet.");
         return -1;    //TODO Err code
     }
@@ -163,7 +163,7 @@ int MediaFoundation_Camera::stop()
         return -2;    //TODO Err code
     }
 
-    state &= ~CA_STATE_CAPTURING;
+    capturing = false;
 
     MediaFoundation_Utils::safeRelease(&imf_source_reader);
     MediaFoundation_Utils::safeRelease(&mf_callback);

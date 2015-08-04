@@ -106,7 +106,7 @@ HRESULT MediaFoundation_Callback::OnReadSample(HRESULT hr, DWORD streamIndex, DW
     }
 
     if (SUCCEEDED(hr)) {
-        if (cam->imf_source_reader && cam->state & CA_STATE_CAPTURING) {
+        if (cam->imf_source_reader && cam->capturing) {
             hr = cam->imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
 
             if (FAILED(hr)) {
