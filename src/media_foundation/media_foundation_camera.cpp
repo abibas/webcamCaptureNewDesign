@@ -90,10 +90,7 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
         return -8;      //TODO Err code
     }
 
-    if (setDeviceFormat(imfMediaSource, width,
-                        height,
-                        pixelFormat,
-                        fps) < 0) {
+    if (setDeviceFormat(imfMediaSource, width, height, pixelFormat, fps) < 0) {
         DEBUG_PRINT("Error: cannot set the device format.");
         return -9;      //TODO Err code
     }
@@ -108,10 +105,7 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
     }
 
     // Set the source reader format.
-    if (setReaderFormat(imfSourceReader, width,
-                        height,
-                        pixelFormat,
-                        fps) < 0) {
+    if (setReaderFormat(imfSourceReader, width, height, pixelFormat, fps) < 0) {
         DEBUG_PRINT("Error: cannot set the reader format.");
         MediaFoundation_Utils::safeRelease(&mfCallback);
         MediaFoundation_Utils::safeRelease(&imfSourceReader);
@@ -141,6 +135,10 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
         }
 
         DEBUG_PRINT("Error: while trying to ReadSample() on the imf_source_reader. ");
+
+        MediaFoundation_Utils::safeRelease(&mfCallback);
+        MediaFoundation_Utils::safeRelease(&imfSourceReader);
+
         return -4;      //TODO Err code
     }
 
@@ -153,11 +151,6 @@ int MediaFoundation_Camera::stop()
     if (!capturing) {
         DEBUG_PRINT("Error: Cannot stop capture because we're not capturing yet.");
         return -1;    //TODO Err code
-    }
-
-    if (!imfSourceReader) {
-        DEBUG_PRINT("Error: Cannot stop capture because sourceReader is empty yet.");
-        return -2;    //TODO Err code
     }
 
     capturing = false;
@@ -711,14 +704,14 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
             hr = media_handler->IsMediaTypeSupported(test_type, NULL);
 
             if (hr != S_OK) {
-                DEBUG_PRINT("> Not supported: %d");
+                DEBUG_PRINT("> Not supported: " << i);
             } else {
-                DEBUG_PRINT("> Yes, supported: %d", i);
+                DEBUG_PRINT("> Yes, supported: " << i);
             }
         }
     }
 
-    safeReleaseMediaFoundation(&test_type);
+    MediaFoundation_Utils::safeRelease(&test_type);
 #endif
     {
         CapabilityTreeBuilder capabilityBuilder;
