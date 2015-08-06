@@ -58,12 +58,12 @@ private:
 public:
     std::shared_ptr<void> mfDeinitializer;
     Frame frame;
-    MediaFoundation_Callback *mf_callback;
-    IMFMediaSource *imf_media_source;
-    IMFSourceReader *imf_source_reader;
+    MediaFoundation_Callback *mfCallback;
+    IMFMediaSource *imfMediaSource;
+    IMFSourceReader *imfSourceReader;
     bool capturing;
     CameraInformation information;
-    FrameCallback cb_frame;
+    FrameCallback frameCallback;
 };
 
 } // namespace webcam_capture

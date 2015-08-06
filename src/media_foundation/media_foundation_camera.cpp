@@ -17,21 +17,21 @@
 namespace webcam_capture {
 
 MediaFoundation_Camera::MediaFoundation_Camera(std::shared_ptr<void> mfDeinitializer,
-        const CameraInformation &information, IMFMediaSource *mediaSource)
-    : information(information)
-    , mfDeinitializer(mfDeinitializer)
-    , capturing(false)
-    , imf_media_source(mediaSource)
-    , mf_callback(NULL)
-    , imf_source_reader(NULL)
+        const CameraInformation &information, IMFMediaSource *mediaSource) :
+    information(information),
+    mfDeinitializer(mfDeinitializer),
+    capturing(false),
+    imfMediaSource(mediaSource),
+    mfCallback(nullptr),
+    imfSourceReader(nullptr)
 {
-
+    // empty
 }
 
 std::unique_ptr<CameraInterface> MediaFoundation_Camera::create(std::shared_ptr<void> mfDeinitializer,
         const CameraInformation &information)
 {
-    IMFMediaSource *mediaSource = NULL;
+    IMFMediaSource *mediaSource = nullptr;
     // Create the MediaSource
 
     const std::wstring& symbolicLink = static_cast<WinapiShared_UniqueId *>(information.getUniqueId().get())->getId();
@@ -53,13 +53,10 @@ MediaFoundation_Camera::~MediaFoundation_Camera()
     }
 
     //Release mediaSource
-    MediaFoundation_Utils::safeRelease(&imf_media_source);
+    MediaFoundation_Utils::safeRelease(&imfMediaSource);
 }
 
-int MediaFoundation_Camera::start(PixelFormat pixelFormat,
-                                  int width,
-                                  int height, float fps,
-                                  FrameCallback cb)
+int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb)
 {
     if (!cb) {
         DEBUG_PRINT("Error: The callback function is empty. Capturing was not started.");
@@ -71,17 +68,17 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat,
         return -2;      //TODO Err code
     }
 
-    cb_frame = cb;
+    frameCallback = cb;
 
 ///WTF the currentFpsBuf variable int setDeviceFormat and in setReaderFormat shows that
 /// FPS is 3000 1 time and second time 500 - in real time - it doesn't changes
 /// Looks like if you want to change FPS - we need to delete imm_media_source and create it again
     //"to test just comment this"
-    MediaFoundation_Utils::safeRelease(&imf_media_source);
+    MediaFoundation_Utils::safeRelease(&imfMediaSource);
     // Create the MediaSource
     const std::wstring& symbolicLink = static_cast<WinapiShared_UniqueId *>(information.getUniqueId().get())->getId();
 
-    if (createVideoDeviceSource(symbolicLink, &imf_media_source) < 0) {
+    if (createVideoDeviceSource(symbolicLink, &imfMediaSource) < 0) {
         DEBUG_PRINT("Error: cannot create the media device source.");
         return NULL;
     }
@@ -93,7 +90,7 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat,
         return -8;      //TODO Err code
     }
 
-    if (setDeviceFormat(imf_media_source, width,
+    if (setDeviceFormat(imfMediaSource, width,
                         height,
                         pixelFormat,
                         fps) < 0) {
@@ -102,22 +99,22 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat,
     }
 
     // Create the source reader.
-    MediaFoundation_Callback::createInstance(this, &mf_callback);
+    MediaFoundation_Callback::createInstance(this, &mfCallback);
 
-    if (createSourceReader(imf_media_source, mf_callback, &imf_source_reader) < 0) {
+    if (createSourceReader(imfMediaSource, mfCallback, &imfSourceReader) < 0) {
         DEBUG_PRINT("Error: cannot create the source reader.");
-        MediaFoundation_Utils::safeRelease(&mf_callback);
+        MediaFoundation_Utils::safeRelease(&mfCallback);
         return -10;      //TODO Err code
     }
 
     // Set the source reader format.
-    if (setReaderFormat(imf_source_reader, width,
+    if (setReaderFormat(imfSourceReader, width,
                         height,
                         pixelFormat,
                         fps) < 0) {
         DEBUG_PRINT("Error: cannot set the reader format.");
-        MediaFoundation_Utils::safeRelease(&mf_callback);
-        MediaFoundation_Utils::safeRelease(&imf_source_reader);
+        MediaFoundation_Utils::safeRelease(&mfCallback);
+        MediaFoundation_Utils::safeRelease(&imfSourceReader);
         return -11;      //TODO Err code
     }
 
@@ -126,7 +123,7 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat,
     frame.pixel_format = pixelFormat;
 
     // Kick off the capture stream.
-    HRESULT hr = imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
+    HRESULT hr = imfSourceReader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
 
     if (FAILED(hr)) {
         if (hr == MF_E_INVALIDREQUEST) {
@@ -158,15 +155,15 @@ int MediaFoundation_Camera::stop()
         return -1;    //TODO Err code
     }
 
-    if (!imf_source_reader) {
+    if (!imfSourceReader) {
         DEBUG_PRINT("Error: Cannot stop capture because sourceReader is empty yet.");
         return -2;    //TODO Err code
     }
 
     capturing = false;
 
-    MediaFoundation_Utils::safeRelease(&imf_source_reader);
-    MediaFoundation_Utils::safeRelease(&mf_callback);
+    MediaFoundation_Utils::safeRelease(&imfSourceReader);
+    MediaFoundation_Utils::safeRelease(&mfCallback);
 
     return 1;   //TODO Err code
 }
@@ -181,7 +178,7 @@ std::unique_ptr<Frame> MediaFoundation_Camera::captureFrame()
 std::vector<CapabilityFormat> MediaFoundation_Camera::getCapabilities()
 {
     std::vector<CapabilityFormat> result;
-    getVideoCapabilities(imf_media_source, result);
+    getVideoCapabilities(imfMediaSource, result);
 
     return result;
 }
@@ -194,7 +191,7 @@ bool MediaFoundation_Camera::getPropertyRange(VideoProperty property, VideoPrope
     VideoProcAmpProperty ampProperty;
     long lMin, lMax, lStep, lDefault, lCaps;
 
-    HRESULT hr = imf_media_source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
+    HRESULT hr = imfMediaSource->QueryInterface(IID_PPV_ARGS(&pProcAmp));
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.");
@@ -242,7 +239,7 @@ int MediaFoundation_Camera::getProperty(VideoProperty property)
 
     IAMVideoProcAmp *pProcAmp = NULL;
     VideoProcAmpProperty ampProperty;
-    HRESULT hr = imf_media_source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
+    HRESULT hr = imfMediaSource->QueryInterface(IID_PPV_ARGS(&pProcAmp));
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.");
@@ -289,7 +286,7 @@ bool MediaFoundation_Camera::setProperty(const VideoProperty property, const int
 {
     IAMVideoProcAmp *pProcAmp = NULL;
     VideoProcAmpProperty ampProperty;
-    HRESULT hr = imf_media_source->QueryInterface(IID_PPV_ARGS(&pProcAmp));
+    HRESULT hr = imfMediaSource->QueryInterface(IID_PPV_ARGS(&pProcAmp));
 
     if (FAILED(hr)) {
         DEBUG_PRINT("Can't get IAMVideoProcAmp object. SetProperty failed.");

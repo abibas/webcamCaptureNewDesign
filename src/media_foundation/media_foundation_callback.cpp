@@ -72,8 +72,8 @@ HRESULT MediaFoundation_Callback::OnReadSample(HRESULT hr, DWORD streamIndex, DW
         IMFSample *sample)
 {
     assert(cam);
-    assert(cam->imf_source_reader);
-    assert(cam->cb_frame);
+    assert(cam->imfSourceReader);
+    assert(cam->frameCallback);
 
     EnterCriticalSection(&crit_sec);
 
@@ -97,7 +97,7 @@ HRESULT MediaFoundation_Callback::OnReadSample(HRESULT hr, DWORD streamIndex, DW
                 cam->frame.plane[0] = data;
                 cam->frame.plane[1] = data + cam->frame.offset[1];
                 cam->frame.plane[2] = data + cam->frame.offset[2];
-                cam->cb_frame(cam->frame);
+                cam->frameCallback(cam->frame);
 
                 buffer->Unlock();
                 buffer->Release();
@@ -106,8 +106,8 @@ HRESULT MediaFoundation_Callback::OnReadSample(HRESULT hr, DWORD streamIndex, DW
     }
 
     if (SUCCEEDED(hr)) {
-        if (cam->imf_source_reader && cam->capturing) {
-            hr = cam->imf_source_reader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
+        if (cam->imfSourceReader && cam->capturing) {
+            hr = cam->imfSourceReader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
 
             if (FAILED(hr)) {
                 DEBUG_PRINT("Error: while trying to read the next sample.");
