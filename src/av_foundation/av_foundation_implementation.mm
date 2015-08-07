@@ -336,7 +336,13 @@
     {
         if (kCVPixelFormatType_422YpCbCr8_yuvs == pix_fmt ||
             kCVPixelFormatType_422YpCbCr8 == pix_fmt ||
-            kCVPixelFormatType_32BGRA == pix_fmt )
+            kCVPixelFormatType_4444YpCbCrA8 == pix_fmt ||
+            kCVPixelFormatType_32BGRA == pix_fmt ||
+            kCVPixelFormatType_32ABGR == pix_fmt ||
+            kCVPixelFormatType_24RGB == pix_fmt ||
+            kCVPixelFormatType_32ARGB == pix_fmt ||
+            kCVPixelFormatType_16BE565 == pix_fmt ||
+            kCVPixelFormatType_16LE555 == pix_fmt)
         {
             frame.plane[0] = (uint8_t*)CVPixelBufferGetBaseAddress(buffer);
         }

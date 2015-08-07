@@ -19,16 +19,8 @@ bool AVFoundation_UniqueId::equals(const UniqueId &other) const
         return false;
     }
 
-    //need to compare string without this "{...}" value.
     const AVFoundation_UniqueId &otherUniqueId = static_cast<const AVFoundation_UniqueId &>(other);
-    size_t thisPos = uniqueId.find_first_of(L'{');
-    size_t otherPos = otherUniqueId.uniqueId.find_first_of(L'{');
-
-    if (thisPos != otherPos || thisPos == std::string::npos) {
-        return false;
-    }
-
-    return uniqueId.compare(0, thisPos, otherUniqueId.uniqueId, 0, otherPos) == 0;
+    return (uniqueId == otherUniqueId.getId());
 }
 
 const std::string &AVFoundation_UniqueId::getId() const
