@@ -37,7 +37,7 @@ std::unique_ptr<CameraInterface> MediaFoundation_Camera::create(std::shared_ptr<
     const std::wstring& symbolicLink = static_cast<WinapiShared_UniqueId *>(information.getUniqueId().get())->getId();
 
     if (MediaFoundation_Camera::createVideoDeviceSource(symbolicLink, &mediaSource) < 0) {
-        DEBUG_PRINT("Error: cannot create the media device source.");
+        DEBUG_PRINT("Error: Can't create the media device source.");
         return nullptr;
     }
 
@@ -64,7 +64,7 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
     }
 
     if (capturing) {
-        DEBUG_PRINT("Error: cannot start capture because we are already capturing.");
+        DEBUG_PRINT("Error: Can't start capture because we are already capturing.");
         return -2;      //TODO Err code
     }
 
@@ -79,19 +79,19 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
     const std::wstring& symbolicLink = static_cast<WinapiShared_UniqueId *>(information.getUniqueId().get())->getId();
 
     if (createVideoDeviceSource(symbolicLink, &imfMediaSource) < 0) {
-        DEBUG_PRINT("Error: cannot create the media device source.");
+        DEBUG_PRINT("Error: Can't create the media device source.");
         return NULL;
     }
 
     //End of "to test comment this"
 
     if (pixelFormat == PixelFormat::UNKNOWN) {
-        DEBUG_PRINT("Error: cannot set a pixel format for UNKNOWN.");
+        DEBUG_PRINT("Error: Can't set a pixel format for PixelFormat::UNKNOWN.");
         return -8;      //TODO Err code
     }
 
     if (setDeviceFormat(imfMediaSource, width, height, pixelFormat, fps) < 0) {
-        DEBUG_PRINT("Error: cannot set the device format.");
+        DEBUG_PRINT("Error: Can't set the device format.");
         return -9;      //TODO Err code
     }
 
@@ -99,14 +99,14 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
     MediaFoundation_Callback::createInstance(this, &mfCallback);
 
     if (createSourceReader(imfMediaSource, mfCallback, &imfSourceReader) < 0) {
-        DEBUG_PRINT("Error: cannot create the source reader.");
+        DEBUG_PRINT("Error: Can't create the source reader.");
         MediaFoundation_Utils::safeRelease(&mfCallback);
         return -10;      //TODO Err code
     }
 
     // Set the source reader format.
     if (setReaderFormat(imfSourceReader, width, height, pixelFormat, fps) < 0) {
-        DEBUG_PRINT("Error: cannot set the reader format.");
+        DEBUG_PRINT("Error: Can't set the reader format.");
         MediaFoundation_Utils::safeRelease(&mfCallback);
         MediaFoundation_Utils::safeRelease(&imfSourceReader);
         return -11;      //TODO Err code
@@ -134,7 +134,7 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
             DEBUG_PRINT("ReadSample - unhandled result.");
         }
 
-        DEBUG_PRINT("Error: while trying to ReadSample() on the imf_source_reader. ");
+        DEBUG_PRINT_HR_ERROR("While trying to ReadSample() on the imfSourceReader.", hr);
 
         MediaFoundation_Utils::safeRelease(&mfCallback);
         MediaFoundation_Utils::safeRelease(&imfSourceReader);
@@ -149,7 +149,7 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
 int MediaFoundation_Camera::stop()
 {
     if (!capturing) {
-        DEBUG_PRINT("Error: Cannot stop capture because we're not capturing yet.");
+        DEBUG_PRINT("Error: Can't stop capture because we're not capturing yet.");
         return -1;    //TODO Err code
     }
 
@@ -187,7 +187,7 @@ bool MediaFoundation_Camera::getPropertyRange(VideoProperty property, VideoPrope
     HRESULT hr = imfMediaSource->QueryInterface(IID_PPV_ARGS(&pProcAmp));
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.");
+        DEBUG_PRINT_HR_ERROR("Can't get IAMVideoProcAmp object.", hr);
         return false;
     }
 
@@ -208,7 +208,7 @@ bool MediaFoundation_Camera::getPropertyRange(VideoProperty property, VideoPrope
         }
 
         default: {
-            DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.");
+            DEBUG_PRINT("Error: Unsupported VideoProperty.");
             return false;
         }
     }
@@ -216,7 +216,7 @@ bool MediaFoundation_Camera::getPropertyRange(VideoProperty property, VideoPrope
     hr = pProcAmp->GetRange(ampProperty, &lMin, &lMax, &lStep, &lDefault, &lCaps);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.");
+        DEBUG_PRINT_HR_ERROR("Couldn't get range of the VideoProperty.", hr);
         return false;
     }
 
@@ -235,7 +235,7 @@ int MediaFoundation_Camera::getProperty(VideoProperty property)
     HRESULT hr = imfMediaSource->QueryInterface(IID_PPV_ARGS(&pProcAmp));
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Can't get IAMVideoProcAmp object. GetPropertyRange failed.");
+        DEBUG_PRINT_HR_ERROR("Can't get IAMVideoProcAmp object.", hr);
         return -99999;///TODO to return error value
     }
 
@@ -256,7 +256,7 @@ int MediaFoundation_Camera::getProperty(VideoProperty property)
         }
 
         default: {
-            DEBUG_PRINT("Unsupported VideoPropertyValue. GetPropertyRange failed.");
+            DEBUG_PRINT("Error: Unsupported VideoProperty.");
             return -99999; ///TODO to return error value
         }
     }
@@ -266,7 +266,7 @@ int MediaFoundation_Camera::getProperty(VideoProperty property)
     hr = pProcAmp->Get(ampProperty, &value, &flags);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.");
+        DEBUG_PRINT_HR_ERROR("Couldn't get value of the VideoProperty.", hr);
         return -99999;
     }
 
@@ -282,7 +282,7 @@ bool MediaFoundation_Camera::setProperty(const VideoProperty property, const int
     HRESULT hr = imfMediaSource->QueryInterface(IID_PPV_ARGS(&pProcAmp));
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Can't get IAMVideoProcAmp object. SetProperty failed.");
+        DEBUG_PRINT_HR_ERROR("Can't get IAMVideoProcAmp object.", hr);
         return false;
     }
 
@@ -312,14 +312,14 @@ bool MediaFoundation_Camera::setProperty(const VideoProperty property, const int
     hr = pProcAmp->Get(ampProperty, &val, &flags);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error during IAMVideoProcAmp->Get. SetProperty failed.");
+        DEBUG_PRINT_HR_ERROR("Couldn't get value of the VideoProperty.", hr);
         return false;
     }
 
     hr = pProcAmp->Set(ampProperty, value, flags);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error during IAMVideoProcAmp->Set. SetProperty failed.");
+        DEBUG_PRINT_HR_ERROR("Couldn't set value of the VideoProperty.", hr);
         return false;
     }
 
