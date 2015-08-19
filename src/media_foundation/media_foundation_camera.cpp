@@ -392,84 +392,73 @@ int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int wi
             goto done;
         }
 
-        UINT32 attr_count = 0;
-        hr = type->GetCount(&attr_count);
-
+        //get subtype from type
+        PropVariantInit(&var);
+        hr = type->GetItem(MF_MT_SUBTYPE, &var);
         if (FAILED(hr)) {
-            DEBUG_PRINT("Error: cannot type param count.");
-            result = -6;        //TODO Err code
-            goto done;
-        }
-
-        if (attr_count > 0) {
-            for (UINT32 j = 0; j < attr_count; ++j) {
-                GUID guid = { 0 };
-                PropVariantInit(&var);
-
-                hr = type->GetItemByIndex(j, &guid, &var);
-
-                if (FAILED(hr)) {
-                    DEBUG_PRINT("Error: cannot get item by index.");
-                    result = -7;        //TODO Err code
-                    PropVariantClear(&var);
-                    goto done;
-                }
-
-                if (guid == MF_MT_SUBTYPE && var.vt == VT_CLSID) {
-                    pixelFormatBuf = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
-                } else if (guid == MF_MT_FRAME_SIZE) {
-                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                    widthBuf = (int)high;
-                    heightBuf = (int)low;
-                }
-
-                PropVariantClear(&var);
-            }
-
-            // Wait till we get the format and resolution we are looking for
-            if (widthBuf != width || heightBuf != height || pixelFormatBuf != pixelFormat) {
-                MediaFoundation_Utils::safeRelease(&type);
-                continue;
-            }
-
-            // figure out fps
-            // we don't read fps above because we need to set it on type, which requires PROPVARIANT of that fps
-
-            auto trySetFps = [&type, &var, &hr, &high, &low, fps](REFGUID GUID) {
-                bool setFps = false;
-
-                PropVariantInit(&var);
-                hr = type->GetItem(GUID, &var);
-                if (SUCCEEDED(hr)) {
-                    Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                    float fpsBuf = FPS_FROM_RATIONAL(high, low);
-
-                    if (FPS_EQUAL(fps, fpsBuf)) {
-                        hr = type->SetItem(MF_MT_FRAME_RATE, var);
-                        setFps = SUCCEEDED(hr);
-                    }
-                }
-                PropVariantClear(&var);
-
-                return setFps;
-            };
-
-            // if we found the fps we are looking for and set it on the type
-            if (trySetFps(MF_MT_FRAME_RATE) || trySetFps(MF_MT_FRAME_RATE_RANGE_MAX) || trySetFps(MF_MT_FRAME_RATE_RANGE_MIN)) {
-
-                hr = media_handler->SetCurrentMediaType(type);
-                if (FAILED(hr)) {
-                    result = -7;
-                    DEBUG_PRINT("Error: Failed to set the current media type for the given settings.");
-                } else {
-                    setType = true;
-                }
-                MediaFoundation_Utils::safeRelease(&type);
-                break;
-            }
-
             MediaFoundation_Utils::safeRelease(&type);
+            continue;
         }
+        if (var.vt == VT_CLSID) {
+            pixelFormatBuf = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
+        }
+        PropVariantClear(&var);
+
+        //get frame size from type
+        PropVariantInit(&var);
+        hr = type->GetItem(MF_MT_FRAME_SIZE, &var);
+        if (FAILED(hr)) {
+            MediaFoundation_Utils::safeRelease(&type);
+            continue;
+        }
+        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+        widthBuf = (int)high;
+        heightBuf = (int)low;
+        PropVariantClear(&var);
+
+        // Wait till we get the format and resolution we are looking for
+        if (widthBuf != width || heightBuf != height || pixelFormatBuf != pixelFormat) {
+            MediaFoundation_Utils::safeRelease(&type);
+            continue;
+        }
+
+        // figure out fps
+        // we don't read fps above because we need to set it on type, which requires PROPVARIANT of that fps
+
+        auto trySetFps = [&type, &var, &hr, &high, &low, fps](REFGUID GUID) {
+            bool setFps = false;
+
+            PropVariantInit(&var);
+            hr = type->GetItem(GUID, &var);
+            if (SUCCEEDED(hr)) {
+                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                float fpsBuf = FPS_FROM_RATIONAL(high, low);
+
+                if (FPS_EQUAL(fps, fpsBuf)) {
+                    hr = type->SetItem(MF_MT_FRAME_RATE, var);
+                    setFps = SUCCEEDED(hr);
+                }
+            }
+            PropVariantClear(&var);
+
+            return setFps;
+        };
+
+        // if we found the fps we are looking for and set it on the type
+        if (trySetFps(MF_MT_FRAME_RATE) || trySetFps(MF_MT_FRAME_RATE_RANGE_MAX) || trySetFps(MF_MT_FRAME_RATE_RANGE_MIN)) {
+
+            hr = media_handler->SetCurrentMediaType(type);
+            if (FAILED(hr)) {
+                result = -7;
+                DEBUG_PRINT("Error: Failed to set the current media type for the given settings.");
+            } else {
+                setType = true;
+            }
+            MediaFoundation_Utils::safeRelease(&type);
+            break;
+        }
+
+        MediaFoundation_Utils::safeRelease(&type);
     }
 
     if (!setType) {
