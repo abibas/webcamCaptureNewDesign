@@ -21,7 +21,12 @@ namespace webcam_capture {
 /**
  *  Provides video frame data.
  */
-struct WEBCAM_CAPTURE_EXPORT Frame {
+#ifdef _WIN32
+    struct WEBCAM_CAPTURE_EXPORT Frame
+#elif __APPLE__
+    struct Frame
+#endif
+{
     /**
      * @param w Sets the width of the frame.
      * @param h Sets the height of the frame.

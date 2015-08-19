@@ -17,7 +17,11 @@ class UniqueId;
 /**
  * Provides a brief description of a camera.
  */
-class WEBCAM_CAPTURE_EXPORT CameraInformation
+#ifdef _WIN32
+    class WEBCAM_CAPTURE_EXPORT CameraInformation
+#elif __APPLE__
+    class CameraInformation
+#endif
 {
 public:
     CameraInformation(std::shared_ptr<UniqueId> uniqueId, std::string cameraName) : uniqueId(uniqueId),

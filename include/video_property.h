@@ -12,7 +12,12 @@ namespace webcam_capture  {
 /**
  *  Supported video properties.
  */
-enum class WEBCAM_CAPTURE_EXPORT VideoProperty {
+
+#ifdef _WIN32
+    enum class WEBCAM_CAPTURE_EXPORT VideoProperty {
+#elif __APPLE__
+    enum class VideoProperty {
+#endif
     Brightness,
     Contrast,
     Saturation

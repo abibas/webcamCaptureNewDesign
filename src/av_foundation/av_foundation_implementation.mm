@@ -432,13 +432,4 @@ int webcam_capture_av_start_capturing(void *cap, webcam_capture::PixelFormat pix
 int webcam_capture_av_stop_capturing(void *cap) {
     return [(id)cap stopCapturing];
 }
-
-//int webcam_capture_av_start_camera_notifications(webcam_capture::ConnectionStatusCallback cb_notifications) {
-//    return 1;
-//}
-
-//int webcam_capture_av_stop_camera_notifications() {
-//    return 1;
-//}
-
 @end

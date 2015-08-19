@@ -18,7 +18,12 @@ namespace webcam_capture {
 
 class CameraInterface;
 
-enum class WEBCAM_CAPTURE_EXPORT CameraConnectionState {
+#ifdef _WIN32
+    enum class WEBCAM_CAPTURE_EXPORT CameraConnectionState {
+#elif __APPLE__
+    enum class CameraConnectionState {
+#endif
+
     Connected, // camera was connected to the system and it's available for use
     Disconnected // camera was disconnected from the system and you should stop using it
 };
@@ -29,7 +34,12 @@ typedef std::function<void(CameraInformation information, CameraConnectionState 
  * Common interface of backend implementations.
  * Provides access to cameras and information of their availability.
  */
-class WEBCAM_CAPTURE_EXPORT BackendInterface
+
+#ifdef _WIN32
+    class WEBCAM_CAPTURE_EXPORT BackendInterface
+#elif __APPLE__
+    class BackendInterface
+#endif
 {
 public:
     BackendInterface(BackendImplementation implementation) : implementation(implementation) {}

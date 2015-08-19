@@ -24,7 +24,11 @@ typedef std::function<void(Frame &frame)> FrameCallback;
  * Common interface of backend implementations.
  * Provides access to video capturing and camera information.
  */
-class WEBCAM_CAPTURE_EXPORT CameraInterface
+#ifdef _WIN32
+    class WEBCAM_CAPTURE_EXPORT CameraInterface
+#elif __APPLE__
+    class CameraInterface
+#endif
 {
 public:
     CameraInterface() {}

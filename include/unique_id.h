@@ -15,7 +15,11 @@ namespace webcam_capture {
  * Uniquely identifies a camera.
  * While the actual data is hidden by the backend implementations, you can still use it for comparison.
  */
-class WEBCAM_CAPTURE_EXPORT UniqueId
+#ifdef _WIN32
+    class WEBCAM_CAPTURE_EXPORT UniqueId
+#elif __APPLE__
+    class UniqueId
+#endif
 {
 public:
     UniqueId(const UniqueId &) = delete;

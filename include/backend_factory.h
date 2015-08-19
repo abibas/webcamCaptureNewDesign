@@ -19,7 +19,11 @@ class BackendInterface;
 /**
  * Provides access to backends and information of their availability.
  */
+#ifdef _WIN32
 class WEBCAM_CAPTURE_EXPORT BackendFactory
+#elif __APPLE__
+class BackendFactory
+#endif
 {
 public:
     /**

@@ -11,7 +11,11 @@ namespace webcam_capture {
 /**
  * Provides range information of a video property.
  */
-class WEBCAM_CAPTURE_EXPORT VideoPropertyRange
+#ifdef _WIN32
+    class WEBCAM_CAPTURE_EXPORT VideoPropertyRange
+#elif __APPLE__
+    class VideoPropertyRange
+#endif
 {
 public:
     VideoPropertyRange():

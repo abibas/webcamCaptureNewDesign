@@ -43,7 +43,7 @@ std::unique_ptr<webcam_capture::CameraInterface> AVFoundation_Backend::getCamera
     return AVFoundation_Camera::createCamera(mfDeinitializer, information);
 }
 
-int AVFoundation_Backend::setAvaliableCamerasChangedCallback(ConnectionStatusCallback callback)
+int AVFoundation_Backend::setCameraConnectionStateCallback(CameraConnectionStateCallback callback)
 {
     connectionStatusCallback = callback;
     //IF n_callback is null_ptr or n_callback function is empty
@@ -74,7 +74,7 @@ void AVFoundation_Backend::AVFoundationCameraConnected(std::string name, std::st
         std::shared_ptr<webcam_capture::AVFoundation_UniqueId> uniqueId =
                 std::make_shared<webcam_capture::AVFoundation_UniqueId>(id);
         CameraInformation device(uniqueId, name);
-        connectionStatusCallback(device, CameraConnectionStatus::Connected);
+        connectionStatusCallback(device, CameraConnectionState::Connected);
     }
 }
 
@@ -83,7 +83,7 @@ void AVFoundation_Backend::AVFoundationCameraDisconnected(std::string name, std:
         std::shared_ptr<webcam_capture::AVFoundation_UniqueId> uniqueId =
                 std::make_shared<webcam_capture::AVFoundation_UniqueId>(id);
         CameraInformation device(uniqueId, name);
-        connectionStatusCallback(device, CameraConnectionStatus::Disconnected);
+        connectionStatusCallback(device, CameraConnectionState::Disconnected);
     }
 }
 

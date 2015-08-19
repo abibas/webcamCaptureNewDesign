@@ -73,7 +73,7 @@ int AVFoundation_Camera::stop()
     return 1;   //TODO Err code
 }
 
-std::unique_ptr<Frame> AVFoundation_Camera::CaptureFrame()
+std::unique_ptr<Frame> AVFoundation_Camera::captureFrame()
 {
     //TODO to realise method
     return nullptr;

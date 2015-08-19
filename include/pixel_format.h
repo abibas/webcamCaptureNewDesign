@@ -19,7 +19,11 @@ namespace webcam_capture {
 /**
  * Supported pixel formats.
  */
-enum class WEBCAM_CAPTURE_EXPORT PixelFormat {
+#ifdef _WIN32
+    enum class WEBCAM_CAPTURE_EXPORT PixelFormat {
+#elif __APPLE__
+    enum class PixelFormat {
+#endif
     //Uncompressed RGB Formats
     RGB1,           /* RGB, 1 bit per pixel (bpp), palettized*/
     RGB4,           /* RGB, 4 bpp, palettized*/
@@ -28,6 +32,13 @@ enum class WEBCAM_CAPTURE_EXPORT PixelFormat {
     RGB565,         /* RGB 565, 16 bpp*/
     RGB24,          /* RGB, 24 bpp*/
     RGB32,          /* RGB, 32 bpp*/
+    BGRA32,         /* 32-bit BGRA */
+    BE16_555,       /* 16-bit big-endian 5-5-5.*/
+    BE16_565,       /* 16-bit big-endian 5-6-5*/
+    LE16_555,       /* 16-bit little-endian 5-5-5*/
+    LE16_565,       /* 16-bit little-endian 5-6-5*/
+    LE16_5551,      /* 16-bit little-endian 5-5-5-1*/
+
     ARGB1555,       /* RGB 555 with alpha channel*/
     ARGB32,         /* RGB, 32 bpp with alpha channel*/
     ARGB4444,       /* 16-bit RGB with alpha channel; 4 bits per channel*/
@@ -42,6 +53,7 @@ enum class WEBCAM_CAPTURE_EXPORT PixelFormat {
     NV11,           /* NV11, Sampling 4:1:1, Planar, Bits per channel - 8*/
     NV12,           /* NV12, Sampling 4:2:0, Planar, Bits per channel - 8*/
     UYVY,           /* UYVY, Sampling 4:2:2, Packed, Bits per channel - 8*/
+    YUYV,           /* YUYV, Sampling 4:2:2, Packed, Bits per channel - 8*/
     Y211,           /* Y211, Sampling "See remarks.", Packed, Bits per channel - 8*/
     Y411,           /* Y411, Sampling 4:1:1, Packed, Bits per channel - 8*/
     Y41P,           /* Y41P, Sampling 4:1:1, Packed, Bits per channel - 8*/
@@ -63,6 +75,9 @@ enum class WEBCAM_CAPTURE_EXPORT PixelFormat {
     P216,           /* P216, Sampling 4:2:2, Planar, Bits per channel - 16*/
     v210,           /* v210, Sampling 4:2:2, Packed, Bits per channel - 10*/
     v216,           /* v216, Sampling 4:2:2, Packed, Bits per channel - 16*/
+    v308,           /* Component Y'CbCr 8-bit 4:4:4.*/
+    v408,           /* Component Y'CbCrA 8-bit 4:4:4:4.*/
+    v410,           /* Component Y'CbCr 10-bit 4:4:4*/
     v40,            /* v410 or (v40), Sampling 4:4:4, Packed, Bits per channel - 10*/
     Y210,           /* Y210, Sampling 4:2:2, Packed, Bits per channel - 10*/
     Y216,           /* Y216, Sampling 4:2:2, Packed, Bits per channel - 16*/
@@ -147,6 +162,30 @@ enum class WEBCAM_CAPTURE_EXPORT PixelFormat {
     AnalogVideo_SECAM_K,    /*(K) SECAM*/
     AnalogVideo_SECAM_K1,   /*(K1) SECAM*/
     AnalogVideo_SECAM_L,    /*(L) SECAM*/
+
+    //AV Foundation Specific Formats
+    IndexedGray8_WhiteIsZero, /* 8 bit indexed gray, white is zero.*/
+    rle,            /* Apple Animation format.*/
+    cvid,           /* Cinepak format.*/
+    jpeg,           /* Joint Photographic Experts Group (JPEG) format.*/
+    dmb1,           /* JPEG format with Open-DML extensions.*/
+    SVQ1,           /* Sorenson video format.*/
+    SVQ3,           /* Sorenson 3 video format.*/
+    avc1,           /* ITU-T H.264 format (also known as ISO/IEC 14496-10 - MPEG-4 Part 10, Advanced Video Coding format).*/
+    mp4v,           /* ISO/IEC Moving Picture Experts Group (MPEG) MPEG-4 Part 2 video format.*/
+    mp2v,           /* MPEG-2 video format.*/
+    mp1v,           /* MPEG-1 video format.*/
+    dvc,            /* DV NTSC format.*/
+    dvcp,           /* DV PAL format.*/
+    dvpp,           /* Panasonic DVCPro PAL format.*/
+    dv5n,           /* Panasonic DVCPro-50 NTSC format.*/
+    dv5p,           /* Panasonic DVCPro-50 PAL format.*/
+    dvhp,           /* Panasonic DVCPro-HD 720p60 format.*/
+    dvhq,           /* Panasonic DVCPro-HD 720p50 format.*/
+    dvh6,           /* Panasonic DVCPro-HD 1080i60 format.*/
+    dvh5,           /* Panasonic DVCPro-HD 1080i50 format.*/
+    dvh3,           /* Panasonic DVCPro-HD 1080p30 format.*/
+    dvh2,           /* Panasonic DVCPro-HD 1080p25 format.*/
 
     UNKNOWN         /* Unknown format*/
 };

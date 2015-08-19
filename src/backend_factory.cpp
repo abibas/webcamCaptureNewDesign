@@ -49,7 +49,7 @@ std::unique_ptr<BackendInterface> BackendFactory::getBackend(BackendImplementati
 #ifdef  WEBCAM_CAPTURE_BACKEND_AV_FOUNDATION
 
         case BackendImplementation::AVFoundation : {
-            return std::make_unique<AV_Foundation_Backend>();
+            return std::make_unique<AVFoundation_Backend>();
         }
 
 #endif

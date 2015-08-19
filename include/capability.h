@@ -19,7 +19,11 @@ namespace webcam_capture {
 /**
  * Provides FPS supported by the camera for some resolution and pixel format.
  */
-class WEBCAM_CAPTURE_EXPORT CapabilityFps
+#ifdef _WIN32
+    class WEBCAM_CAPTURE_EXPORT CapabilityFps
+#elif __APPLE__
+    class CapabilityFps
+#endif
 {
 public:
     CapabilityFps(float fps) :
@@ -44,7 +48,11 @@ private:
  * Provides resolution (width and height) supported by the camera for some pixel format,
  * along with a list of supported FPS values for that resolution.
  */
-class WEBCAM_CAPTURE_EXPORT CapabilityResolution
+#ifdef _WIN32
+    class WEBCAM_CAPTURE_EXPORT CapabilityResolution
+#elif __APPLE__
+    class CapabilityResolution
+#endif
 {
 public:
     CapabilityResolution(int width, int height, std::vector<CapabilityFps> fpses) :
@@ -89,7 +97,11 @@ private:
  * Provides pixel format supported by the camera,
  * along with a list of supported resolutions for that pixel format.
  */
-class WEBCAM_CAPTURE_EXPORT CapabilityFormat
+#ifdef _WIN32
+    class WEBCAM_CAPTURE_EXPORT CapabilityFormat
+#elif __APPLE__
+    class CapabilityFormat
+#endif
 {
 public:
     CapabilityFormat(PixelFormat pixelFormat, std::vector<CapabilityResolution> resolutions):

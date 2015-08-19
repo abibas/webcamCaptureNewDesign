@@ -14,7 +14,11 @@ namespace webcam_capture {
 /**
  * Handles conversion of frames' pixel formats.
  */
-class WEBCAM_CAPTURE_EXPORT PixelFormatConverter
+#ifdef _WIN32
+    class WEBCAM_CAPTURE_EXPORT PixelFormatConverter
+#elif __APPLE__
+    class PixelFormatConverter
+#endif
 {
 public:
     /**

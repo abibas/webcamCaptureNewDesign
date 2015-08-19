@@ -19,11 +19,11 @@ public:
     static void DeinitBackend(void *);
     std::vector<CameraInformation> getAvailableCameras() const;
     std::unique_ptr<CameraInterface> getCamera(const CameraInformation &information) const;
-    int setAvaliableCamerasChangedCallback(ConnectionStatusCallback callback);
+    int setCameraConnectionStateCallback(CameraConnectionStateCallback callback);
     void AVFoundationCameraConnected(std::string name, std::string id);
     void AVFoundationCameraDisconnected(std::string name, std::string id);
 private:
-    ConnectionStatusCallback connectionStatusCallback;
+    CameraConnectionStateCallback connectionStatusCallback;
     std::shared_ptr<void> mfDeinitializer;
     void* avFoundationBackendObjectiveCInterface; // the objective-c interface
 

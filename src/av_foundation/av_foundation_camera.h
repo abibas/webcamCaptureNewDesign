@@ -27,7 +27,7 @@ public:
 
     int start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb);
     int stop();
-    std::unique_ptr<Frame> CaptureFrame();
+    std::unique_ptr<Frame> captureFrame();
     // ---- Capabilities ----
     bool getPropertyRange(VideoProperty property, VideoPropertyRange &videoPropRange);
     int getProperty(VideoProperty property);

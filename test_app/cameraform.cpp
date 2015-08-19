@@ -225,6 +225,9 @@ std::string  CameraForm::formatToString(PixelFormat format)
         case PixelFormat::UYVY:
             return "UYVY";
 
+        case PixelFormat::YUYV:
+            return "YUYV";
+
         case PixelFormat::Y41P:
             return "Y41P";
 
@@ -353,6 +356,9 @@ std::string  CameraForm::formatToString(PixelFormat format)
 
         case PixelFormat::O420:
             return "420O";
+
+        case PixelFormat::dmb1:
+            return "dmb1";
 
         default:
             return "Unknown format";
