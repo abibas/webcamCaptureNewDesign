@@ -1,7 +1,11 @@
 #ifndef VIDEO_PROPERTY_H
 #define VIDEO_PROPERTY_H
 
-#include <webcam_capture_export.h>
+#ifdef _WIN32
+    #include <webcam_capture_export.h>
+#elif __APPLE__
+    //nothing to include
+#endif
 
 namespace webcam_capture  {
 

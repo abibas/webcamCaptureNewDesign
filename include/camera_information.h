@@ -1,7 +1,11 @@
 #ifndef CAMERA_INFORMATION_H
 #define CAMERA_INFORMATION_H
 
-#include <webcam_capture_export.h>
+#ifdef _WIN32
+    #include <webcam_capture_export.h>
+#elif __APPLE__
+    //nothing to include
+#endif
 
 #include <memory>
 #include <string>

@@ -4,7 +4,11 @@
 #include <camera_information.h>
 #include <backend_implementation.h>
 
-#include <webcam_capture_export.h>
+#ifdef _WIN32
+    #include <webcam_capture_export.h>
+#elif __APPLE__
+    //nothing to include
+#endif
 
 #include <functional>
 #include <memory>

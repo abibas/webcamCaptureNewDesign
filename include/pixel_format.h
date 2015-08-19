@@ -1,7 +1,11 @@
 #ifndef PIXEL_FORMAT_H
 #define PIXEL_FORMAT_H
 
-#include <webcam_capture_export.h>
+#ifdef _WIN32
+    #include <webcam_capture_export.h>
+#elif __APPLE__
+    //nothing to include
+#endif
 
 /* Media Foundation
  *   - Formats: https://msdn.microsoft.com/en-us/library/windows/desktop/aa370819(v=vs.85).aspx
