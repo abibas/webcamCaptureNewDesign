@@ -628,6 +628,7 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
     IMFMediaTypeHandler *media_handler = NULL;
     IMFMediaType *type = NULL;
     int result = 1;        //TODO Err code
+    CapabilityTreeBuilder capabilityBuilder;
 
     HRESULT hr = source->CreatePresentationDescriptor(&presentation_desc);
 
@@ -668,122 +669,97 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
         goto done;
     }
 
-#if 0
-    // The list of supported types is not garantueed to return everything :)
-    // this was a test to check if some types that are supported by my test-webcam
-    // were supported when I check them manually. (they didn't).
-    // See the Remark here for more info: http://msdn.microsoft.com/en-us/library/windows/desktop/bb970473(v=vs.85).aspx
-    IMFMediaType *test_type = NULL;
-    MFCreateMediaType(&test_type);
+    // Loop over all the types
+    PROPVARIANT var;
 
-    if (test_type) {
-        GUID types[] = { MFVideoFormat_UYVY,
-                         MFVideoFormat_I420,
-                         MFVideoFormat_IYUV,
-                         MFVideoFormat_NV12,
-                         MFVideoFormat_YUY2,
-                         MFVideoFormat_Y42T,
-                         MFVideoFormat_RGB24
-                       } ;
+    for (DWORD i = 0; i < types_count; ++i) {
 
-        test_type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+        PixelFormat pixelFormat = PixelFormat::UNKNOWN;
+        int width = 0;
+        int height = 0;
+        float minFps = 0;
+        float maxFps = 0;
+        float currentFps = 0;
+        UINT32 high = 0;
+        UINT32 low =  0;
 
-        for (int i = 0; i < 7; ++i) {
-            test_type->SetGUID(MF_MT_SUBTYPE, types[i]);
-            hr = media_handler->IsMediaTypeSupported(test_type, NULL);
+        hr = media_handler->GetMediaTypeByIndex(i, &type);
 
-            if (hr != S_OK) {
-                DEBUG_PRINT("> Not supported: " << i);
-            } else {
-                DEBUG_PRINT("> Yes, supported: " << i);
-            }
-        }
-    }
-
-    MediaFoundation_Utils::safeRelease(&test_type);
-#endif
-    {
-        CapabilityTreeBuilder capabilityBuilder;
-
-        // Loop over all the types
-        PROPVARIANT var;
-
-        for (DWORD i = 0; i < types_count; ++i) {
-
-            PixelFormat pixelFormat = PixelFormat::UNKNOWN;
-            int width = 0;
-            int height = 0;
-            float minFps = 0;
-            float maxFps = 0;
-            float currentFps = 0;
-            UINT32 high = 0;
-            UINT32 low =  0;
-
-            hr = media_handler->GetMediaTypeByIndex(i, &type);
-
-            if (FAILED(hr)) {
-                DEBUG_PRINT("Error: cannot get media type by index.");
-                MediaFoundation_Utils::safeRelease(&type);
-                continue;
-            }
-
-            UINT32 attr_count = 0;
-            hr = type->GetCount(&attr_count);
-
-            if (FAILED(hr)) {
-                DEBUG_PRINT("Error: cannot type param count.");
-                MediaFoundation_Utils::safeRelease(&type);
-                continue;
-            }
-
-            if (attr_count > 0) {
-                for (UINT32 j = 0; j < attr_count; ++j) {
-
-                    GUID guid = { 0 };
-                    PropVariantInit(&var);
-
-                    hr = type->GetItemByIndex(j, &guid, &var);
-
-                    if (FAILED(hr)) {
-                        DEBUG_PRINT("Error: cannot get item by index.");
-                        PropVariantClear(&var);
-                        continue;
-                    }
-
-                    if (guid == MF_MT_SUBTYPE && var.vt == VT_CLSID) {
-                        pixelFormat = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
-                    } else if (guid == MF_MT_FRAME_SIZE) {
-                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                        width = (int)high;
-                        height = (int)low;
-                    } else if (guid == MF_MT_FRAME_RATE_RANGE_MIN) {
-                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                        minFps = FPS_FROM_RATIONAL(high, low);
-                    } else if (guid == MF_MT_FRAME_RATE_RANGE_MAX) {
-                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                        maxFps = FPS_FROM_RATIONAL(high, low);
-                    } else if (guid == MF_MT_FRAME_RATE) {
-                        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                        currentFps = FPS_FROM_RATIONAL(high, low);
-                    }
-
-                    PropVariantClear(&var);
-                }
-
-                // check that all required fields were set
-                if (pixelFormat == PixelFormat::UNKNOWN || !width || !height || !minFps || !maxFps || !currentFps) {
-                    continue;
-                }
-
-                capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
-            }
-
+        if (FAILED(hr)) {
+            DEBUG_PRINT("Error: cannot get media type by index.");
             MediaFoundation_Utils::safeRelease(&type);
+            continue;
         }
 
+        //TYPE
+        PropVariantInit(&var);
+        hr = type->GetItem(MF_MT_SUBTYPE, &var);
+        if (FAILED(hr)) {
+            MediaFoundation_Utils::safeRelease(&type);
+            continue;
+        }
+        if (var.vt == VT_CLSID) {
+            pixelFormat = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
+        }
+        PropVariantClear(&var);
 
-        capFormatVector = capabilityBuilder.build();
+        //FRAME SIZE
+        PropVariantInit(&var);
+        hr = type->GetItem(MF_MT_FRAME_SIZE, &var);
+        if (FAILED(hr)) {
+            MediaFoundation_Utils::safeRelease(&type);
+            continue;
+        }
+        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+        width = (int)high;
+        height = (int)low;
+        PropVariantClear(&var);
+
+        //MIN FRAME RATE
+        PropVariantInit(&var);
+        hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
+        if (FAILED(hr)) {
+            MediaFoundation_Utils::safeRelease(&type);
+            continue;
+        }
+        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+        minFps = FPS_FROM_RATIONAL(high, low);
+        PropVariantClear(&var);
+
+        //MAX FRAME RATE
+        PropVariantInit(&var);
+        hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
+        if (FAILED(hr)) {
+            MediaFoundation_Utils::safeRelease(&type);
+            continue;
+        }
+        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+        maxFps = FPS_FROM_RATIONAL(high, low);
+        PropVariantClear(&var);
+
+        //CURRENT FRAME RATE
+        PropVariantInit(&var);
+        hr = type->GetItem(MF_MT_FRAME_RATE, &var);
+        if (FAILED(hr)) {
+            MediaFoundation_Utils::safeRelease(&type);
+            continue;
+        }
+        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+        currentFps = FPS_FROM_RATIONAL(high, low);
+        PropVariantClear(&var);
+
+        // check that all required fields were set
+        if (pixelFormat == PixelFormat::UNKNOWN || !width || !height || !minFps || !maxFps || !currentFps) {
+            MediaFoundation_Utils::safeRelease(&type);
+            continue;
+        }
+
+        capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
+
+        MediaFoundation_Utils::safeRelease(&type);
     }
+
+    capFormatVector = capabilityBuilder.build();
 
 done:
     MediaFoundation_Utils::safeRelease(&presentation_desc);
