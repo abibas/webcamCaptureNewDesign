@@ -8,11 +8,13 @@
 #include "../src/direct_show/direct_show_backend.h"
 #endif
 
+#ifdef WEBCAM_CAPTURE_BACKEND_AV_FOUNDATION
+#include "../src/av_foundation/av_foundation_backend.h"
+#endif
+
 #ifdef V4L
 #endif
 
-#ifdef AV_FOUNDATION
-#endif
 
 
 namespace webcam_capture {
@@ -44,7 +46,7 @@ std::unique_ptr<BackendInterface> BackendFactory::getBackend(BackendImplementati
 
 #endif
 
-#ifdef AV_FOUNDATION
+#ifdef  WEBCAM_CAPTURE_BACKEND_AV_FOUNDATION
 
         case BackendImplementation::AVFoundation : {
             return std::make_unique<AV_Foundation_Backend>();
@@ -73,7 +75,7 @@ std::vector<BackendImplementation> BackendFactory::getAvailableBackends()
         BackendImplementation::v4l,
 #endif
 
-#ifdef AV_FOUNDATION
+#ifdef  WEBCAM_CAPTURE_BACKEND_AV_FOUNDATION
         BackendImplementation::AVFoundation,
 #endif
 
