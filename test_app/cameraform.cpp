@@ -168,13 +168,22 @@ void CameraForm::on_captureVideoBtb_clicked()
     videoForm->show();
 /// TODO ~ PAY ATTANTION!!! in MediaFoundation in decompressFormat
 /// you HAVE TO use one of the formats returned by Camera_Interface::getCapabilities();
+
+
+///Example to grab in mjpg, decompess into YUY2 and then convert into UYVY
+/// On my HP notebook webcam work's fine.
+//    if (camera->start(capFormat.getPixelFormat(),
+//                      capResolution.getWidth(),
+//                      capResolution.getHeight(),
+//                      capFps.getFps(),
+//                      videoForm->getFrameCallback(),
+//                      PixelFormat::UYVY,
+//                      PixelFormat::YUY2) < 0) {
     if (camera->start(capFormat.getPixelFormat(),
                       capResolution.getWidth(),
                       capResolution.getHeight(),
                       capFps.getFps(),
-                      videoForm->getFrameCallback(),
-                      PixelFormat::UYVY,
-                      PixelFormat::YUY2) < 0) {
+                      videoForm->getFrameCallback()) < 0) {
         delete videoForm;
     } else {
         videoForm->setCapturingStatus(true);
