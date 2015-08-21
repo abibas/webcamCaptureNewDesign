@@ -167,7 +167,7 @@ void CameraForm::on_captureVideoBtb_clicked()
     videoForm->setAttribute(Qt::WA_DeleteOnClose);
     videoForm->show();
 
-    if (camera->start(capFormat.getPixelFormat(), capResolution.getWidth(), capResolution.getHeight(), capFps.getFps(), videoForm->getFrameCallback()) < 0) {
+    if (camera->start(capFormat.getPixelFormat(), capResolution.getWidth(), capResolution.getHeight(), capFps.getFps(), videoForm->getFrameCallback(), PixelFormat::YUY2) < 0) {
         delete videoForm;
     } else {
         videoForm->setCapturingStatus(true);

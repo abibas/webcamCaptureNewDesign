@@ -14,6 +14,9 @@
 #include <shlwapi.h>
 #include <stdio.h>
 
+////
+#include <mferror.h>
+/////
 namespace webcam_capture {
 
 bool MediaFoundation_Callback::createInstance(MediaFoundation_Camera *cam, MediaFoundation_Callback **cb)
@@ -82,10 +85,51 @@ HRESULT MediaFoundation_Callback::OnReadSample(HRESULT hr, DWORD streamIndex, DW
         IMFMediaBuffer *buffer;
         HRESULT hr = S_OK;
         DWORD count = 0;
+        HRESULT decoderHR = S_OK;
+        MFT_OUTPUT_DATA_BUFFER odf;
+        odf.dwStreamID = 1;
+        odf.pSample = sample;
+        odf.dwStatus = 0;
+        odf.pEvents = NULL;
+
         sample->GetBufferCount(&count);
 
+        //if pDecoder exist's (!= NULL) - need to convert samples
+        if (pDecoder) {
+            //Using osi and isi to get information (used in debug)
+            MFT_OUTPUT_STREAM_INFO osi;
+            MFT_INPUT_STREAM_INFO isi;
+
+            decoderHR = pDecoder->GetInputStreamInfo(0, &isi);
+            if (FAILED(decoderHR)) {
+                DEBUG_PRINT("Error: Can't get input stream info for IMFTransform obj");
+            }
+            decoderHR = pDecoder->GetOutputStreamInfo(0, &osi);
+            if (FAILED(decoderHR)) {
+                DEBUG_PRINT("Error: Can't get output stream info for IMFTransform obj");
+            }
+
+            ///TODO pay attantion to this remark:
+            /// the idea is to call IMFTransform::ProcessInput() until it returns MF_E_NOTACCEPTING.
+            /// Then you should call IMFTransform::ProcessOutput() until it returns MF_E_TRANSFORM_NEED_MORE_INPUT.
+            /// And you keep that actions in a loop.
+            decoderHR = pDecoder->ProcessInput(0, sample, 0);
+            if (FAILED(decoderHR)) {
+                DEBUG_PRINT("Error: Can't Process input for IMFTransform obj");
+            }
+
+            DWORD outStatus = 0;
+            decoderHR = pDecoder->ProcessOutput(0,1, &odf, &outStatus);
+            if (FAILED(decoderHR)) {
+                DEBUG_PRINT("Error: Can't Process output for IMFTransform obj");
+            }
+        }
+
         for (DWORD i = 0; i < count; ++i) {
-            hr = sample->GetBufferByIndex(i, &buffer);
+            if (FAILED(decoderHR)){
+                break;
+            }
+            hr = odf.pSample->GetBufferByIndex(i, &buffer);
 
             if (SUCCEEDED(hr)) {
                 DWORD length = 0;

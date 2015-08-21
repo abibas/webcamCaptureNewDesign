@@ -32,7 +32,7 @@ public:
     ~MediaFoundation_Camera();
     static std::unique_ptr<CameraInterface> create(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
 
-    int start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb);
+    int start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb, PixelFormat decodeFormat = PixelFormat::UNKNOWN);
     int stop();
     std::unique_ptr<Frame> captureFrame();  //TODO
     // ---- Capabilities ----
@@ -54,6 +54,7 @@ private:
     int setDeviceFormat(IMFMediaSource *source, const int width, const int height, const PixelFormat pixelFormat,
                         const float fps) const;
     int setReaderFormat(IMFSourceReader *reader, const int width, const int height, const PixelFormat pixelFormat, const float fps) const;
+    int setDecoderFormats(MediaFoundation_Callback *mfCallback, const int width, const int height, const PixelFormat inputFormat, const PixelFormat outputFormat);
 
 public:
     std::shared_ptr<void> mfDeinitializer;

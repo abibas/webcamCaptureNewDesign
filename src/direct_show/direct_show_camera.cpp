@@ -47,7 +47,8 @@ DirectShow_Camera::~DirectShow_Camera()
 int DirectShow_Camera::start(PixelFormat pixelFormat,
                               int width,
                               int height, float fps,
-                              FrameCallback cb )
+                              FrameCallback cb,
+                              PixelFormat decodeFormat)
 {
     if (!cb) {
         DEBUG_PRINT("Error: The callback function is empty. Capturing was not started.");

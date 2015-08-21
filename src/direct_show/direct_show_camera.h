@@ -28,7 +28,7 @@ public:
     ~DirectShow_Camera();
     static std::unique_ptr<CameraInterface> createCamera(std::shared_ptr<void> mfDeinitializer, const CameraInformation &information);
 
-    int start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb);
+    int start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb, PixelFormat decodeFormat = PixelFormat::UNKNOWN);
     int stop();
     std::unique_ptr<Frame> captureFrame();
     // ---- Capabilities ----

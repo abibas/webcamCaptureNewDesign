@@ -47,6 +47,8 @@ private:
     MediaFoundation_Camera *cam;
     long ref_count;
     CRITICAL_SECTION crit_sec;
+public:
+    IMFTransform *pDecoder = NULL;
 };
 } // namespace webcam_capture
 

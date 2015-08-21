@@ -13,6 +13,7 @@
 #include <mfreadwrite.h>
 #include <shlwapi.h>
 #include <windows.h>
+#include <Wmcodecdsp.h>
 
 namespace webcam_capture {
 
@@ -56,7 +57,7 @@ MediaFoundation_Camera::~MediaFoundation_Camera()
     MediaFoundation_Utils::safeRelease(&imfMediaSource);
 }
 
-int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb)
+int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb, PixelFormat decodeFormat)
 {
     if (!cb) {
         DEBUG_PRINT("Error: The callback function is empty. Capturing was not started.");
@@ -95,13 +96,21 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
         return -9;      //TODO Err code
     }
 
-    // Create the source reader.
+    //Create mfCallback
     MediaFoundation_Callback::createInstance(this, &mfCallback);
+    //Set Decoder formats
+    if (decodeFormat != PixelFormat::UNKNOWN) {
+        if (setDecoderFormats(mfCallback, width, height, pixelFormat, decodeFormat) < 0){
+            DEBUG_PRINT("Error: Can't set the decoder formats.");
+            return -10;      //TODO Err code
+        }
+    }
 
+    // Create the source reader.
     if (createSourceReader(imfMediaSource, mfCallback, &imfSourceReader) < 0) {
         DEBUG_PRINT("Error: Can't create the source reader.");
         MediaFoundation_Utils::safeRelease(&mfCallback);
-        return -10;      //TODO Err code
+        return -11;      //TODO Err code
     }
 
     // Set the source reader format.
@@ -109,7 +118,7 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
         DEBUG_PRINT("Error: Can't set the reader format.");
         MediaFoundation_Utils::safeRelease(&mfCallback);
         MediaFoundation_Utils::safeRelease(&imfSourceReader);
-        return -11;      //TODO Err code
+        return -12;      //TODO Err code
     }
 
     frame.width[0] = width;
@@ -825,5 +834,102 @@ int MediaFoundation_Camera::createVideoDeviceSource(const std::wstring &pszSymbo
 
     MediaFoundation_Utils::safeRelease(&pAttributes);
     return 1; //TODO Err code
+}
+
+int MediaFoundation_Camera::setDecoderFormats(MediaFoundation_Callback *mfCallback, const int width, const int height, const PixelFormat inputFormat, const PixelFormat outputFormat)
+{
+    mfCallback->pDecoder = NULL;
+    HRESULT r = CoCreateInstance(CLSID_CColorConvertDMO, NULL, CLSCTX_INPROC_SERVER,
+                     IID_IMFTransform, (void**)&mfCallback->pDecoder);
+
+    GUID inFormat;
+    GUID outFormat;
+
+    IMFMediaType *mediaType;
+    PixelFormat pixelFormatBuf;
+
+    for (int i = 0; true; i++){
+        r = mfCallback->pDecoder->GetInputAvailableType(0, i, &mediaType);
+        //if FAILED(r) - no more formats in the list
+        if (FAILED(r)){
+            DEBUG_PRINT("Error: setDecoderFormats: inputFormat is unavaliable.");
+            MediaFoundation_Utils::safeRelease(&mfCallback->pDecoder);
+            mfCallback->pDecoder = NULL;
+            return -1;
+        }
+        PROPVARIANT var;
+
+        PropVariantInit(&var);
+        r = mediaType->GetItem(MF_MT_SUBTYPE, &var);
+        if (SUCCEEDED(r)) {
+            pixelFormatBuf = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
+            if (pixelFormatBuf == inputFormat) {
+                inFormat = *var.puuid;
+                MediaFoundation_Utils::safeRelease(&mediaType);
+                break;
+            }
+        }
+        PropVariantClear(&var);
+        MediaFoundation_Utils::safeRelease(&mediaType);
+    }
+
+    for (int i = 0; true; i++){
+        r = mfCallback->pDecoder->GetOutputAvailableType(0, i, &mediaType);
+        //if FAILED(r) - no more formats in the list
+        if (FAILED(r)){
+            DEBUG_PRINT("Error: setDecoderFormats: outputFormat is unavaliable.");
+            MediaFoundation_Utils::safeRelease(&mfCallback->pDecoder);
+            mfCallback->pDecoder = NULL;
+            return -2;
+        }
+        PROPVARIANT var;
+
+        PropVariantInit(&var);
+        r = mediaType->GetItem(MF_MT_SUBTYPE, &var);
+        if (SUCCEEDED(r)) {
+            pixelFormatBuf = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
+            if (pixelFormatBuf == outputFormat) {
+                outFormat = *var.puuid;
+                MediaFoundation_Utils::safeRelease(&mediaType);
+                break;
+            }
+        }
+        PropVariantClear(&var);
+        MediaFoundation_Utils::safeRelease(&mediaType);
+    }
+
+    //DSP input MediaType
+    IMFMediaType *inputMediaType = NULL;
+    r = MFCreateMediaType(&inputMediaType);
+    r = inputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+    r = inputMediaType->SetGUID(MF_MT_SUBTYPE, inFormat);
+    r = inputMediaType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+    r = MFSetAttributeSize(inputMediaType, MF_MT_FRAME_SIZE, width, height);
+    r = MFSetAttributeRatio(inputMediaType, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
+    r = mfCallback->pDecoder->SetInputType(0, inputMediaType, 0);
+    if (FAILED(r)) {
+        DEBUG_PRINT("Error: setDecoderFormats: IMFDecoder->SetInputType failed.");
+        MediaFoundation_Utils::safeRelease(&mfCallback->pDecoder);
+        mfCallback->pDecoder = NULL;
+        return -3;
+    }
+
+    //DSP output MediaType
+    IMFMediaType *outputMediaType = NULL;
+    r = MFCreateMediaType(&outputMediaType);
+    r = outputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+    r = outputMediaType->SetGUID(MF_MT_SUBTYPE, outFormat);
+    r = outputMediaType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+    r = MFSetAttributeSize(outputMediaType, MF_MT_FRAME_SIZE, width, height);
+    r = MFSetAttributeRatio(outputMediaType, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
+    r = mfCallback->pDecoder->SetOutputType(0, outputMediaType, 0);
+    if (FAILED(r)) {
+        DEBUG_PRINT("Error: setDecoderFormats: IMFDecoder->SetOutputType failed.");
+        MediaFoundation_Utils::safeRelease(&mfCallback->pDecoder);
+        mfCallback->pDecoder = NULL;
+        return -4;
+    }
+
+    return 1;
 }
 } // namespace webcam_capture
