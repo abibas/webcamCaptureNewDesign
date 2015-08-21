@@ -166,8 +166,15 @@ void CameraForm::on_captureVideoBtb_clicked()
     videoForm = new VideoForm(*camera, capResolution.getWidth(), capResolution.getHeight());
     videoForm->setAttribute(Qt::WA_DeleteOnClose);
     videoForm->show();
-
-    if (camera->start(capFormat.getPixelFormat(), capResolution.getWidth(), capResolution.getHeight(), capFps.getFps(), videoForm->getFrameCallback(), PixelFormat::YUY2) < 0) {
+/// TODO ~ PAY ATTANTION!!! in MediaFoundation in decompressFormat
+/// you HAVE TO use one of the formats returned by Camera_Interface::getCapabilities();
+    if (camera->start(capFormat.getPixelFormat(),
+                      capResolution.getWidth(),
+                      capResolution.getHeight(),
+                      capFps.getFps(),
+                      videoForm->getFrameCallback(),
+                      PixelFormat::UYVY,
+                      PixelFormat::YUY2) < 0) {
         delete videoForm;
     } else {
         videoForm->setCapturingStatus(true);

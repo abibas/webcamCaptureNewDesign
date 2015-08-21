@@ -57,8 +57,9 @@ MediaFoundation_Camera::~MediaFoundation_Camera()
     MediaFoundation_Utils::safeRelease(&imfMediaSource);
 }
 
-int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb, PixelFormat decodeFormat)
+int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb, PixelFormat decodeFormat, PixelFormat decompressFormat)
 {
+    int resultBuf = 0;
     if (!cb) {
         DEBUG_PRINT("Error: The callback function is empty. Capturing was not started.");
         return -1;      //TODO Err code
@@ -71,7 +72,8 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
 
     frameCallback = cb;
 
-///WTF the currentFpsBuf variable int setDeviceFormat and in setReaderFormat shows that
+/// TODO Check and solve this
+/// The currentFpsBuf variable int setDeviceFormat and in setReaderFormat shows that
 /// FPS is 3000 1 time and second time 500 - in real time - it doesn't changes
 /// Looks like if you want to change FPS - we need to delete imm_media_source and create it again
     //"to test just comment this"
@@ -99,8 +101,14 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
     //Create mfCallback
     MediaFoundation_Callback::createInstance(this, &mfCallback);
     //Set Decoder formats
-    if (decodeFormat != PixelFormat::UNKNOWN) {
-        if (setDecoderFormats(mfCallback, width, height, pixelFormat, decodeFormat) < 0){
+    resultBuf = 0;
+    if ( (decodeFormat != PixelFormat::UNKNOWN) && (decodeFormat != decompressFormat) ) {
+        if (decompressFormat == PixelFormat::UNKNOWN ) {
+            resultBuf = setDecoderFormats(mfCallback, width, height, pixelFormat, decodeFormat);
+        } else {
+            resultBuf = setDecoderFormats(mfCallback, width, height, decompressFormat, decodeFormat);
+        }
+        if (resultBuf < 0){
             DEBUG_PRINT("Error: Can't set the decoder formats.");
             return -10;      //TODO Err code
         }
@@ -113,8 +121,14 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
         return -11;      //TODO Err code
     }
 
-    // Set the source reader format.
-    if (setReaderFormat(imfSourceReader, width, height, pixelFormat, fps) < 0) {
+    // Set the source reader format. (decompress is doing there automatically by framework)
+    resultBuf = 0;
+    if (decompressFormat != PixelFormat::UNKNOWN) {
+        resultBuf = setReaderFormat(imfSourceReader, width, height, decompressFormat, fps);
+    } else {
+        resultBuf = setReaderFormat(imfSourceReader, width, height, pixelFormat, fps);
+    }
+    if (resultBuf < 0) {
         DEBUG_PRINT("Error: Can't set the reader format.");
         MediaFoundation_Utils::safeRelease(&mfCallback);
         MediaFoundation_Utils::safeRelease(&imfSourceReader);
@@ -547,6 +561,8 @@ int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int w
     int result = -1;        //TODO Err code
     HRESULT hr = S_OK;
     float currentFpsBuf = 0;
+    PROPVARIANT fpsPropBuf;
+    bool isFpsFounded = false;
 
     for (DWORD media_type_index = 0; true; ++media_type_index) {
         PixelFormat pixelFormatBuf = PixelFormat::UNKNOWN;
@@ -570,41 +586,80 @@ int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int w
         if (SUCCEEDED(hr)) {
             pixelFormatBuf = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
         }
-
         PropVariantClear(&var);
 
         // SIZE
         PropVariantInit(&var);
         hr = type->GetItem(MF_MT_FRAME_SIZE, &var);
-
         if (SUCCEEDED(hr)) {
             Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
             widthBuf = high;
             heightBuf = low;
         }
-
         PropVariantClear(&var);
 
-        PropVariantInit(&var);
-        hr = type->GetItem(MF_MT_FRAME_RATE, &var);
-
-        if (SUCCEEDED(hr)) {
-            Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-            currentFpsBuf = FPS_FROM_RATIONAL(high, low);
+        //Trying to find the fps in PROPVARIANT view to set to the output format
+        if (!isFpsFounded){
+            //current FPS
+            PropVariantInit(&var);
+            hr = type->GetItem(MF_MT_FRAME_RATE, &var);
+            if (SUCCEEDED(hr)) {
+                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                currentFpsBuf = FPS_FROM_RATIONAL(high, low);
+                if (FPS_EQUAL(currentFpsBuf, fps)) {
+                    hr = type->GetItem(MF_MT_FRAME_RATE, &fpsPropBuf);
+                    isFpsFounded = true;
+                }
+            }
+            PropVariantClear(&var);
         }
 
-        PropVariantClear(&var);
+         if (!isFpsFounded){
+            //max fps
+            PropVariantInit(&var);
+            hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
+            if (SUCCEEDED(hr)) {
+                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                currentFpsBuf = FPS_FROM_RATIONAL(high, low);
+                if (FPS_EQUAL(currentFpsBuf, fps)) {
+                    hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &fpsPropBuf);
+                    isFpsFounded = true;
+                }
+            }
+            PropVariantClear(&var);
+        }
+
+         if (!isFpsFounded){
+            //min fps
+            PropVariantInit(&var);
+            hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
+            if (SUCCEEDED(hr)) {
+                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
+                currentFpsBuf = FPS_FROM_RATIONAL(high, low);
+                if (FPS_EQUAL(currentFpsBuf, fps)) {
+                    hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &fpsPropBuf);
+                    isFpsFounded = true;
+                }
+            }
+            PropVariantClear(&var);
+        }
 
         // When the output media type of the source reader matches our specs, set it!
         if (widthBuf == width &&
                 heightBuf == height &&
-                pixelFormatBuf == pixelFormat &&
-                FPS_EQUAL(currentFpsBuf, fps)) {
+                pixelFormatBuf == pixelFormat ) {
 
+            hr = type->SetItem(MF_MT_FRAME_RATE, fpsPropBuf);
+            if (FAILED(hr)) {
+                DEBUG_PRINT("Error: while setting new FPS to the readerMediaType.");
+                return -1;
+            }
+            PropVariantClear(&fpsPropBuf);
             hr = reader->SetCurrentMediaType(0, NULL, type);
 
             if (FAILED(hr)) {
                 DEBUG_PRINT("Error: Failed to set the current media type for the given settings.");
+                result = -2;
             } else {
                 hr = S_OK;
                 result = 1;        //TODO Err code

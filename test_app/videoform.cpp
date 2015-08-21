@@ -32,8 +32,7 @@ VideoForm::~VideoForm()
 void VideoForm::FrameCaptureCallback(Frame &frame)
 {
     this->ui->videoLabel->setPixmap(QPixmap::fromImage(YUV422toRGBA32(frame)));
-
-//    //TO SAVE mjpg to file
+///EXAMPLE - SAVE mjpg to file
 //    /// Test of mjpeg writing.
 //    printf("Frame callback: %lu bytes, stride: %lu \n", buffer.nbytes, buffer.stride[0]);
 //    static int count = 0;

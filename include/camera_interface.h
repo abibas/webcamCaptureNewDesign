@@ -47,10 +47,11 @@ public:
      * @param height Height part of resolution of the captured video frames.
      * @param fps Frame rate of capturing.
      * @param callback Callback with the captured video frame data.
-     * @param decodeFormat Result pixel format decode in
+     * @param decodeFormat Pixel format decode in
+     * @param decompressFormat Decompress format or intermediate format if you wan't decompres and convert formats in one step
      * @return TODO(nurupo): add enum for: already in use, already started, invalid combination of capabilities, unknown error.
      */
-    virtual int start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback callback, PixelFormat decodeFormat = PixelFormat::UNKNOWN) = 0;
+    virtual int start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback callback, PixelFormat decodeFormat = PixelFormat::UNKNOWN, PixelFormat decompressFormat = PixelFormat::UNKNOWN) = 0;
 
     /**
      * Stops video capture.

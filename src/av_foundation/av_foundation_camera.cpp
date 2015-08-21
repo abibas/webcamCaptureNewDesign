@@ -42,7 +42,9 @@ AVFoundation_Camera::~AVFoundation_Camera()
 int AVFoundation_Camera::start(PixelFormat pixelFormat,
                                   int width,
                                   int height, float fps,
-                                  FrameCallback cb)
+                                  FrameCallback cb,
+				  PixelFormat decodeFormat, 
+				  PixelFormat decompressFormat)
 {
     if (!cb) {
         DEBUG_PRINT("Error: The callback function is empty. Capturing was not started.\n");
