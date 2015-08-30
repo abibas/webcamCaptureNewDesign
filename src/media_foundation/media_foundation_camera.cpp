@@ -859,98 +859,146 @@ int MediaFoundation_Camera::createVideoDeviceSource(const std::wstring &pszSymbo
     return 1; //TODO Err code
 }
 
+// 1 -- success, -1 -- format unsupported, -2 -- general error
 int MediaFoundation_Camera::setDecoderFormats(MediaFoundation_Callback *mfCallback, const int width, const int height, const PixelFormat inputFormat, const PixelFormat outputFormat)
 {
     mfCallback->pDecoder = NULL;
-    HRESULT r = CoCreateInstance(CLSID_CColorConvertDMO, NULL, CLSCTX_INPROC_SERVER,
+    HRESULT hr = CoCreateInstance(CLSID_CColorConvertDMO, NULL, CLSCTX_INPROC_SERVER,
                      IID_IMFTransform, (void**)&mfCallback->pDecoder);
+    if (FAILED(hr)) {
+        DEBUG_PRINT_HR_ERROR("Failed to obtain service for pixel format conversion.", hr);
+        mfCallback->pDecoder = NULL;
+        return -2;
+    }
 
     GUID inFormat;
     GUID outFormat;
 
-    IMFMediaType *mediaType;
-    PixelFormat pixelFormatBuf;
+    // first we try to get stream ids, since some implementations of transforms use them.
+    // if we fail to get them, we assume they are cosecutive and 0-index based, just like
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/ms693988%28v=vs.85%29.aspx
+    // describes, i.e. we just use 0 values in that case.
+    DWORD inputStreamId = 0;
+    DWORD outputStreamId = 0;
 
-    for (int i = 0; true; i++){
-        r = mfCallback->pDecoder->GetInputAvailableType(0, i, &mediaType);
-        //if FAILED(r) - no more formats in the list
-        if (FAILED(r)){
-            DEBUG_PRINT("Error: setDecoderFormats: inputFormat is unavaliable.");
-            MediaFoundation_Utils::safeRelease(&mfCallback->pDecoder);
-            mfCallback->pDecoder = NULL;
-            return -1;
-        }
-        PROPVARIANT var;
+    DWORD inputStreamIdCount;
+    DWORD outputStreamIdCount;
 
-        PropVariantInit(&var);
-        r = mediaType->GetItem(MF_MT_SUBTYPE, &var);
-        if (SUCCEEDED(r)) {
-            pixelFormatBuf = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
-            if (pixelFormatBuf == inputFormat) {
-                inFormat = *var.puuid;
-                MediaFoundation_Utils::safeRelease(&mediaType);
-                break;
-            }
+    std::unique_ptr<DWORD[]> inputStreamIds;
+    std::unique_ptr<DWORD[]> outputStreamIds;
+
+    hr = mfCallback->pDecoder->GetStreamCount(&inputStreamIdCount, &outputStreamIdCount);
+    if (SUCCEEDED(hr) && inputStreamIdCount > 0 && outputStreamIdCount > 0) {
+        inputStreamIds.reset(new DWORD[inputStreamIdCount]);
+        outputStreamIds.reset(new DWORD[outputStreamIdCount]);
+
+        hr = mfCallback->pDecoder->GetStreamIDs(inputStreamIdCount, inputStreamIds.get(), outputStreamIdCount, outputStreamIds.get());
+        if (SUCCEEDED(hr)) {
+            inputStreamId = inputStreamIds[0];
+            outputStreamId = outputStreamIds[0];
         }
-        PropVariantClear(&var);
-        MediaFoundation_Utils::safeRelease(&mediaType);
     }
 
-    for (int i = 0; true; i++){
-        r = mfCallback->pDecoder->GetOutputAvailableType(0, i, &mediaType);
-        //if FAILED(r) - no more formats in the list
-        if (FAILED(r)){
-            DEBUG_PRINT("Error: setDecoderFormats: outputFormat is unavaliable.");
-            MediaFoundation_Utils::safeRelease(&mfCallback->pDecoder);
-            mfCallback->pDecoder = NULL;
+    // check if the input pixel format fot the conversion is supported by the conversion service and get its GUID
+    // 0 -- success, -1 -- format unsupported, -2 -- general error
+    auto getSubtypeForPixelFormat = [](IMFTransform *transform, HRESULT (IMFTransform::*getAvailableType)(DWORD, DWORD, IMFMediaType**), PixelFormat pixelFormat, DWORD streamId, GUID &subtype) -> int
+    {
+        for (int i = 0; true; i++) {
+            IMFMediaType *mediaType;
+
+            HRESULT hr = (transform->*getAvailableType)(streamId, i, &mediaType);
+
+            if (hr == MF_E_NO_MORE_TYPES) {
+                DEBUG_PRINT("No conversion for the pixel format is available.");
+                MediaFoundation_Utils::safeRelease(&transform);
+                transform = NULL;
+                return -1;
+            }
+
+            if (FAILED(hr)) {
+                DEBUG_PRINT_HR_ERROR("Failed to get a list of available pixel formats for the conversion.", hr);
+                MediaFoundation_Utils::safeRelease(&transform);
+                transform = NULL;
+                return -2;
+            }
+
+            PROPVARIANT var;
+            PropVariantInit(&var);
+            hr = mediaType->GetItem(MF_MT_SUBTYPE, &var);
+            if (SUCCEEDED(hr)) {
+                PixelFormat pixelFormatBuf = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
+                if (pixelFormatBuf == pixelFormat && pixelFormatBuf != PixelFormat::UNKNOWN) {
+                    subtype = *var.puuid;
+                    PropVariantClear(&var);
+                    MediaFoundation_Utils::safeRelease(&mediaType);
+                    return 0;
+                }
+            }
+            PropVariantClear(&var);
+            MediaFoundation_Utils::safeRelease(&mediaType);
+        }
+    };
+
+    // set media type on the transform
+    // 0 -- success, -1 -- format unsupported, -2 -- general error
+    auto setSubtypeMediaType = [width, height](IMFTransform *transform, HRESULT (IMFTransform::*setType)(DWORD, IMFMediaType*, DWORD), DWORD streamId, const GUID &subtype) -> int
+    {
+        IMFMediaType *mediaType = NULL;
+        HRESULT hr = MFCreateMediaType(&mediaType);
+        if (FAILED(hr)) {
+            DEBUG_PRINT_HR_ERROR("Failed to create MediaType.", hr);
             return -2;
         }
-        PROPVARIANT var;
 
-        PropVariantInit(&var);
-        r = mediaType->GetItem(MF_MT_SUBTYPE, &var);
-        if (SUCCEEDED(r)) {
-            pixelFormatBuf = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
-            if (pixelFormatBuf == outputFormat) {
-                outFormat = *var.puuid;
-                MediaFoundation_Utils::safeRelease(&mediaType);
-                break;
-            }
+#define CHECK_ATTRIBUTE \
+    if (FAILED(hr)) { \
+        DEBUG_PRINT_HR_ERROR("Failed to set attribute on MediaType.", hr); \
+        return -2; \
+    }
+
+        hr = mediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+        CHECK_ATTRIBUTE
+        hr = mediaType->SetGUID(MF_MT_SUBTYPE, subtype);
+        CHECK_ATTRIBUTE
+        hr = mediaType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+        CHECK_ATTRIBUTE
+        hr = MFSetAttributeSize(mediaType, MF_MT_FRAME_SIZE, width, height);
+        CHECK_ATTRIBUTE
+        hr = MFSetAttributeRatio(mediaType, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
+        CHECK_ATTRIBUTE
+#undef CHECK_ATTRIBUTE
+        hr = (transform->*setType)(streamId, mediaType, 0);
+        if (hr == MF_E_INVALIDMEDIATYPE) {
+            DEBUG_PRINT("Conversion with such pixel format is unsupported.");
+            MediaFoundation_Utils::safeRelease(&transform);
+            transform = NULL;
+            return -1;
         }
-        PropVariantClear(&var);
-        MediaFoundation_Utils::safeRelease(&mediaType);
-    }
+        if (FAILED(hr)) {
+            DEBUG_PRINT_HR_ERROR("Failed to set MediaType on transform.", hr);
+            MediaFoundation_Utils::safeRelease(&transform);
+            transform = NULL;
+            return -2;
+        }
 
-    //DSP input MediaType
-    IMFMediaType *inputMediaType = NULL;
-    r = MFCreateMediaType(&inputMediaType);
-    r = inputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-    r = inputMediaType->SetGUID(MF_MT_SUBTYPE, inFormat);
-    r = inputMediaType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
-    r = MFSetAttributeSize(inputMediaType, MF_MT_FRAME_SIZE, width, height);
-    r = MFSetAttributeRatio(inputMediaType, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
-    r = mfCallback->pDecoder->SetInputType(0, inputMediaType, 0);
-    if (FAILED(r)) {
-        DEBUG_PRINT("Error: setDecoderFormats: IMFDecoder->SetInputType failed.");
-        MediaFoundation_Utils::safeRelease(&mfCallback->pDecoder);
-        mfCallback->pDecoder = NULL;
-        return -3;
-    }
+        return 0;
+    };
 
-    //DSP output MediaType
-    IMFMediaType *outputMediaType = NULL;
-    r = MFCreateMediaType(&outputMediaType);
-    r = outputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-    r = outputMediaType->SetGUID(MF_MT_SUBTYPE, outFormat);
-    r = outputMediaType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
-    r = MFSetAttributeSize(outputMediaType, MF_MT_FRAME_SIZE, width, height);
-    r = MFSetAttributeRatio(outputMediaType, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
-    r = mfCallback->pDecoder->SetOutputType(0, outputMediaType, 0);
-    if (FAILED(r)) {
-        DEBUG_PRINT("Error: setDecoderFormats: IMFDecoder->SetOutputType failed.");
-        MediaFoundation_Utils::safeRelease(&mfCallback->pDecoder);
-        mfCallback->pDecoder = NULL;
-        return -4;
+    int res = getSubtypeForPixelFormat(mfCallback->pDecoder, &IMFTransform::GetInputAvailableType, inputFormat, inputStreamId, inFormat);
+    if (res < 0) {
+        return res;
+    }
+    res = setSubtypeMediaType(mfCallback->pDecoder, &IMFTransform::SetInputType, inputStreamId, inFormat);
+    if (res < 0) {
+        return res;
+    }
+    res = getSubtypeForPixelFormat(mfCallback->pDecoder, &IMFTransform::GetOutputAvailableType, outputFormat, outputStreamId, outFormat);
+    if (res < 0) {
+        return res;
+    }
+    res = setSubtypeMediaType(mfCallback->pDecoder, &IMFTransform::SetOutputType, outputStreamId, outFormat);
+    if (res < 0) {
+        return res;
     }
 
     return 1;
