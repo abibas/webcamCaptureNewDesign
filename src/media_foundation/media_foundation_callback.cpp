@@ -13,20 +13,21 @@
 #include <mfidl.h>
 #include <shlwapi.h>
 #include <stdio.h>
+#include <Mfapi.h>
 
 ////
 #include <mferror.h>
 /////
 namespace webcam_capture {
 
-bool MediaFoundation_Callback::createInstance(MediaFoundation_Camera *cam, MediaFoundation_Callback **cb)
+bool MediaFoundation_Callback::createInstance(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_ColorConverter> colorConverter, MediaFoundation_Callback **cb)
 {
     if (cb == NULL) {
         DEBUG_PRINT("Error: the given MediaFoundation_Capture is invalid; cant create an instance.");
         return false;
     }
 
-    MediaFoundation_Callback *media_cb = new MediaFoundation_Callback(cam);
+    MediaFoundation_Callback *media_cb = new MediaFoundation_Callback(cam, std::move(colorConverter));
 
     if (!media_cb) {
         DEBUG_PRINT("Error: cannot allocate a MediaFoundation_Callback object - out of memory");
@@ -40,7 +41,7 @@ bool MediaFoundation_Callback::createInstance(MediaFoundation_Camera *cam, Media
     return true;
 }
 
-MediaFoundation_Callback::MediaFoundation_Callback(MediaFoundation_Camera *cam) : ref_count(1), cam(cam)
+MediaFoundation_Callback::MediaFoundation_Callback(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_ColorConverter> colorConverter) : ref_count(1), cam(cam), colorConverter(std::move(colorConverter))
 {
     InitializeCriticalSection(&crit_sec);
 }
@@ -81,55 +82,23 @@ HRESULT MediaFoundation_Callback::OnReadSample(HRESULT hr, DWORD streamIndex, DW
     EnterCriticalSection(&crit_sec);
 
     if (SUCCEEDED(hr) && sample) {
+        IMFSample *finalSample = sample;
 
-        IMFMediaBuffer *buffer;
-        HRESULT hr = S_OK;
-        DWORD count = 0;
-        HRESULT decoderHR = S_OK;
-        MFT_OUTPUT_DATA_BUFFER odf;
-        odf.dwStreamID = 1;
-        odf.pSample = sample;
-        odf.dwStatus = 0;
-        odf.pEvents = NULL;
-
-        sample->GetBufferCount(&count);
-
-        //if pDecoder exist's (!= NULL) - need to convert samples
-        if (pDecoder) {
-            //Using osi and isi to get information (used in debug)
-            MFT_OUTPUT_STREAM_INFO osi;
-            MFT_INPUT_STREAM_INFO isi;
-
-            decoderHR = pDecoder->GetInputStreamInfo(0, &isi);
-            if (FAILED(decoderHR)) {
-                DEBUG_PRINT("Error: Can't get input stream info for IMFTransform obj");
-            }
-            decoderHR = pDecoder->GetOutputStreamInfo(0, &osi);
-            if (FAILED(decoderHR)) {
-                DEBUG_PRINT("Error: Can't get output stream info for IMFTransform obj");
-            }
-
-            ///TODO pay attantion to this remark:
-            /// the idea is to call IMFTransform::ProcessInput() until it returns MF_E_NOTACCEPTING.
-            /// Then you should call IMFTransform::ProcessOutput() until it returns MF_E_TRANSFORM_NEED_MORE_INPUT.
-            /// And you keep that actions in a loop.
-            decoderHR = pDecoder->ProcessInput(0, sample, 0);
-            if (FAILED(decoderHR)) {
-                DEBUG_PRINT("Error: Can't Process input for IMFTransform obj");
-            }
-
-            DWORD outStatus = 0;
-            decoderHR = pDecoder->ProcessOutput(0,1, &odf, &outStatus);
-            if (FAILED(decoderHR)) {
-                DEBUG_PRINT("Error: Can't Process output for IMFTransform obj");
+        if (colorConverter) {
+            if (!colorConverter->convert(sample, &finalSample)) {
+                DEBUG_PRINT("Failed to convert!");
             }
         }
 
+        DWORD count = 0;
+        HRESULT hr = finalSample->GetBufferCount(&count);
+
         for (DWORD i = 0; i < count; ++i) {
-            if (FAILED(decoderHR)){
+            if (FAILED(hr)){
                 break;
             }
-            hr = odf.pSample->GetBufferByIndex(i, &buffer);
+            IMFMediaBuffer *buffer;
+            hr = finalSample->GetBufferByIndex(i, &buffer);
 
             if (SUCCEEDED(hr)) {
                 DWORD length = 0;

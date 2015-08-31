@@ -7,11 +7,14 @@
 #ifndef MEDIA_FOUNDATION_CALLBACK_H
 #define MEDIA_FOUNDATION_CALLBACK_H
 
+#include "media_foundation_color_converter.h"
+
 #include <windows.h>
 #include <mfidl.h>
 #include <mfreadwrite.h>
 #include <shlwapi.h>
 
+#include <memory>
 
 namespace webcam_capture {
 
@@ -20,7 +23,7 @@ class MediaFoundation_Camera;
 class MediaFoundation_Callback : public IMFSourceReaderCallback
 {
 public:
-    static bool createInstance(MediaFoundation_Camera *cam, MediaFoundation_Callback **cb);
+    static bool createInstance(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_ColorConverter> colorConverter, MediaFoundation_Callback **cb);
 
     STDMETHODIMP QueryInterface(REFIID iid, void **v);
     STDMETHODIMP_(ULONG) AddRef();
@@ -40,11 +43,12 @@ public:
     }
 
 private:
-    MediaFoundation_Callback(MediaFoundation_Camera *cam);
+    MediaFoundation_Callback(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_ColorConverter> colorConverter);
     virtual ~MediaFoundation_Callback();
 
 private:
     MediaFoundation_Camera *cam;
+    std::unique_ptr<MediaFoundation_ColorConverter> colorConverter;
     long ref_count;
     CRITICAL_SECTION crit_sec;
 public:
