@@ -9,12 +9,15 @@
 
 #include "media_foundation_color_converter.h"
 
+#include <atomic>
+#include <condition_variable>
+#include <memory>
+#include <mutex>
+
 #include <windows.h>
 #include <mfidl.h>
 #include <mfreadwrite.h>
 #include <shlwapi.h>
-
-#include <memory>
 
 namespace webcam_capture {
 
@@ -42,6 +45,8 @@ public:
         return S_OK;
     }
 
+    void stop();
+
 private:
     MediaFoundation_Callback(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_ColorConverter> colorConverter);
     virtual ~MediaFoundation_Callback();
@@ -51,6 +56,10 @@ private:
     std::unique_ptr<MediaFoundation_ColorConverter> colorConverter;
     long ref_count;
     CRITICAL_SECTION crit_sec;
+    std::atomic<bool> keepRunning;
+    std::atomic<bool> stoppedRunning;
+    std::mutex stoppingMutex;
+    std::condition_variable stoppingCondition;
 public:
     IMFTransform *pDecoder = NULL;
 };

@@ -41,7 +41,7 @@ bool MediaFoundation_Callback::createInstance(MediaFoundation_Camera *cam, std::
     return true;
 }
 
-MediaFoundation_Callback::MediaFoundation_Callback(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_ColorConverter> colorConverter) : ref_count(1), cam(cam), colorConverter(std::move(colorConverter))
+MediaFoundation_Callback::MediaFoundation_Callback(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_ColorConverter> colorConverter) : ref_count(1), cam(cam), colorConverter(std::move(colorConverter)), keepRunning(true), stoppedRunning(false)
 {
     InitializeCriticalSection(&crit_sec);
 }
@@ -119,12 +119,15 @@ HRESULT MediaFoundation_Callback::OnReadSample(HRESULT hr, DWORD streamIndex, DW
     }
 
     if (SUCCEEDED(hr)) {
-        if (cam->imfSourceReader && cam->capturing) {
+        if (cam->imfSourceReader && keepRunning) {
             hr = cam->imfSourceReader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
 
             if (FAILED(hr)) {
                 DEBUG_PRINT("Error: while trying to read the next sample.");
             }
+        } else if (!keepRunning) {
+            stoppedRunning = true;
+            stoppingCondition.notify_one();
         }
     }
 
@@ -140,6 +143,15 @@ HRESULT MediaFoundation_Callback::OnEvent(DWORD, IMFMediaEvent *event)
 HRESULT MediaFoundation_Callback::OnFlush(DWORD)
 {
     return S_OK;
+}
+
+void MediaFoundation_Callback::stop()
+{
+    if (keepRunning) {
+        std::unique_lock<std::mutex> lg(stoppingMutex);
+        keepRunning = false;
+        stoppingCondition.wait(lg, [this]{return stoppedRunning == true;});
+    }
 }
 
 } // namespace webcam_capture

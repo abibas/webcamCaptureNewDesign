@@ -183,6 +183,8 @@ int MediaFoundation_Camera::stop()
 
     capturing = false;
 
+    mfCallback->stop();
+
     MediaFoundation_Utils::safeRelease(&imfSourceReader);
     MediaFoundation_Utils::safeRelease(&mfCallback);
 
