@@ -183,7 +183,7 @@ void CameraForm::on_captureVideoBtb_clicked()
                       capResolution.getWidth(),
                       capResolution.getHeight(),
                       capFps.getFps(),
-                      videoForm->getFrameCallback()) < 0) {
+                      videoForm->getFrameCallback(), PixelFormat::UNKNOWN, PixelFormat::YUY2) < 0) {
         delete videoForm;
     } else {
         videoForm->setCapturingStatus(true);
