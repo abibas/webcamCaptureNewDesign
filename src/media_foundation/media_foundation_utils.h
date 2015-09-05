@@ -35,7 +35,11 @@ public:
 
     MediaFoundation_Utils() = delete;
 
-    static PixelFormat videoFormatToCaptureFormat(const GUID &guid);
+    static PixelFormat videoFormatToPixelFormat(const GUID &guid);
+    /**
+     * @return true if set guid, false if couldn't set guid
+     */
+    static bool pixelFormatToVideoFormat(PixelFormat pixelFormat, GUID &guid);
 
     // Convert a WCHAR to a std::string
     template<class T>
