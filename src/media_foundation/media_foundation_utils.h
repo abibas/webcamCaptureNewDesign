@@ -70,6 +70,9 @@ public:
         }
     }
 
+private:
+    const static std::vector<std::pair<PixelFormat, GUID>> pixelFormatMappingList;
+
 };
 
 } // namespace webcam_capture

@@ -78,10 +78,9 @@ namespace webcam_capture {
     v308,           /* Component Y'CbCr 8-bit 4:4:4.*/
     v408,           /* Component Y'CbCrA 8-bit 4:4:4:4.*/
     v410,           /* Component Y'CbCr 10-bit 4:4:4*/
-    v40,            /* v410 or (v40), Sampling 4:4:4, Packed, Bits per channel - 10*/
     Y210,           /* Y210, Sampling 4:2:2, Packed, Bits per channel - 10*/
     Y216,           /* Y216, Sampling 4:2:2, Packed, Bits per channel - 16*/
-    Y40,            /* Y410 or (Y40), Sampling 4:4:4, Packed, Bits per channel - 10*/
+    Y410,            /* Y410, Sampling 4:4:4, Packed, Bits per channel - 10*/
     Y416,           /* Y416, Sampling 4:4:4, Packed, Bits per channel - 16*/
     //Encoded Video Types
     DV25,           /* DVCPRO 25 (525-60 or 625-50)*/

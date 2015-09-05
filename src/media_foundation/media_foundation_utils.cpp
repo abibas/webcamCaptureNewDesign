@@ -14,149 +14,107 @@
 
 namespace webcam_capture {
 
-// Convert the MF format to one we can use.
-PixelFormat MediaFoundation_Utils::videoFormatToCaptureFormat(const GUID &guid)
+const std::vector<std::pair<PixelFormat, GUID>> MediaFoundation_Utils::pixelFormatMappingList =
 {
-    ///Uncompressed RGB Formats
-    if (IsEqualGUID(guid, MFVideoFormat_RGB8))     {
-        return PixelFormat::RGB8;
-    } else if (IsEqualGUID(guid, MFVideoFormat_RGB555)) {
-        return PixelFormat::RGB555;
-    } else if (IsEqualGUID(guid, MFVideoFormat_RGB565)) {
-        return PixelFormat::RGB565;
-    } else if (IsEqualGUID(guid, MFVideoFormat_RGB24)) {
-        return PixelFormat::RGB24;
-    } else if (IsEqualGUID(guid, MFVideoFormat_RGB32)) {
-        return PixelFormat::RGB32;
-    } else if (IsEqualGUID(guid, MFVideoFormat_ARGB32)) {
-        return PixelFormat::ARGB32;
-    }
-    ///YUV Formats: 8-Bit and Palettized
-    else if (IsEqualGUID(guid, MFVideoFormat_AI44)) {
-        return PixelFormat::AI44;
-    } else if (IsEqualGUID(guid, MFVideoFormat_AYUV)) {
-        return PixelFormat::AYUV;
-    } else if (IsEqualGUID(guid, MFVideoFormat_I420)) {
-        return PixelFormat::I420;
-    } else if (IsEqualGUID(guid, MFVideoFormat_IYUV)) {
-        return PixelFormat::IYUV;
-    } else if (IsEqualGUID(guid, MFVideoFormat_NV11)) {
-        return PixelFormat::NV11;
-    } else if (IsEqualGUID(guid, MFVideoFormat_NV12)) {
-        return PixelFormat::NV12;
-    } else if (IsEqualGUID(guid, MFVideoFormat_UYVY)) {
-        return PixelFormat::UYVY;
-    } else if (IsEqualGUID(guid, MFVideoFormat_Y41P)) {
-        return PixelFormat::Y41P;
-    } else if (IsEqualGUID(guid, MFVideoFormat_Y41T)) {
-        return PixelFormat::Y41T;
-    } else if (IsEqualGUID(guid, MFVideoFormat_Y42T)) {
-        return PixelFormat::Y42T;
-    } else if (IsEqualGUID(guid, MFVideoFormat_YUY2)) {
-        return PixelFormat::YUY2;
-    } else if (IsEqualGUID(guid, MFVideoFormat_YV12)) {
-        return PixelFormat::YV12;
-    }
-    ///YUV Formats: 10-Bit and 16-Bit
-    else if (IsEqualGUID(guid, MFVideoFormat_P010)) {
-        return PixelFormat::P010;
-    } else if (IsEqualGUID(guid, MFVideoFormat_P016)) {
-        return PixelFormat::P016;
-    } else if (IsEqualGUID(guid, MFVideoFormat_P210)) {
-        return PixelFormat::P210;
-    } else if (IsEqualGUID(guid, MFVideoFormat_P216)) {
-        return PixelFormat::P216;
-    } else if (IsEqualGUID(guid, MFVideoFormat_v210)) {
-        return PixelFormat::v210;
-    } else if (IsEqualGUID(guid, MFVideoFormat_v216)) {
-        return PixelFormat::v216;
-    } else if (IsEqualGUID(guid, MFVideoFormat_v410)) {
-        return PixelFormat::v40;
-    } else if (IsEqualGUID(guid, MFVideoFormat_Y210)) {
-        return PixelFormat::Y210;
-    } else if (IsEqualGUID(guid, MFVideoFormat_Y216)) {
-        return PixelFormat::Y216;
-    } else if (IsEqualGUID(guid, MFVideoFormat_Y410)) {
-        return PixelFormat::Y40;
-    } else if (IsEqualGUID(guid, MFVideoFormat_Y416)) {
-        return PixelFormat::Y416;
-    }
-    ///Encoded Video Types
-    else if (IsEqualGUID(guid, MFVideoFormat_DV25)) {
-        return PixelFormat::DV25;
-    } else if (IsEqualGUID(guid, MFVideoFormat_DV50)) {
-        return PixelFormat::DV50;
-    } else if (IsEqualGUID(guid, MFVideoFormat_DVC)) {
-        return PixelFormat::DVC;
-    } else if (IsEqualGUID(guid, MFVideoFormat_DVH1)) {
-        return PixelFormat::DVH1;
-    } else if (IsEqualGUID(guid, MFVideoFormat_DVHD)) {
-        return PixelFormat::DVHD;
-    } else if (IsEqualGUID(guid, MFVideoFormat_DVSD)) {
-        return PixelFormat::DVSD;
-    } else if (IsEqualGUID(guid, MFVideoFormat_DVSL)) {
-        return PixelFormat::DVSL;
-    }
+    /// Uncompressed RGB Formats
+    {PixelFormat::RGB8,     MFVideoFormat_RGB8},
+    {PixelFormat::RGB555,   MFVideoFormat_RGB555},
+    {PixelFormat::RGB565,   MFVideoFormat_RGB565},
+    {PixelFormat::RGB24,    MFVideoFormat_RGB24},
+    {PixelFormat::RGB32,    MFVideoFormat_RGB32},
+    {PixelFormat::ARGB32,   MFVideoFormat_ARGB32},
 
+    /// YUV Formats: 8-Bit and Palettized
+    {PixelFormat::AI44,     MFVideoFormat_AI44},
+    {PixelFormat::AYUV,     MFVideoFormat_AYUV},
+    {PixelFormat::I420,     MFVideoFormat_I420},
+    {PixelFormat::IYUV,     MFVideoFormat_IYUV},
+    {PixelFormat::NV11,     MFVideoFormat_NV11},
+    {PixelFormat::NV12,     MFVideoFormat_NV12},
+    {PixelFormat::UYVY,     MFVideoFormat_UYVY},
+    {PixelFormat::Y41P,     MFVideoFormat_Y41P},
+    {PixelFormat::Y41T,     MFVideoFormat_Y41T},
+    {PixelFormat::Y42T,     MFVideoFormat_Y42T},
+    {PixelFormat::YUY2,     MFVideoFormat_YUY2},
+    {PixelFormat::YV12,     MFVideoFormat_YV12},
+
+    /// YUV Formats: 10-Bit and 16-Bit
+    {PixelFormat::P010,     MFVideoFormat_P010},
+    {PixelFormat::P016,     MFVideoFormat_P016},
+    {PixelFormat::P210,     MFVideoFormat_P210},
+    {PixelFormat::P216,     MFVideoFormat_P216},
+    {PixelFormat::v210,     MFVideoFormat_v210},
+    {PixelFormat::v216,     MFVideoFormat_v216},
+    {PixelFormat::v410,     MFVideoFormat_v410},
+    {PixelFormat::Y210,     MFVideoFormat_Y210},
+    {PixelFormat::Y216,     MFVideoFormat_Y216},
+    {PixelFormat::Y410,     MFVideoFormat_Y410},
+    {PixelFormat::Y416,     MFVideoFormat_Y416},
+
+    /// Encoded Video Types
+    {PixelFormat::DV25,     MFVideoFormat_DV25},
+    {PixelFormat::DV50,     MFVideoFormat_DV50},
+    {PixelFormat::DVC,      MFVideoFormat_DVC},
+    {PixelFormat::DVH1,     MFVideoFormat_DVH1},
+    {PixelFormat::DVHD,     MFVideoFormat_DVHD},
+    {PixelFormat::DVSD,     MFVideoFormat_DVSD},
+    {PixelFormat::DVSL,     MFVideoFormat_DVSL},
 #if (WINVER >= _WIN32_WINNT_WIN8)
-    else if (IsEqualGUID(guid, MFVideoFormat_H263)) {
-        return PixelFormat::H263;
-    }
-
+    {PixelFormat::H263,     MFVideoFormat_H263},
 #endif
-    else if (IsEqualGUID(guid, MFVideoFormat_H264)) {
-        return PixelFormat::H264;
-    } else if (IsEqualGUID(guid, MFVideoFormat_H264_ES)) {
-        return PixelFormat::H264_ES;
-    } else if (IsEqualGUID(guid, MFVideoFormat_HEVC)) {
-        return PixelFormat::HEVC;
-    } else if (IsEqualGUID(guid, MFVideoFormat_HEVC_ES)) {
-        return PixelFormat::HEVC_ES;
-    } else if (IsEqualGUID(guid, MFVideoFormat_M4S2)) {
-        return PixelFormat::M4S2;
-    } else if (IsEqualGUID(guid, MFVideoFormat_MJPG)) {
-        return PixelFormat::MJPG;
-    } else if (IsEqualGUID(guid, MFVideoFormat_MP43)) {
-        return PixelFormat::MP43;
-    } else if (IsEqualGUID(guid, MFVideoFormat_MP4S)) {
-        return PixelFormat::MP4S;
-    } else if (IsEqualGUID(guid, MFVideoFormat_MP4V)) {
-        return PixelFormat::MP4V;
-    } else if (IsEqualGUID(guid, MFVideoFormat_MPEG2)) {
-        return PixelFormat::MPEG2;
-    } else if (IsEqualGUID(guid, MFVideoFormat_MPG1)) {
-        return PixelFormat::MPG1;
-    } else if (IsEqualGUID(guid, MFVideoFormat_MSS1)) {
-        return PixelFormat::MSS1;
-    } else if (IsEqualGUID(guid, MFVideoFormat_MSS2)) {
-        return PixelFormat::MSS2;
-    } else if (IsEqualGUID(guid, MFVideoFormat_WMV1)) {
-        return PixelFormat::WMV1;
-    } else if (IsEqualGUID(guid, MFVideoFormat_WMV2)) {
-        return PixelFormat::WMV2;
-    } else if (IsEqualGUID(guid, MFVideoFormat_WMV3)) {
-        return PixelFormat::WMV3;
-    } else if (IsEqualGUID(guid, MFVideoFormat_WVC1)) {
-        return PixelFormat::WVC1;
-    } else if (IsEqualGUID(guid, MFVideoFormat_420O)) {
-        return PixelFormat::O420;
-    } else {
+    {PixelFormat::H264,     MFVideoFormat_H264},
+    {PixelFormat::H264_ES,  MFVideoFormat_H264_ES},
+    {PixelFormat::M4S2,     MFVideoFormat_M4S2},
+    {PixelFormat::MJPG,     MFVideoFormat_MJPG},
+    {PixelFormat::MP43,     MFVideoFormat_MP43},
+    {PixelFormat::MP4S,     MFVideoFormat_MP4S},
+    {PixelFormat::MP4V,     MFVideoFormat_MP4V},
+    {PixelFormat::MPEG2,    MFVideoFormat_MPEG2},
+    {PixelFormat::MPG1,     MFVideoFormat_MPG1},
+    {PixelFormat::MSS1,     MFVideoFormat_MSS1},
+    {PixelFormat::MSS2,     MFVideoFormat_MSS2},
+    {PixelFormat::WMV1,     MFVideoFormat_WMV1},
+    {PixelFormat::WMV2,     MFVideoFormat_WMV2},
+    {PixelFormat::WMV3,     MFVideoFormat_WMV3},
+    {PixelFormat::WVC1,     MFVideoFormat_WVC1},
+    {PixelFormat::O420,     MFVideoFormat_420O}
+};
+
+// Convert the MF format to one we can use.
+PixelFormat MediaFoundation_Utils::videoFormatToPixelFormat(const GUID &guid)
+{
+    for (auto &&pair : pixelFormatMappingList) {
+        if (IsEqualGUID(guid, pair.second)) {
+            return pair.first;
+        }
+    }
 
 #ifdef WEBCAM_CAPTURE_DEBUG
-        LPOLESTR guidString = NULL;
-        HRESULT hr = StringFromCLSID(guid, &guidString);
+    LPOLESTR guidString = NULL;
+    HRESULT hr = StringFromCLSID(guid, &guidString);
 
-        if (SUCCEEDED(hr)) {
-            DEBUG_PRINT("Unknown pixel format, GUID: " << MediaFoundation_Utils::string_cast<std::string>(guidString));
-        } else {
-            DEBUG_PRINT("Unknown pixel format.");
-        }
+    if (SUCCEEDED(hr)) {
+        DEBUG_PRINT("Unknown pixel format, GUID: " << MediaFoundation_Utils::string_cast<std::string>(guidString));
+    } else {
+        DEBUG_PRINT("Unknown pixel format.");
+    }
 
-        CoTaskMemFree(guidString);
+    CoTaskMemFree(guidString);
 #endif
 
-        return PixelFormat::UNKNOWN;
+    return PixelFormat::UNKNOWN;
+}
+
+bool MediaFoundation_Utils::pixelFormatToVideoFormat(PixelFormat pixelFormat, GUID &guid)
+{
+    for (auto &&pair : pixelFormatMappingList) {
+        if (pixelFormat == pair.first) {
+            guid = pair.second;
+            return true;
+        }
     }
+
+    return false;
 }
 
 } // namespace webcam_capture

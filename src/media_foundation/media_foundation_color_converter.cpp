@@ -145,7 +145,7 @@ MediaFoundation_ColorConverter::PRIVATE_RESULT MediaFoundation_ColorConverter::g
         PropVariantInit(&var);
         hr = mediaType->GetItem(MF_MT_SUBTYPE, &var);
         if (SUCCEEDED(hr)) {
-            PixelFormat pixelFormatBuf = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
+            PixelFormat pixelFormatBuf = MediaFoundation_Utils::videoFormatToPixelFormat(*var.puuid);
             if (pixelFormatBuf == pixelFormat && pixelFormatBuf != PixelFormat::UNKNOWN) {
                 subtype = *var.puuid;
                 PropVariantClear(&var);

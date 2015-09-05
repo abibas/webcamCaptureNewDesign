@@ -279,8 +279,8 @@ std::string  CameraForm::formatToString(PixelFormat format)
         case PixelFormat::v216:
             return "v216";
 
-        case PixelFormat::v40:
-            return "v40";
+        case PixelFormat::v410:
+            return "v410";
 
         case PixelFormat::Y210:
             return "Y210";
@@ -288,8 +288,8 @@ std::string  CameraForm::formatToString(PixelFormat format)
         case PixelFormat::Y216:
             return "Y216";
 
-        case PixelFormat::Y40:
-            return "Y40";
+        case PixelFormat::Y410:
+            return "Y410";
 
         case PixelFormat::Y416:
             return "Y416";

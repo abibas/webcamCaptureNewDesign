@@ -430,7 +430,7 @@ int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int wi
             continue;
         }
         if (var.vt == VT_CLSID) {
-            pixelFormatBuf = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
+            pixelFormatBuf = MediaFoundation_Utils::videoFormatToPixelFormat(*var.puuid);
         }
         PropVariantClear(&var);
 
@@ -587,7 +587,7 @@ int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int w
         hr = type->GetItem(MF_MT_SUBTYPE, &var);
 
         if (SUCCEEDED(hr)) {
-            pixelFormatBuf = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
+            pixelFormatBuf = MediaFoundation_Utils::videoFormatToPixelFormat(*var.puuid);
         }
         PropVariantClear(&var);
 
@@ -738,7 +738,7 @@ int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
             continue;
         }
         if (var.vt == VT_CLSID) {
-            pixelFormat = MediaFoundation_Utils::videoFormatToCaptureFormat(*var.puuid);
+            pixelFormat = MediaFoundation_Utils::videoFormatToPixelFormat(*var.puuid);
         }
         PropVariantClear(&var);
 
