@@ -4,7 +4,7 @@
 #include "../utils.h"
 #include "../winapi_shared/winapi_shared_unique_id.h"
 #include "media_foundation_callback.h"
-#include "media_foundation_color_converter.h"
+#include "media_foundation_color_converter_transform.h"
 #include "media_foundation_utils.h"
 
 #include <mfapi.h>
@@ -99,18 +99,18 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
         return -9;      //TODO Err code
     }
 
-    std::unique_ptr<MediaFoundation_ColorConverter> colorConvertor;
-    MediaFoundation_ColorConverter::RESULT res;
+    std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConvertor;
+    MediaFoundation_ColorConverterTransform::RESULT res;
 
     //Set Decoder formats
     resultBuf = 0;
     if ( (decodeFormat != PixelFormat::UNKNOWN) && (decodeFormat != decompressFormat) ) {
         if (decompressFormat == PixelFormat::UNKNOWN ) {
-            colorConvertor = MediaFoundation_ColorConverter::getInstance(width, height, pixelFormat, decodeFormat, res);
+            colorConvertor = MediaFoundation_ColorConverterTransform::getInstance(width, height, pixelFormat, decodeFormat, res);
         } else {
-            colorConvertor = MediaFoundation_ColorConverter::getInstance(width, height, decompressFormat, decodeFormat, res);
+            colorConvertor = MediaFoundation_ColorConverterTransform::getInstance(width, height, decompressFormat, decodeFormat, res);
         }
-        if (res != MediaFoundation_ColorConverter::RESULT::OK) {
+        if (res != MediaFoundation_ColorConverterTransform::RESULT::OK) {
             DEBUG_PRINT("Error: Can't set the decoder formats.");
             return -10;      //TODO Err code
         }

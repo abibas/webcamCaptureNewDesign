@@ -1,25 +1,15 @@
-#include "media_foundation_color_converter.h"
+#include "media_foundation_pixel_format_transform.h"
 
 #include "media_foundation_utils.h"
 
 #include <mftransform.h>
 #include <mferror.h>
 #include <mfapi.h>
-#include <wmcodecdsp.h>
 
 namespace webcam_capture {
 
-std::unique_ptr<MediaFoundation_ColorConverter> MediaFoundation_ColorConverter::getInstance(int width, int height, PixelFormat inputPixelFormat, PixelFormat outputPixelFormat, RESULT &result)
+std::unique_ptr<MediaFoundation_PixelFormatTransform> MediaFoundation_PixelFormatTransform::getInstance(IMFTransform *transform, int width, int height, PixelFormat inputPixelFormat, PixelFormat outputPixelFormat, RESULT &result)
 {
-    IMFTransform *transform = nullptr;
-
-    HRESULT hr = CoCreateInstance(CLSID_CColorConvertDMO, nullptr, CLSCTX_INPROC_SERVER, IID_IMFTransform, reinterpret_cast<void**>(&transform));
-    if (FAILED(hr)) {
-        DEBUG_PRINT_HR_ERROR("Failed to create transform.", hr);
-        result = RESULT::FAILURE;
-        return nullptr;
-    }
-
     DWORD inputStreamId;
     DWORD outputStreamId;
 
@@ -55,7 +45,7 @@ std::unique_ptr<MediaFoundation_ColorConverter> MediaFoundation_ColorConverter::
 
     MFT_OUTPUT_STREAM_INFO osi;
 
-    hr = transform->GetOutputStreamInfo(outputStreamId, &osi);
+    HRESULT hr = transform->GetOutputStreamInfo(outputStreamId, &osi);
     if (FAILED(hr)) {
         MediaFoundation_Utils::safeRelease(&transform);
         result = RESULT::FAILURE;
@@ -93,10 +83,29 @@ std::unique_ptr<MediaFoundation_ColorConverter> MediaFoundation_ColorConverter::
 
     result = RESULT::OK;
 
-    return std::unique_ptr<MediaFoundation_ColorConverter>(new MediaFoundation_ColorConverter(transform, inputStreamId, outputStreamId, weAllocateOutputSample, outputSample, outputSampleBuffer));
+    return std::unique_ptr<MediaFoundation_PixelFormatTransform>(new MediaFoundation_PixelFormatTransform(transform, inputStreamId, outputStreamId, weAllocateOutputSample, outputSample, outputSampleBuffer));
 }
 
-void MediaFoundation_ColorConverter::getStreamIds(IMFTransform *transform, DWORD &inputStreamId, DWORD &outputStreamId)
+MediaFoundation_PixelFormatTransform::MediaFoundation_PixelFormatTransform(MediaFoundation_PixelFormatTransform &&other)
+{
+    if (this != &other) {
+        // copy all data
+        this->transform = other.transform;
+        this->inputStreamId = other.inputStreamId;
+        this->outputStreamId = other.outputStreamId;
+        this->weAllocateOutputSample = other.weAllocateOutputSample;
+        this->outputSample = other.outputSample;
+        this->outputSampleBuffer = other.outputSampleBuffer;
+
+        // make other object destroy without freeing data we use
+        other.transform = nullptr;
+        other.weAllocateOutputSample = true;
+        other.outputSample = nullptr;
+        other.outputSampleBuffer = nullptr;
+    }
+}
+
+void MediaFoundation_PixelFormatTransform::getStreamIds(IMFTransform *transform, DWORD &inputStreamId, DWORD &outputStreamId)
 {
     // first we try to get stream ids, since some implementations of transforms use them.
     // if we fail to get them, we assume they are cosecutive and 0-index based, just like
@@ -124,8 +133,15 @@ void MediaFoundation_ColorConverter::getStreamIds(IMFTransform *transform, DWORD
     }
 }
 
-MediaFoundation_ColorConverter::PRIVATE_RESULT MediaFoundation_ColorConverter::getSubtypeForPixelFormat(IMFTransform *transform, HRESULT (IMFTransform::*getAvailableType)(DWORD, DWORD, IMFMediaType **), PixelFormat pixelFormat, DWORD streamId, GUID &subtype)
+MediaFoundation_PixelFormatTransform::PRIVATE_RESULT MediaFoundation_PixelFormatTransform::getSubtypeForPixelFormat(IMFTransform *transform, HRESULT (IMFTransform::*getAvailableType)(DWORD, DWORD, IMFMediaType **), PixelFormat pixelFormat, DWORD streamId, GUID &subtype)
 {
+    GUID desiredSubtype;
+    bool ok = MediaFoundation_Utils::pixelFormatToVideoFormat(pixelFormat, desiredSubtype);
+
+    if (!ok) {
+        return PRIVATE_RESULT::UNSUPPORTED_PIXEL_FORMAT;
+    }
+
     for (int i = 0; true; i++) {
         IMFMediaType *mediaType;
 
@@ -145,8 +161,7 @@ MediaFoundation_ColorConverter::PRIVATE_RESULT MediaFoundation_ColorConverter::g
         PropVariantInit(&var);
         hr = mediaType->GetItem(MF_MT_SUBTYPE, &var);
         if (SUCCEEDED(hr)) {
-            PixelFormat pixelFormatBuf = MediaFoundation_Utils::videoFormatToPixelFormat(*var.puuid);
-            if (pixelFormatBuf == pixelFormat && pixelFormatBuf != PixelFormat::UNKNOWN) {
+            if (IsEqualGUID(desiredSubtype, *var.puuid)) {
                 subtype = *var.puuid;
                 PropVariantClear(&var);
                 MediaFoundation_Utils::safeRelease(&mediaType);
@@ -158,7 +173,7 @@ MediaFoundation_ColorConverter::PRIVATE_RESULT MediaFoundation_ColorConverter::g
     }
 }
 
-MediaFoundation_ColorConverter::PRIVATE_RESULT MediaFoundation_ColorConverter::setSubtypeMediaType(IMFTransform *transform, HRESULT (IMFTransform::*setType)(DWORD, IMFMediaType *, DWORD), int width, int height, DWORD streamId, const GUID &subtype)
+MediaFoundation_PixelFormatTransform::PRIVATE_RESULT MediaFoundation_PixelFormatTransform::setSubtypeMediaType(IMFTransform *transform, HRESULT (IMFTransform::*setType)(DWORD, IMFMediaType *, DWORD), int width, int height, DWORD streamId, const GUID &subtype)
 {
     IMFMediaType *mediaType;
     HRESULT hr = MFCreateMediaType(&mediaType);
@@ -199,13 +214,13 @@ if (FAILED(hr)) { \
     return PRIVATE_RESULT::OK;
 }
 
-MediaFoundation_ColorConverter::MediaFoundation_ColorConverter(IMFTransform *transform, DWORD inputStreamId, DWORD outputStreamId, bool weManageAllocation, IMFSample *outputSample, IMFMediaBuffer *outputSampleBuffer) :
+MediaFoundation_PixelFormatTransform::MediaFoundation_PixelFormatTransform(IMFTransform *transform, DWORD inputStreamId, DWORD outputStreamId, bool weManageAllocation, IMFSample *outputSample, IMFMediaBuffer *outputSampleBuffer) :
     transform(transform), inputStreamId(inputStreamId), outputStreamId(outputStreamId), weAllocateOutputSample(weManageAllocation), outputSample(outputSample), outputSampleBuffer(outputSampleBuffer)
 {
-
+    // empty
 }
 
-void MediaFoundation_ColorConverter::releaseSample(IMFSample *sample) const
+void MediaFoundation_PixelFormatTransform::releaseSample(IMFSample *sample) const
 {
     DWORD count;
     sample->GetBufferCount(&count);
@@ -220,7 +235,7 @@ void MediaFoundation_ColorConverter::releaseSample(IMFSample *sample) const
 }
 
 
-MediaFoundation_ColorConverter::~MediaFoundation_ColorConverter()
+MediaFoundation_PixelFormatTransform::~MediaFoundation_PixelFormatTransform()
 {
     MediaFoundation_Utils::safeRelease(&transform);
 
@@ -233,7 +248,7 @@ MediaFoundation_ColorConverter::~MediaFoundation_ColorConverter()
     }
 }
 
-bool MediaFoundation_ColorConverter::convert(IMFSample *inputSample, IMFSample **outputSample)
+bool MediaFoundation_PixelFormatTransform::convert(IMFSample *inputSample, IMFSample **outputSample)
 {
     HRESULT hr = transform->ProcessInput(inputStreamId, inputSample, 0);
     if (FAILED(hr)) {
