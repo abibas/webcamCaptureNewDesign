@@ -1,6 +1,9 @@
 #include "videoform.h"
 #include "ui_videoform.h"
 
+#include <QPoint>
+#include <QMatrix>
+
 using namespace std::placeholders; //for std::bind _1
 
 //TO SAVE mjpg to file
@@ -31,7 +34,24 @@ VideoForm::~VideoForm()
 
 void VideoForm::FrameCaptureCallback(Frame &frame)
 {
-    this->ui->videoLabel->setPixmap(QPixmap::fromImage(YUV422toRGBA32(frame)));
+    QImage img;
+    const bool displayYUY2 = true;
+
+    if (displayYUY2) {
+        img = YUV422toRGBA32(frame);
+    } else {
+        // display RGB24
+        img = QImage(frame.plane[0], frame.width[0], frame.height[0], 3*frame.width[0], QImage::Format_RGB888).rgbSwapped();
+        QMatrix matrix;
+
+        // comment next 2 lines to remove rotation
+        matrix.translate(img.rect().center().x(), img.rect().center().y());
+        matrix.rotate(180);
+
+        img = img.transformed(matrix);
+    }
+
+    this->ui->videoLabel->setPixmap(QPixmap::fromImage(img));
 ///EXAMPLE - SAVE mjpg to file
 //    /// Test of mjpeg writing.
 //    printf("Frame callback: %lu bytes, stride: %lu \n", buffer.nbytes, buffer.stride[0]);
@@ -51,72 +71,47 @@ void VideoForm::setCapturingStatus(bool isCapturing)
     this->isCapturing = isCapturing;
 }
 
+
+// https://en.wikipedia.org/wiki/YUV#Converting_between_Y.27UV_and_RGB
 QImage VideoForm::YUV422toRGBA32(Frame &frame)
 {
-    const unsigned char *plane = frame.plane[0];
-    size_t frameSize = frame.nbytes;
+    QImage rgbImg(frame.width[0], frame.height[0], QImage::Format_RGB888);
 
-    size_t height = frame.height[0];
-    size_t width = frame.width[0];
+    int w = 0;
+    int h = 0;
 
-    std::vector<int> redContainer;
-    std::vector<int> greenContainer;
-    std::vector<int> blueContainer;
+#define CLAMP(X) (((X) > 255) ? 255 : (((X) < 0) ? 0 : (X)))
+#define YUV_TO_R(Y, U, V) (CLAMP((Y) + 1.402 * ((V) - 128)))
+#define YUV_TO_G(Y, U, V) (CLAMP((Y) - 0.334 * ((U) - 128) - 0.714 * ((V) - 128)))
+#define YUV_TO_B(Y, U, V) (CLAMP((Y) + 1.772 * ((U) - 128)))
+#define YUV_TO_QRGB(Y, U, V) (qRgb(YUV_TO_R((Y), (U), (V)), YUV_TO_G((Y), (U), (V)), YUV_TO_B((Y), (U), (V))))
 
-    // Loop through 4 bytes at a time
-    int cnt = -1;
+    for (unsigned int i = 0 ; i <= frame.nbytes - 4 ; i += 4) {
+        int y1 = frame.plane[0][i + 0];
+        int u  = frame.plane[0][i + 1];
+        int y2 = frame.plane[0][i + 2];
+        int v  = frame.plane[0][i + 3];
 
-    for (unsigned int i = 0 ; i <= frameSize - 4 ; i += 4) {
-        // Extract yuv components
-        int y1  = (int)plane[i];
-        int u = (int)plane[i + 1];
-        int y2  = (int)plane[i + 2];
-        int v = (int)plane[i + 3];
-
-        // Define the RGB
-        int r1 = 0 , g1 = 0 , b1 = 0;
-        int r2 = 0 , g2 = 0 , b2 = 0;
-        // u and v are +-0.5
-        u -= 128;
-        v -= 128;
-
-        // Conversion
-        r1 = y1 + 1.403 * v;
-        g1 = y1 - 0.344 * u - 0.714 * v;
-        b1 = y1 + 1.770 * u;
-        r2 = y2 + 1.403 * v;
-        g2 = y2 - 0.344 * u - 0.714 * v;
-        b2 = y2 + 1.770 * u;
-
-        // Increment by one so we can insert
-        cnt += 1;
-
-        // Append to the array holding our RGB Values
-        redContainer.push_back(r1);
-        greenContainer.push_back(g1);
-        blueContainer.push_back(b1);
-
-        // Increment again since we have 2 pixels per uv value
-        cnt += 1;
-
-        // Store the second pixel
-        redContainer.push_back(r2);
-        greenContainer.push_back(g2);
-        blueContainer.push_back(b2);
-    }
-
-    QImage rgbImage = QImage((int)width, (int)height, QImage::Format_RGBA8888);
-    int pixelCounter = -1;
-
-    for (int i = 0; i < height; ++i) {
-        for (int j = 0; j < width; ++j) {
-            pixelCounter += 1;
-            rgbImage.setPixel(j, i, qRgb(redContainer.at(pixelCounter) ,  greenContainer.at(pixelCounter) ,
-                                         blueContainer.at(pixelCounter)));
+        if (w == frame.width[0]) {
+            w = 0;
+            h ++;
         }
+        rgbImg.setPixel(w++, h, YUV_TO_QRGB(y1, u, v));
+
+        if (w == frame.height[0]) {
+            w = 0;
+            h ++;
+        }
+        rgbImg.setPixel(w++, h, YUV_TO_QRGB(y2, u, v));
     }
 
-    return rgbImage;
+#undef CLAMP
+#undef YUV_TO_R
+#undef YUV_TO_G
+#undef YUV_TO_B
+#undef YUV_TO_QRGB
+
+    return rgbImg;
 }
 
 FrameCallback VideoForm::getFrameCallback()
