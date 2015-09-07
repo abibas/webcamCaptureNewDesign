@@ -42,6 +42,9 @@ public:
     bool convert(IMFSample *inputSample, IMFSample **outputSample);
 
 protected:
+    /**
+     * Takes ownership of the transform -- you should not release the transform on your own, even if the call fails.
+     */
     static std::unique_ptr<MediaFoundation_PixelFormatTransform> getInstance(IMFTransform *transform, int width, int height, PixelFormat inputPixelFormat, PixelFormat outputPixelFormat, RESULT &result);
     MediaFoundation_PixelFormatTransform(MediaFoundation_PixelFormatTransform &&other);
 
