@@ -5,6 +5,7 @@
 #include "../winapi_shared/winapi_shared_unique_id.h"
 #include "media_foundation_callback.h"
 #include "media_foundation_color_converter_transform.h"
+#include "media_foundation_decompresser_transform.h"
 #include "media_foundation_utils.h"
 
 #include <mfapi.h>
@@ -60,7 +61,6 @@ MediaFoundation_Camera::~MediaFoundation_Camera()
 
 int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height, float fps, FrameCallback cb, PixelFormat decodeFormat, PixelFormat decompressFormat)
 {
-    int resultBuf = 0;
     if (!cb) {
         DEBUG_PRINT("Error: The callback function is empty. Capturing was not started.");
         return -1;      //TODO Err code
@@ -73,6 +73,16 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
 
     frameCallback = cb;
 
+    if (pixelFormat == PixelFormat::UNKNOWN) {
+        DEBUG_PRINT("Error: Can't set a pixel format for PixelFormat::UNKNOWN.");
+        return -8;      //TODO Err code
+    }
+
+    if (decodeFormat == decompressFormat && decodeFormat != PixelFormat::UNKNOWN) {
+        DEBUG_PRINT("Error: decompressFormat and decodeFormat can't be the same.");
+        return -5;      //TODO Err code
+    }
+
 /// TODO Check and solve this
 /// The currentFpsBuf variable int setDeviceFormat and in setReaderFormat shows that
 /// FPS is 3000 1 time and second time 500 - in real time - it doesn't changes
@@ -84,27 +94,33 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
 
     if (createVideoDeviceSource(symbolicLink, &imfMediaSource) < 0) {
         DEBUG_PRINT("Error: Can't create the media device source.");
-        return NULL;
+        return -3;
     }
 
     //End of "to test comment this"
-
-    if (pixelFormat == PixelFormat::UNKNOWN) {
-        DEBUG_PRINT("Error: Can't set a pixel format for PixelFormat::UNKNOWN.");
-        return -8;      //TODO Err code
-    }
 
     if (setDeviceFormat(imfMediaSource, width, height, pixelFormat, fps) < 0) {
         DEBUG_PRINT("Error: Can't set the device format.");
         return -9;      //TODO Err code
     }
 
-    std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConvertor;
-    MediaFoundation_ColorConverterTransform::RESULT res;
+    std::unique_ptr<MediaFoundation_DecompresserTransform> decompresser;
 
-    //Set Decoder formats
-    resultBuf = 0;
-    if ( (decodeFormat != PixelFormat::UNKNOWN) && (decodeFormat != decompressFormat) ) {
+    // Set Decoder formats
+    if (decompressFormat != PixelFormat::UNKNOWN) {
+        MediaFoundation_DecompresserTransform::RESULT res;
+        decompresser = MediaFoundation_DecompresserTransform::getInstance(width, height, pixelFormat, decompressFormat, res);
+        if (res != MediaFoundation_DecompresserTransform::RESULT::OK) {
+            DEBUG_PRINT("Error: Can't set the decompressor formats.");
+            return -6;      //TODO Err code
+        }
+    }
+
+    std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConvertor;
+
+    // Set Decoder formats
+    if (decodeFormat != PixelFormat::UNKNOWN) {
+        MediaFoundation_ColorConverterTransform::RESULT res;
         if (decompressFormat == PixelFormat::UNKNOWN ) {
             colorConvertor = MediaFoundation_ColorConverterTransform::getInstance(width, height, pixelFormat, decodeFormat, res);
         } else {
@@ -117,7 +133,7 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
     }
 
     //Create mfCallback
-    MediaFoundation_Callback::createInstance(this, std::move(colorConvertor), &mfCallback);
+    MediaFoundation_Callback::createInstance(this, std::move(decompresser), std::move(colorConvertor), &mfCallback);
 
     // Create the source reader.
     if (createSourceReader(imfMediaSource, mfCallback, &imfSourceReader) < 0) {
@@ -126,14 +142,8 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
         return -11;      //TODO Err code
     }
 
-    // Set the source reader format. (decompress is doing there automatically by framework)
-    resultBuf = 0;
-    if (decompressFormat != PixelFormat::UNKNOWN) {
-        resultBuf = setReaderFormat(imfSourceReader, width, height, decompressFormat, fps);
-    } else {
-        resultBuf = setReaderFormat(imfSourceReader, width, height, pixelFormat, fps);
-    }
-    if (resultBuf < 0) {
+    // Set the source reader format
+    if (setReaderFormat(imfSourceReader, width, height, pixelFormat, fps) < 0) {
         DEBUG_PRINT("Error: Can't set the reader format.");
         MediaFoundation_Utils::safeRelease(&mfCallback);
         MediaFoundation_Utils::safeRelease(&imfSourceReader);

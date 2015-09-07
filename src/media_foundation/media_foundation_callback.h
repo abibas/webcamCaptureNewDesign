@@ -8,6 +8,7 @@
 #define MEDIA_FOUNDATION_CALLBACK_H
 
 #include "media_foundation_color_converter_transform.h"
+#include "media_foundation_decompresser_transform.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -26,7 +27,7 @@ class MediaFoundation_Camera;
 class MediaFoundation_Callback : public IMFSourceReaderCallback
 {
 public:
-    static bool createInstance(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter, MediaFoundation_Callback **cb);
+    static bool createInstance(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_DecompresserTransform> decompresser, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter, MediaFoundation_Callback **cb);
 
     STDMETHODIMP QueryInterface(REFIID iid, void **v);
     STDMETHODIMP_(ULONG) AddRef();
@@ -48,11 +49,12 @@ public:
     void stop();
 
 private:
-    MediaFoundation_Callback(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter);
+    MediaFoundation_Callback(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_DecompresserTransform> decompresser, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter);
     virtual ~MediaFoundation_Callback();
 
 private:
     MediaFoundation_Camera *cam;
+    std::unique_ptr<MediaFoundation_DecompresserTransform> decompresser;
     std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter;
     long ref_count;
     CRITICAL_SECTION crit_sec;

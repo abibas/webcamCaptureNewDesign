@@ -20,14 +20,14 @@
 /////
 namespace webcam_capture {
 
-bool MediaFoundation_Callback::createInstance(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter, MediaFoundation_Callback **cb)
+bool MediaFoundation_Callback::createInstance(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_DecompresserTransform> decompresser, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter, MediaFoundation_Callback **cb)
 {
     if (cb == NULL) {
         DEBUG_PRINT("Error: the given MediaFoundation_Capture is invalid; cant create an instance.");
         return false;
     }
 
-    MediaFoundation_Callback *media_cb = new MediaFoundation_Callback(cam, std::move(colorConverter));
+    MediaFoundation_Callback *media_cb = new MediaFoundation_Callback(cam, std::move(decompresser), std::move(colorConverter));
 
     if (!media_cb) {
         DEBUG_PRINT("Error: cannot allocate a MediaFoundation_Callback object - out of memory");
@@ -39,7 +39,7 @@ bool MediaFoundation_Callback::createInstance(MediaFoundation_Camera *cam, std::
     return true;
 }
 
-MediaFoundation_Callback::MediaFoundation_Callback(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter) : ref_count(1), cam(cam), colorConverter(std::move(colorConverter)), keepRunning(true), stoppedRunning(false)
+MediaFoundation_Callback::MediaFoundation_Callback(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_DecompresserTransform> decompresser, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter) : ref_count(1), cam(cam), decompresser(std::move(decompresser)), colorConverter(std::move(colorConverter)), keepRunning(true), stoppedRunning(false)
 {
     InitializeCriticalSection(&crit_sec);
 }
@@ -82,9 +82,17 @@ HRESULT MediaFoundation_Callback::OnReadSample(HRESULT hr, DWORD streamIndex, DW
     if (SUCCEEDED(hr) && sample) {
         IMFSample *finalSample = sample;
 
+        if (decompresser) {
+            if (!decompresser->convert(sample, &finalSample)) {
+                DEBUG_PRINT("Failed to decompress.");
+            } else {
+                sample = finalSample;
+            }
+        }
+
         if (colorConverter) {
             if (!colorConverter->convert(sample, &finalSample)) {
-                DEBUG_PRINT("Failed to convert!");
+                DEBUG_PRINT("Failed to convert color.");
             }
         }
 
