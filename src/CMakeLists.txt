@@ -50,6 +50,7 @@ if (WIN32)
       mfreadwrite
       mfuuid
       shlwapi
+      wmcodecdspuuid
     )
 
     add_definitions(-DWEBCAM_CAPTURE_BACKEND_MEDIA_FOUNDATION)
