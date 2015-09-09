@@ -98,7 +98,7 @@ QImage VideoForm::YUV422toRGBA32(Frame &frame)
         }
         rgbImg.setPixel(w++, h, YUV_TO_QRGB(y1, u, v));
 
-        if (w == frame.height[0]) {
+        if (w == frame.width[0]) {
             w = 0;
             h ++;
         }
