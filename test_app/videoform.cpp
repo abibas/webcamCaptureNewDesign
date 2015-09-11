@@ -35,11 +35,10 @@ VideoForm::~VideoForm()
 void VideoForm::FrameCaptureCallback(Frame &frame)
 {
     QImage img;
-    const bool displayYUY2 = true;
 
-    if (displayYUY2) {
+    if (frame.pixel_format == PixelFormat::YUY2) {
         img = YUV422toRGBA32(frame);
-    } else {
+    } else if (frame.pixel_format == PixelFormat::RGB24) {
         // display RGB24
         img = QImage(frame.plane[0], frame.width[0], frame.height[0], 3*frame.width[0], QImage::Format_RGB888).rgbSwapped();
         QMatrix matrix;
