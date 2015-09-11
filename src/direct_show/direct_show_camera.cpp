@@ -1,7 +1,6 @@
-#include <atlbase.h>    //DO NOT move this include - if it will be after #include "direct_show_camera.h" will be error.
-
-#include "../capability_tree_builder.h"
 #include "direct_show_camera.h"
+#include "../capability_tree_builder.h"
+
 #include "../winapi_shared/winapi_shared_unique_id.h"
 #include "direct_show_utils.h"
 #include "../capability_tree_builder.h"
@@ -92,7 +91,7 @@ int DirectShow_Camera::start(PixelFormat pixelFormat,
     }
 
     /// 4 step Set capabilities
-    int setCapRes = setCapabilities(pBuild, pVCap, pixelFormat, width, height, fps);
+    int setCapRes = setCapabilities(pVCap, pixelFormat, width, height, fps);
     if ( setCapRes < 0 ) {
         pBuild->Release();
         pVCap->Release();
@@ -291,106 +290,107 @@ std::unique_ptr<Frame> DirectShow_Camera::captureFrame()
     return nullptr;
 }
 
+bool DirectShow_Camera::enumerateCapabilities(IBaseFilter *videoCaptureFilter, EnumEntryCallback enumEntryCallback)
+{
+    // destroy videoCaptureFilter only if it set (i.e. owned) by us
+    CComPtr<IBaseFilter> pVideoCaptureFilter;
+
+    if (!videoCaptureFilter) {
+        CComPtr<IMoniker> pMoniker = getIMonikerByUniqueId(information.getUniqueId());
+        if (!pMoniker) {
+            return false;
+        }
+
+        HRESULT hr = pMoniker->BindToObject(0, 0, IID_PPV_ARGS(&pVideoCaptureFilter));
+        if (FAILED(hr)) {
+            return false;
+        }
+        videoCaptureFilter = pVideoCaptureFilter.p;
+    }
+
+    CComPtr<IEnumPins> enumPins;
+    HRESULT hr = videoCaptureFilter->EnumPins(&enumPins);
+    if (FAILED(hr)) {
+        return false;
+    }
+
+    // enumerate pins one by one
+    unsigned long pinCount = 0;
+
+    while (true) {
+        enumPins->Reset();
+        enumPins->Skip(pinCount);
+        if (FAILED(hr)) {
+            return false;
+        }
+        CComPtr<IPin> pin;
+        hr = enumPins->Next(1, &pin, nullptr);
+        if (FAILED(hr)) {
+            return false;
+        }
+        pinCount ++;
+        CComPtr<IAMStreamConfig> streamConfig;
+        hr = pin->QueryInterface(IID_PPV_ARGS(&streamConfig));
+        if (FAILED(hr)) {
+            continue;
+        }
+
+        int capCount = 0;
+        int configSize = 0;
+
+         // get the number of different resolutions possible
+         hr = streamConfig->GetNumberOfCapabilities(&capCount, &configSize);
+         if (FAILED(hr)) {
+             continue;
+         }
+
+         std::unique_ptr<BYTE> config(new BYTE[configSize]);
+
+         for (int cap = 0; cap < capCount; cap++) {
+             AM_MEDIA_TYPE *mediaType;
+
+             hr = streamConfig->GetStreamCaps(cap, &mediaType, config.get());
+
+             bool done = false;
+
+             if (SUCCEEDED(hr)) {
+ #define CALL_HELPER(VIH) enumerateCapabilitiesHelper(videoCaptureFilter, pin, streamConfig, cap, mediaType, reinterpret_cast<VIDEO_STREAM_CONFIG_CAPS*>(config.get()), reinterpret_cast<VIH*>(mediaType->pbFormat), enumEntryCallback);
+                 if (mediaType->formattype == FORMAT_VideoInfo) {
+                     done = CALL_HELPER(VIDEOINFOHEADER);
+                 } else if (mediaType->formattype == FORMAT_VideoInfo2) {
+                     done = CALL_HELPER(VIDEOINFOHEADER2);
+                 } else {
+                     //TODO(nurupo): improve error reporting
+                     //DEBUG_PRINT("Unknown format type" << mediaType->formattype);
+                 }
+#undef CALL_HELPER
+             }
+
+             _DeleteMediaType(mediaType);
+
+             if (done) {
+                 goto end;
+             }
+         }
+    }
+end:
+    return true;
+}
+
 // ---- Capabilities ----
 std::vector<CapabilityFormat> DirectShow_Camera::getCapabilities()
 {
-    std::vector<CapabilityFormat> result;
-
-    IMoniker *pMoniker = getIMonikerByUniqueId(information.getUniqueId());
-    if (!pMoniker) {
-        return result;
-    }
-
-    IBaseFilter *pBaseFilter;
-    HRESULT hr = pMoniker->BindToObject(0, 0, IID_IBaseFilter, (void**)&pBaseFilter);
-    if (FAILED(hr)) {
-        pBaseFilter->Release();
-        pMoniker->Release();
-        return result;
-    }
-
-    ICaptureGraphBuilder2 *pBuild;
-    hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL, CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&pBuild );
-    if (FAILED(hr)) {
-        pBuild->Release();
-        pBaseFilter->Release();
-        pMoniker->Release();
-        return result;
-    }
-
-    CComPtr<IAMStreamConfig> pConfig;
-    hr = pBuild->FindInterface(
-                NULL,
-                &MEDIATYPE_Video,
-                pBaseFilter,
-                IID_IAMStreamConfig,
-                (void**)&pConfig);
-
-    if (FAILED(hr)) {
-        pBuild->Release();
-        pBaseFilter->Release();
-        pMoniker->Release();
-        return result;
-    }
-
-   int iCount = 0;
-   int iSize = 0;
-
-    // get the number of different resolutions possible
-    hr = pConfig->GetNumberOfCapabilities(&iCount, &iSize);
-    if (FAILED(hr)) {
-        pBuild->Release();
-        pBaseFilter->Release();
-        pMoniker->Release();
-        return result;
-    }    
-
     CapabilityTreeBuilder capabilityBuilder;
 
-    for (DWORD capId = 0; capId < iCount; capId++) {
-        VIDEO_STREAM_CONFIG_CAPS scc;
-        AM_MEDIA_TYPE *pmtConfig;
+    enumerateCapabilities(nullptr, [&capabilityBuilder](IAMStreamConfig*, AM_MEDIA_TYPE*, PixelFormat pixelFormat, int width, int height, std::vector<float> &fps)
+    {
+        capabilityBuilder.addCapability(pixelFormat, width, height, fps);
 
-        hr = pConfig->GetStreamCaps(capId, &pmtConfig, (BYTE*)&scc);
+        return false;
+    });
 
-        if (SUCCEEDED(hr)) {
-            if (pmtConfig->formattype == FORMAT_VideoInfo) {
-                VIDEOINFOHEADER *pVHeader = reinterpret_cast<VIDEOINFOHEADER*>(pmtConfig->pbFormat);
-
-                PixelFormat pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
-
-                int width = pVHeader->bmiHeader.biWidth;
-                int height = pVHeader->bmiHeader.biHeight;
-
-                float minFps = FPS_FROM_RATIONAL(10000000, scc.MaxFrameInterval);
-                float maxFps = FPS_FROM_RATIONAL(10000000, scc.MinFrameInterval);
-                float currentFps = FPS_FROM_RATIONAL(10000000, pVHeader->AvgTimePerFrame);
-
-                capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
-            } else if (pmtConfig->formattype == FORMAT_VideoInfo2) {
-                VIDEOINFOHEADER2 *pVHeader = reinterpret_cast<VIDEOINFOHEADER2*>(pmtConfig->pbFormat);
-
-                PixelFormat pixelFormat = direct_show_video_format_to_capture_format(pmtConfig->subtype);
-
-                int width = pVHeader->bmiHeader.biWidth;
-                int height = pVHeader->bmiHeader.biHeight;
-
-                float minFps = FPS_FROM_RATIONAL(10000000, scc.MaxFrameInterval);
-                float maxFps = FPS_FROM_RATIONAL(10000000, scc.MinFrameInterval);
-                float currentFps = FPS_FROM_RATIONAL(10000000, pVHeader->AvgTimePerFrame);
-
-                capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
-            }
-        }
-    }
-    result = capabilityBuilder.build();
-
-    pBuild->Release();
-    pBaseFilter->Release();
-    pMoniker->Release();
-    return result;
+    return capabilityBuilder.build();
 }
-
 
 
 bool DirectShow_Camera::getPropertyRange(VideoProperty property, VideoPropertyRange &videoPropRange)
@@ -670,103 +670,40 @@ IMoniker* DirectShow_Camera::getIMonikerByUniqueId(const std::shared_ptr<UniqueI
     return pResult;
 }
 
-int DirectShow_Camera::setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pBaseFilter, PixelFormat pixelFormat,
-                                       int width, int height, float fps)
+int DirectShow_Camera::setCapabilities(IBaseFilter *videoCaptureFilter, PixelFormat pixelFormat, int width, int height, float fps)
 {
-    CComPtr<IAMStreamConfig> pConfig;
-    HRESULT hr = pBuild->FindInterface(
-                NULL,
-                &MEDIATYPE_Video,
-                pBaseFilter,
-                IID_IAMStreamConfig,
-                (void**)&pConfig);
+    int result = -1;
 
-    if (FAILED(hr)) {
-        return -1;
-    }
-
-    int iCount = 0;
-    int iSize = 0;
-
-    // get the number of different possible resolutions
-    hr = pConfig->GetNumberOfCapabilities(&iCount, &iSize);
-    if (FAILED(hr)) {
-        return -2;
-    }
-
-    bool setFormat = false;
-
-    for (DWORD capId = 0; capId < iCount; capId++) {
-        VIDEO_STREAM_CONFIG_CAPS scc;
-        AM_MEDIA_TYPE *pmtConfig;
-
-        hr = pConfig->GetStreamCaps(capId, &pmtConfig, (BYTE*)&scc);
-
-        if (FAILED(hr)) {
-            continue;
+    enumerateCapabilities(videoCaptureFilter, [&result, &pixelFormat, &width, &height, &fps](IAMStreamConfig *streamConfig, AM_MEDIA_TYPE* mediaType, PixelFormat pixelFormatEnum, int widthEnum, int heightEnum, std::vector<float> &fpsEnum)
+    {
+        if (pixelFormat != pixelFormatEnum || width != widthEnum || height != heightEnum) {
+            return false;
         }
 
-        if (pmtConfig->formattype == FORMAT_VideoInfo) {
-            VIDEOINFOHEADER *pVHeader = reinterpret_cast<VIDEOINFOHEADER*>(pmtConfig->pbFormat);
+        bool foundFps = false;
 
-            PixelFormat pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
-            int widthBuf = pVHeader->bmiHeader.biWidth;
-            int heightBuf = pVHeader->bmiHeader.biHeight;
-            if ( pixelFormatBuf != pixelFormat || widthBuf != width || heightBuf != height ) {
-                continue;
-            }
-
-            auto trySetFps = [&pVHeader, &fps](REFERENCE_TIME timePerFrame)
-            {
-                if (FPS_EQUAL(fps, FPS_FROM_RATIONAL(10000000, timePerFrame))) {
-                    pVHeader->AvgTimePerFrame = timePerFrame;
-                    return true;
+        for (auto &&f : fpsEnum) {
+            if (FPS_EQUAL(fps, f)) {
+                if (mediaType->formattype == FORMAT_VideoInfo) {
+                    reinterpret_cast<VIDEOINFOHEADER*>(mediaType->pbFormat)->AvgTimePerFrame = FPS_FROM_RATIONAL(10000000, f);
+                } else if (mediaType->formattype == FORMAT_VideoInfo2) {
+                    reinterpret_cast<VIDEOINFOHEADER*>(mediaType->pbFormat)->AvgTimePerFrame = FPS_FROM_RATIONAL(10000000, f);
                 }
-                return false;
-            };
-
-            if (trySetFps(scc.MaxFrameInterval) || trySetFps(scc.MinFrameInterval) || trySetFps(pVHeader->AvgTimePerFrame)) {
-                pConfig->SetFormat(pmtConfig);
-                if (FAILED(hr)) {
-                    return -4;
-                }
-                setFormat = true;
-                break;
-            }
-        } else if (pmtConfig->formattype == FORMAT_VideoInfo2) {
-            VIDEOINFOHEADER2 *pVHeader = reinterpret_cast<VIDEOINFOHEADER2*>(pmtConfig->pbFormat);
-
-            PixelFormat pixelFormatBuf = direct_show_video_format_to_capture_format(pmtConfig->subtype);
-            int widthBuf = pVHeader->bmiHeader.biWidth;
-            int heightBuf = pVHeader->bmiHeader.biHeight;
-            if ( pixelFormatBuf != pixelFormat || widthBuf != width || heightBuf != height ) {
-                continue;
-            }
-
-            auto trySetFps = [&pVHeader, &fps](REFERENCE_TIME timePerFrame)
-            {
-                if (FPS_EQUAL(fps, FPS_FROM_RATIONAL(10000000, timePerFrame))) {
-                    pVHeader->AvgTimePerFrame = timePerFrame;
-                    return true;
-                }
-                return false;
-            };
-
-            if (trySetFps(scc.MaxFrameInterval) || trySetFps(scc.MinFrameInterval) || trySetFps(pVHeader->AvgTimePerFrame)) {
-                pConfig->SetFormat(pmtConfig);
-                if (FAILED(hr)) {
-                    return -4;
-                }
-                setFormat = true;
+                foundFps = true;
                 break;
             }
         }
-    }
-    if (!setFormat) {
-        return -5;
-    }
 
-    return 1;
+        if (foundFps) {
+            streamConfig->SetFormat(mediaType);
+            result = 1;
+            return true;
+        }
+
+        return false;
+    });
+
+    return result;
 }
 
 } // namespace webcam_capture

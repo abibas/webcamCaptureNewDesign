@@ -5,7 +5,7 @@
 #define CA_STATE_NONE 0x00          /* Default state */
 #define CA_STATE_CAPTURING 0x01     /* The user started captureing */
 
-#include <windows.h>
+#include <atlbase.h>
 #include <string>
 #include <vector>
 #include <memory>  //std::shared_ptr include
@@ -19,6 +19,7 @@
 #include "../include/video_property_range.h"
 //#include "media_foundation_utils.h"
 #include "direct_show_callback.h"
+
 
 namespace webcam_capture {
 
@@ -42,7 +43,53 @@ private:
 
     /***** SDK FUNCTIONS *****/
     IMoniker* getIMonikerByUniqueId(const std::shared_ptr<UniqueId> &uniqueId);
-    int setCapabilities(ICaptureGraphBuilder2 *pBuild, IBaseFilter *pBaseFilter, PixelFormat pixelFormat, int width, int height, float fps);
+    int setCapabilities(IBaseFilter *videoCaptureFilter, PixelFormat pixelFormat, int width, int height, float fps);
+    /**
+     * Return true to stop enumerating further, otherwise return false.
+     */
+    typedef std::function<bool(IAMStreamConfig*, AM_MEDIA_TYPE*, PixelFormat, int, int, std::vector<float>&)> EnumEntryCallback;
+
+    //TODO(nurupo): create IBaseFilter *videoCaptureFilter in ctor
+    /**
+     * Enumerates capabilities of camera and calls the provided callback for each capability set.
+     * @param videoCaptureFilter Set it to the existing Video Captire Filter. Can be null.
+     * @param enumEntryCallback Callback that will be called for each capability set found.
+     * @return true if no errors occured, false otherwise.
+     */
+    bool enumerateCapabilities(IBaseFilter *videoCaptureFilter, EnumEntryCallback enumEntryCallback);
+
+    template<typename VideoInfoHeaderN>
+    bool enumerateCapabilitiesHelper(IBaseFilter *videoCaptureFilter, IPin *pin, IAMStreamConfig *streamConfig, int cap, AM_MEDIA_TYPE *mediaType, VIDEO_STREAM_CONFIG_CAPS *config, VideoInfoHeaderN *videoInfoHeader, EnumEntryCallback &enumEntryCallback)
+    {
+        PixelFormat pixelFormat = direct_show_video_format_to_capture_format(mediaType->subtype);
+
+        int width = videoInfoHeader->bmiHeader.biWidth;
+        int height = videoInfoHeader->bmiHeader.biHeight;
+
+        std::vector<float> fps;
+
+    #define ADD_RATIONAL_FPS(RATIONAL_FPS) fps.push_back(FPS_FROM_RATIONAL(10000000, RATIONAL_FPS))
+        ADD_RATIONAL_FPS(config->MaxFrameInterval);
+        ADD_RATIONAL_FPS(config->MinFrameInterval);
+        ADD_RATIONAL_FPS(videoInfoHeader->AvgTimePerFrame);
+
+        CComPtr<IAMVideoControl> cameraControl;
+        HRESULT hr = videoCaptureFilter->QueryInterface(IID_PPV_ARGS(&cameraControl));
+        if (SUCCEEDED(hr)) {
+            long fpsCount;
+            LONGLONG *fpsList;
+            hr = cameraControl->GetFrameRateList(pin, cap, {width, height}, &fpsCount, &fpsList);
+            if (SUCCEEDED(hr)) {
+                for (int i = 0; i < fpsCount; i ++) {
+                    ADD_RATIONAL_FPS(fpsList[i]);
+                }
+            }
+            CoTaskMemFree(fpsList);
+        }
+    #undef ADD_RATIONAL_FPS
+
+        return enumEntryCallback(streamConfig, mediaType, pixelFormat, width, height, fps);
+    }
 
 public:
     std::shared_ptr<void> mfDeinitializer;

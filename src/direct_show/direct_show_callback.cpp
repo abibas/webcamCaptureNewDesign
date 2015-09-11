@@ -1,5 +1,6 @@
-#include "direct_show_callback.h"
 #include "direct_show_camera.h"
+#include "direct_show_callback.h"
+
 
 namespace webcam_capture {
 

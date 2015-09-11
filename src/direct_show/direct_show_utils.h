@@ -3,6 +3,7 @@
 
 #include <guiddef.h>
 #include <pixel_format.h>
+#include <Dshow.h>
 
 namespace webcam_capture {
 
@@ -16,6 +17,8 @@ template <class T> void safeReleaseDirectShow(T **t)
         *t = NULL;
     }
 }
+
+void _DeleteMediaType(AM_MEDIA_TYPE *pmt);
 
 } // namespace webcam_capture
 

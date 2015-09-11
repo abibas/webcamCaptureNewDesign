@@ -1,8 +1,9 @@
+#include "direct_show_camera.h"
+
 #include <windows.h>
 #include <dshow.h>
 
 #include "direct_show_backend.h"
-#include "direct_show_camera.h"
 #include "../winapi_shared/winapi_shared_unique_id.h"
 
 namespace webcam_capture {
