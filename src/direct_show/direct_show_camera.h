@@ -83,8 +83,8 @@ private:
                 for (int i = 0; i < fpsCount; i ++) {
                     ADD_RATIONAL_FPS(fpsList[i]);
                 }
+                CoTaskMemFree(fpsList);
             }
-            CoTaskMemFree(fpsList);
         }
     #undef ADD_RATIONAL_FPS
 

@@ -319,13 +319,19 @@ bool DirectShow_Camera::enumerateCapabilities(IBaseFilter *videoCaptureFilter, E
 
     while (true) {
         enumPins->Reset();
-        enumPins->Skip(pinCount);
+        hr = enumPins->Skip(pinCount);
         if (FAILED(hr)) {
+            //TODO(nurupo): print error
+            return false;
+        } else if (hr == S_FALSE) {
             return false;
         }
         CComPtr<IPin> pin;
         hr = enumPins->Next(1, &pin, nullptr);
         if (FAILED(hr)) {
+            //TODO(nurupo): print error
+            return false;
+        } else if (hr == S_FALSE) {
             return false;
         }
         pinCount ++;
