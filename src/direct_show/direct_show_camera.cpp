@@ -318,6 +318,7 @@ bool DirectShow_Camera::enumerateCapabilities(IBaseFilter *videoCaptureFilter, E
     unsigned long pinCount = 0;
 
     while (true) {
+        // get pin
         enumPins->Reset();
         hr = enumPins->Skip(pinCount);
         if (FAILED(hr)) {
@@ -335,6 +336,31 @@ bool DirectShow_Camera::enumerateCapabilities(IBaseFilter *videoCaptureFilter, E
             return false;
         }
         pinCount ++;
+
+        // check if the pin of the category we want
+        CComPtr<IKsPropertySet> propertySet;
+        hr = pin->QueryInterface(IID_PPV_ARGS(&propertySet));
+        if (FAILED(hr)) {
+            continue;
+        }
+
+        GUID pinCategory;
+        DWORD bytesReturned;
+        hr = propertySet->Get(AMPROPSETID_Pin, AMPROPERTY_PIN_CATEGORY, nullptr, 0, &pinCategory, sizeof(pinCategory), &bytesReturned);
+        if (FAILED(hr)) {
+            continue;
+        }
+        if (bytesReturned != sizeof(pinCategory)) {
+            continue;
+        }
+        // TODO(nurupo): figure out how to capture PIN_CATEGORY_STILL correctly
+        // https://msdn.microsoft.com/en-us/library/windows/desktop/dd318622(v=vs.85).aspx
+        if (!IsEqualGUID(pinCategory, PIN_CATEGORY_CAPTURE) && !IsEqualGUID(pinCategory, PIN_CATEGORY_PREVIEW))
+        {
+            continue;
+        }
+
+        // go over capabilities
         CComPtr<IAMStreamConfig> streamConfig;
         hr = pin->QueryInterface(IID_PPV_ARGS(&streamConfig));
         if (FAILED(hr)) {
