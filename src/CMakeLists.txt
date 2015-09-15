@@ -82,6 +82,9 @@ aux_source_directory(. SRC_LIST)
 # also used for installation
 file(GLOB INCLUDE_LIST ${CMAKE_SOURCE_DIR}/include/*.h)
 
+# as well as utils.h
+set(SRC_LIST ${SRC_LIST} utils.h)
+
 add_library(${TARGET} ${LIBRARY_TYPE} ${SRC_LIST} ${INCLUDE_LIST} ${BACKEND_SRC_LIST})
 target_link_libraries(${TARGET} ${LIBS})
 
