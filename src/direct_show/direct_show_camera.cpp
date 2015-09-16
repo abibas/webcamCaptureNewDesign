@@ -370,40 +370,39 @@ bool DirectShow_Camera::enumerateCapabilities(IBaseFilter *videoCaptureFilter, E
         int capCount = 0;
         int configSize = 0;
 
-         // get the number of different resolutions possible
-         hr = streamConfig->GetNumberOfCapabilities(&capCount, &configSize);
-         if (FAILED(hr)) {
-             continue;
-         }
+        hr = streamConfig->GetNumberOfCapabilities(&capCount, &configSize);
+        if (FAILED(hr)) {
+         continue;
+        }
 
-         std::unique_ptr<BYTE> config(new BYTE[configSize]);
+        std::unique_ptr<BYTE> config(new BYTE[configSize]);
 
-         for (int cap = 0; cap < capCount; cap++) {
-             AM_MEDIA_TYPE *mediaType;
+        for (int cap = 0; cap < capCount; cap++) {
+            AM_MEDIA_TYPE *mediaType;
 
-             hr = streamConfig->GetStreamCaps(cap, &mediaType, config.get());
+            hr = streamConfig->GetStreamCaps(cap, &mediaType, config.get());
 
-             bool done = false;
+            bool done = false;
 
-             if (SUCCEEDED(hr)) {
- #define CALL_HELPER(VIH) enumerateCapabilitiesHelper(videoCaptureFilter, pin, streamConfig, cap, mediaType, reinterpret_cast<VIDEO_STREAM_CONFIG_CAPS*>(config.get()), reinterpret_cast<VIH*>(mediaType->pbFormat), enumEntryCallback);
-                 if (mediaType->formattype == FORMAT_VideoInfo) {
-                     done = CALL_HELPER(VIDEOINFOHEADER);
-                 } else if (mediaType->formattype == FORMAT_VideoInfo2) {
-                     done = CALL_HELPER(VIDEOINFOHEADER2);
-                 } else {
-                     //TODO(nurupo): improve error reporting
-                     //DEBUG_PRINT("Unknown format type" << mediaType->formattype);
-                 }
+            if (SUCCEEDED(hr)) {
+#define CALL_HELPER(VIH) enumerateCapabilitiesHelper(videoCaptureFilter, pin, streamConfig, cap, mediaType, reinterpret_cast<VIDEO_STREAM_CONFIG_CAPS*>(config.get()), reinterpret_cast<VIH*>(mediaType->pbFormat), enumEntryCallback);
+                if (mediaType->formattype == FORMAT_VideoInfo) {
+                    done = CALL_HELPER(VIDEOINFOHEADER);
+                } else if (mediaType->formattype == FORMAT_VideoInfo2) {
+                    done = CALL_HELPER(VIDEOINFOHEADER2);
+                } else {
+                    //TODO(nurupo): improve error reporting
+                    //DEBUG_PRINT("Unknown format type" << mediaType->formattype);
+                }
 #undef CALL_HELPER
-             }
+            }
 
-             _DeleteMediaType(mediaType);
+            _DeleteMediaType(mediaType);
 
-             if (done) {
-                 goto end;
-             }
-         }
+            if (done) {
+                goto end;
+            }
+        }
     }
 end:
     return true;
