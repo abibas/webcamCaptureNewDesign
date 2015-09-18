@@ -638,7 +638,7 @@ bool MediaFoundation_Camera::enumerateCapabilities(IMFMediaSource *source, EnumE
 
     if (FAILED(hr)) {
         DEBUG_PRINT_HR_ERROR("Couldn't get presentation descriptor.", hr);
-        return false; //TODO Err code
+        return false;
     }
 
     DWORD streamDescriptorCount;
@@ -646,7 +646,7 @@ bool MediaFoundation_Camera::enumerateCapabilities(IMFMediaSource *source, EnumE
 
     if (FAILED(hr)) {
         DEBUG_PRINT_HR_ERROR("Couldn't get stream descriptor count.", hr);
-        return false;        //TODO Err code
+        return false;
     }
 
     for (DWORD iStreamDescriptor = 0; iStreamDescriptor < streamDescriptorCount; iStreamDescriptor++) {
