@@ -18,9 +18,14 @@
 #include <string>
 #include <vector>
 
+#include <windows.h>
+
 struct IMFMediaSource;
 struct IMFSourceReader;
 struct IMFSourceReaderCallback;
+struct IMFPresentationDescriptor;
+struct IMFMediaTypeHandler;
+struct IMFMediaType;
 
 namespace webcam_capture {
 
@@ -52,9 +57,23 @@ private:
     static int createVideoDeviceSource(const std::wstring &pszSymbolicLink, IMFMediaSource **ppSource);
     int getVideoCapabilities(IMFMediaSource *source, std::vector<CapabilityFormat> &capFormatVector) const;
     int setDeviceFormat(IMFMediaSource *source, const int width, const int height, const PixelFormat pixelFormat,
-                        const float fps) const;
+                        const float fps);
     int setReaderFormat(IMFSourceReader *reader, const int width, const int height, const PixelFormat pixelFormat, const float fps) const;
     int setDecoderFormats(MediaFoundation_Callback *mfCallback, const int width, const int height, const PixelFormat inputFormat, const PixelFormat outputFormat);
+    /**
+     * Return true to stop enumerating further, otherwise return false.
+     */
+    typedef std::function<bool(IMFPresentationDescriptor*, DWORD, BOOL&, IMFMediaTypeHandler*, IMFMediaType*, PixelFormat, int, int, std::vector<std::pair<UINT32, UINT32>>)> EnumEntryCallback;
+
+    bool enumerateCapabilities(IMFMediaSource *source, EnumEntryCallback enumEntryCallback);
+    /**
+     * Returns true on success, false on failure.
+     */
+    static bool getCapabilityFromMediaType(IMFMediaType *mediaType, PixelFormat &pixelFormat, int &width, int &height, std::vector<std::pair<UINT32, UINT32> > &fps);
+    /**
+     * Returns true on success, false on failure.
+     */
+    static bool setMatchingFpsOnMediaType(IMFMediaType *mediaType, float fps, std::vector<std::pair<UINT32, UINT32>> &fpsList);
 
 public:
     std::shared_ptr<void> mfDeinitializer;

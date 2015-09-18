@@ -1,3 +1,4 @@
+#include <atlbase.h>
 #include "media_foundation_camera.h"
 
 #include "../capability_tree_builder.h"
@@ -210,10 +211,22 @@ std::unique_ptr<Frame> MediaFoundation_Camera::captureFrame()
 // ---- Capabilities ----
 std::vector<CapabilityFormat> MediaFoundation_Camera::getCapabilities()
 {
-    std::vector<CapabilityFormat> result;
-    getVideoCapabilities(imfMediaSource, result);
+    CapabilityTreeBuilder capabilityBuilder;
 
-    return result;
+    enumerateCapabilities(imfMediaSource, [&capabilityBuilder](IMFPresentationDescriptor*, DWORD, BOOL&, IMFMediaTypeHandler*, IMFMediaType*, PixelFormat pixelFormat, int width, int height, std::vector<std::pair<UINT32, UINT32>> fps)
+    {
+        std::vector<float> fpsList;
+        fpsList.reserve(fps.size());
+
+        for (auto &&f : fps) {
+            fpsList.push_back(FPS_FROM_RATIONAL(f.first, f.second));
+        }
+        capabilityBuilder.addCapability(pixelFormat, width, height, fpsList);
+
+        return false;
+    });
+
+    return capabilityBuilder.build();
 }
 
 
@@ -370,145 +383,55 @@ bool MediaFoundation_Camera::setProperty(const VideoProperty property, const int
 /* -------------------------------------- */
 
 int MediaFoundation_Camera::setDeviceFormat(IMFMediaSource *source, const int width, const int height,
-        const PixelFormat pixelFormat, const float fps) const
+        const PixelFormat pixelFormat, const float fps)
 {
+    int result = -1;
+    DWORD selectedStreamDescriptor = -1;
 
-    IMFPresentationDescriptor *pres_desc = NULL;
-    IMFStreamDescriptor *stream_desc = NULL;
-    IMFMediaTypeHandler *media_handler = NULL;
-    IMFMediaType *type = NULL;
-    int result = 1; //TODO Err code
-
-    HRESULT hr = source->CreatePresentationDescriptor(&pres_desc);
-
-    if (FAILED(hr)) {
-        DEBUG_PRINT("source->CreatePresentationDescriptor() failed.");
-        result = -1;        //TODO Err code
-        goto done;
-    }
-
-    BOOL selected;
-    hr = pres_desc->GetStreamDescriptorByIndex(0, &selected, &stream_desc);
-
-    if (FAILED(hr)) {
-        DEBUG_PRINT("pres_desc->GetStreamDescriptorByIndex failed.");
-        result = -2;        //TODO Err code
-        goto done;
-    }
-
-    hr = stream_desc->GetMediaTypeHandler(&media_handler);
-
-    if (FAILED(hr)) {
-        DEBUG_PRINT("stream_desc->GetMediaTypehandler() failed.");
-        result = -3;        //TODO Err code
-        goto done;
-    }
-
-    DWORD types_count = 0;
-    hr = media_handler->GetMediaTypeCount(&types_count);
-
-    if (FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot get media type count.");
-        result = -4;        //TODO Err code
-        goto done;
-    }
-
-    PROPVARIANT var;
-
-    bool setType = false;
-
-    for (DWORD i = 0; i < types_count; ++i) {
-        PixelFormat pixelFormatBuf = PixelFormat::UNKNOWN;
-        int widthBuf = 0;
-        int heightBuf = 0;
-        UINT32 high = 0;
-        UINT32 low =  0;
-
-        hr = media_handler->GetMediaTypeByIndex(i, &type);
-
-        if (FAILED(hr)) {
-            DEBUG_PRINT("Error: cannot get media type by index.");
-            result = -5;        //TODO Err code
-            goto done;
+    enumerateCapabilities(source, [&selectedStreamDescriptor, &result, &pixelFormat, &width, &height, &fps](IMFPresentationDescriptor *presentationDescriptor, DWORD iStreamDescriptor, BOOL &isStreamSelected, IMFMediaTypeHandler *mediaTypeHandler, IMFMediaType *mediaType, PixelFormat pixelFormatEnum, int widthEnum, int heightEnum, std::vector<std::pair<UINT32, UINT32>> fpsEnum)
+    {
+        // whitelist the stream we have selected from being deselected
+        if (iStreamDescriptor == selectedStreamDescriptor) {
+            return false;
         }
 
-        //get subtype from type
-        PropVariantInit(&var);
-        hr = type->GetItem(MF_MT_SUBTYPE, &var);
-        if (FAILED(hr)) {
-            MediaFoundation_Utils::safeRelease(&type);
-            continue;
-        }
-        if (var.vt == VT_CLSID) {
-            pixelFormatBuf = MediaFoundation_Utils::videoFormatToPixelFormat(*var.puuid);
-        }
-        PropVariantClear(&var);
-
-        //get frame size from type
-        PropVariantInit(&var);
-        hr = type->GetItem(MF_MT_FRAME_SIZE, &var);
-        if (FAILED(hr)) {
-            MediaFoundation_Utils::safeRelease(&type);
-            continue;
-        }
-        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-        widthBuf = (int)high;
-        heightBuf = (int)low;
-        PropVariantClear(&var);
-
-        // Wait till we get the format and resolution we are looking for
-        if (widthBuf != width || heightBuf != height || pixelFormatBuf != pixelFormat) {
-            MediaFoundation_Utils::safeRelease(&type);
-            continue;
-        }
-
-        // figure out fps
-        // we don't read fps above because we need to set it on type, which requires PROPVARIANT of that fps
-        auto trySetFps = [&type, &var, &hr, &high, &low, fps](REFGUID GUID) {
-            bool setFps = false;
-
-            PropVariantInit(&var);
-            hr = type->GetItem(GUID, &var);
-            if (SUCCEEDED(hr)) {
-                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                float fpsBuf = FPS_FROM_RATIONAL(high, low);
-
-                if (FPS_EQUAL(fps, fpsBuf)) {
-                    hr = type->SetItem(MF_MT_FRAME_RATE, var);
-                    setFps = SUCCEEDED(hr);
-                }
-            }
-            PropVariantClear(&var);
-
-            return setFps;
-        };
-
-        // if we found the fps we are looking for and set it on the type
-        if (trySetFps(MF_MT_FRAME_RATE) || trySetFps(MF_MT_FRAME_RATE_RANGE_MAX) || trySetFps(MF_MT_FRAME_RATE_RANGE_MIN)) {
-
-            hr = media_handler->SetCurrentMediaType(type);
+        // deselect any selected stream
+        if (isStreamSelected) {
+            HRESULT hr = presentationDescriptor->DeselectStream(iStreamDescriptor);
             if (FAILED(hr)) {
-                result = -7;
-                DEBUG_PRINT("Error: Failed to set the current media type for the given settings.");
+                DEBUG_PRINT_HR_ERROR("Couldn't deselect stream descriptor.", hr);
             } else {
-                setType = true;
+                isStreamSelected = false;
             }
-            MediaFoundation_Utils::safeRelease(&type);
-            break;
         }
 
-        MediaFoundation_Utils::safeRelease(&type);
-    }
+        if (pixelFormat != pixelFormatEnum || width != widthEnum || height != heightEnum) {
+            return false;
+        }
 
-    if (!setType) {
-        result = -8;
-    }
+        if (!setMatchingFpsOnMediaType(mediaType, fps, fpsEnum)) {
+            return false;
+        }
 
-done:
-    MediaFoundation_Utils::safeRelease(&pres_desc);
-    MediaFoundation_Utils::safeRelease(&stream_desc);
-    MediaFoundation_Utils::safeRelease(&media_handler);
-    MediaFoundation_Utils::safeRelease(&type);
+        HRESULT hr = presentationDescriptor->SelectStream(iStreamDescriptor);
+        if (FAILED(hr)) {
+            DEBUG_PRINT_HR_ERROR("Couldn't select stream descriptor.", hr);
+            return false;
+        }
+
+        selectedStreamDescriptor = isStreamSelected;
+        isStreamSelected = true;
+
+        hr = mediaTypeHandler->SetCurrentMediaType(mediaType);
+        if (FAILED(hr)) {
+            DEBUG_PRINT_HR_ERROR("Couldn't set media type.", hr);
+            return true;
+        } else {
+            result = 1;
+        }
+
+        return false;
+    });
 
     return result;
 }
@@ -573,249 +496,227 @@ done:
 int MediaFoundation_Camera::setReaderFormat(IMFSourceReader *reader, const int width, const int height,
         const PixelFormat pixelFormat, const float fps) const
 {
-
-    int result = -1;        //TODO Err code
-    HRESULT hr = S_OK;
-
-    for (DWORD media_type_index = 0; true; ++media_type_index) {
-        PixelFormat pixelFormatBuf = PixelFormat::UNKNOWN;
-        int widthBuf = 0;
-        int heightBuf = 0;
-        UINT32 high = 0;
-        UINT32 low =  0;
-        IMFMediaType *type = NULL;
-
-        hr = reader->GetNativeMediaType(0, media_type_index, &type);
-
-        if (FAILED(hr)) {
-            break;
-        }
-
-        // PIXELFORMAT
-        PROPVARIANT var;
-        PropVariantInit(&var);
-        hr = type->GetItem(MF_MT_SUBTYPE, &var);
-
-        if (SUCCEEDED(hr)) {
-            pixelFormatBuf = MediaFoundation_Utils::videoFormatToPixelFormat(*var.puuid);
-        }
-        PropVariantClear(&var);
-
-        // SIZE
-        PropVariantInit(&var);
-        hr = type->GetItem(MF_MT_FRAME_SIZE, &var);
-        if (SUCCEEDED(hr)) {
-            Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-            widthBuf = high;
-            heightBuf = low;
-        }
-        PropVariantClear(&var);
-
-        // figure out fps
-        // we don't read fps above because we need to set it on type, which requires PROPVARIANT of that fps
-        auto trySetFps = [&type, &var, &hr, &high, &low, fps](REFGUID GUID) {
-            bool setFps = false;
-
-            PropVariantInit(&var);
-            hr = type->GetItem(GUID, &var);
-            if (SUCCEEDED(hr)) {
-                Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-                float fpsBuf = FPS_FROM_RATIONAL(high, low);
-
-                if (FPS_EQUAL(fps, fpsBuf)) {
-                    hr = type->SetItem(MF_MT_FRAME_RATE, var);
-                    setFps = SUCCEEDED(hr);
-                }
-            }
-            PropVariantClear(&var);
-
-            return setFps;
-        };
-
-        // When the output media type of the source reader matches our specs, set it!
-        if (widthBuf == width &&
-                heightBuf == height &&
-                pixelFormatBuf == pixelFormat &&
-                (trySetFps(MF_MT_FRAME_RATE) ||
-                 trySetFps(MF_MT_FRAME_RATE_RANGE_MAX) ||
-                 trySetFps(MF_MT_FRAME_RATE_RANGE_MIN))) {
-
-            hr = reader->SetCurrentMediaType(0, NULL, type);
-
-            if (FAILED(hr)) {
-                DEBUG_PRINT("Error: Failed to set the current media type for the given settings.");
-                result = -2;
-            } else {
-                hr = S_OK;
-                result = 1;        //TODO Err code
-            }
-            MediaFoundation_Utils::safeRelease(&type);
-            break;
-        }
-
-        MediaFoundation_Utils::safeRelease(&type);
+    // deselect all streams
+    HRESULT hr = reader->SetStreamSelection(MF_SOURCE_READER_ALL_STREAMS, false);
+    if (FAILED(hr)) {
+        DEBUG_PRINT_HR_ERROR("Couldn't deselect all streams.", hr);
+        return -1;
     }
 
-    return result;
+    for (DWORD iStreamIndex = 0; true; iStreamIndex ++) {
+
+        for (DWORD iMediaType = 0; true; iMediaType ++) {
+
+            CComPtr<IMFMediaType> mediaType;
+            hr = reader->GetNativeMediaType(iStreamIndex, iMediaType, &mediaType);
+
+            if (hr == MF_E_NO_MORE_TYPES) {
+                // go to the next stream
+                break;
+            } else if (hr == MF_E_INVALIDSTREAMNUMBER) {
+                // no more streams available
+                return -1;
+            } else if (FAILED(hr)) {
+                DEBUG_PRINT_HR_ERROR("Couldn't get native media type.", hr);
+                return -1;
+            }
+
+            PixelFormat pixelFormatBuf;
+            int widthBuf;
+            int heightBuf;
+            std::vector<std::pair<UINT32, UINT32>> fpsBuf;
+
+            if (!getCapabilityFromMediaType(mediaType.p, pixelFormatBuf, widthBuf, heightBuf, fpsBuf)) {
+                continue;
+            }
+
+            if (widthBuf != width || heightBuf != height || pixelFormatBuf != pixelFormat) {
+                continue;
+            }
+
+            if (!setMatchingFpsOnMediaType(mediaType, fps, fpsBuf)) {
+                continue;
+            }
+
+            hr = reader->SetStreamSelection(iStreamIndex, true);
+            if (FAILED(hr)) {
+                DEBUG_PRINT_HR_ERROR("Couldn't select stream.", hr);
+                return -1;
+            }
+
+            hr = reader->SetCurrentMediaType(iStreamIndex, nullptr, mediaType);
+            if (FAILED(hr)) {
+                DEBUG_PRINT_HR_ERROR("Couldn't set media type.", hr);
+                return -1;
+            }
+
+            return 1;
+        }
+    }
+
+    return -1;
 }
 
-
-
-/**
- * Get capabilities for the given IMFMediaSource which represents
- * a video capture device.
- *
- * @param IMFMediaSource* source [in]               Pointer to the video capture source.
- * @param std::vector<AVCapability>& caps [out]     This will be filled with capabilites
- */
-int MediaFoundation_Camera::getVideoCapabilities(IMFMediaSource *source,
-        std::vector<CapabilityFormat> &capFormatVector) const
+bool MediaFoundation_Camera::setMatchingFpsOnMediaType(IMFMediaType *mediaType, float fps, std::vector<std::pair<UINT32, UINT32>> &fpsList)
 {
+    bool setFps = false;
 
-    IMFPresentationDescriptor *presentation_desc = NULL;
-    IMFStreamDescriptor *stream_desc = NULL;
-    IMFMediaTypeHandler *media_handler = NULL;
-    IMFMediaType *type = NULL;
-    int result = 1;        //TODO Err code
-    CapabilityTreeBuilder capabilityBuilder;
-
-    HRESULT hr = source->CreatePresentationDescriptor(&presentation_desc);
-
-    if (hr == MF_E_SHUTDOWN) {
-        DEBUG_PRINT("Error: The media source's Shutdown method has been called.");
-        goto done;
+    for (auto &&f : fpsList) {
+        if (FPS_EQUAL(fps, FPS_FROM_RATIONAL(f.first, f.second))) {
+            UINT64 rationalFps = Pack2UINT32AsUINT64(f.first, f.second);
+            HRESULT hr = mediaType->SetUINT64(MF_MT_FRAME_RATE, rationalFps);
+            setFps = SUCCEEDED(hr);
+            break;
+        }
     }
+
+    return setFps;
+}
+
+bool MediaFoundation_Camera::getCapabilityFromMediaType(IMFMediaType *mediaType, PixelFormat &pixelFormat, int &width, int &height, std::vector<std::pair<UINT32, UINT32>> &fps)
+{
+    HRESULT hr;
+
+    // Pixel Format
+    {
+        GUID subtype;
+        hr = mediaType->GetGUID(MF_MT_SUBTYPE, &subtype);
+        if (FAILED(hr)) {
+            DEBUG_PRINT_HR_ERROR("Couldn't get subtype of a media type.", hr);
+            return false;
+        }
+        pixelFormat = MediaFoundation_Utils::videoFormatToPixelFormat(subtype);
+        if (pixelFormat == PixelFormat::UNKNOWN) {
+            return false;
+        }
+    }
+
+    // width x height
+    {
+        UINT64 frameSize;
+        UINT32 frameSizeHigh;
+        UINT32 frameSizeLow;
+
+        hr = mediaType->GetUINT64(MF_MT_FRAME_SIZE, &frameSize);
+        if (FAILED(hr)) {
+            DEBUG_PRINT_HR_ERROR("Couldn't get frame size of a media type.", hr);
+            return false;
+        }
+        Unpack2UINT32AsUINT64(frameSize, &frameSizeHigh, &frameSizeLow);
+        width = (int)frameSizeHigh;
+        height = (int)frameSizeLow;
+    }
+
+    // FPS
+    auto tryGetFps = [&mediaType, &hr, &fps](REFGUID GUID) {
+        UINT64 rationalFps;
+        UINT32 rationalFpsHigh;
+        UINT32 rationalFpsLow;
+        hr = mediaType->GetUINT64(GUID, &rationalFps);
+        if (FAILED(hr)) {
+            return false;
+        }
+        Unpack2UINT32AsUINT64(rationalFps, &rationalFpsHigh, &rationalFpsLow);
+        fps.push_back({rationalFpsHigh, rationalFpsLow});
+
+        return true;
+    };
+
+    if (!tryGetFps(MF_MT_FRAME_RATE_RANGE_MIN) ||
+        !tryGetFps(MF_MT_FRAME_RATE_RANGE_MAX) ||
+        !tryGetFps(MF_MT_FRAME_RATE)) {
+            return false;
+        }
+
+    return true;
+}
+
+bool MediaFoundation_Camera::enumerateCapabilities(IMFMediaSource *source, EnumEntryCallback enumEntryCallback)
+{
+    CComPtr<IMFPresentationDescriptor> presentationDescriptor;
+    HRESULT hr = source->CreatePresentationDescriptor(&presentationDescriptor);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot get presentation descriptor.");
-        result = -1;        //TODO Err code
-        goto done;
+        DEBUG_PRINT_HR_ERROR("Couldn't get presentation descriptor.", hr);
+        return false; //TODO Err code
     }
 
-    BOOL selected;
-    hr = presentation_desc->GetStreamDescriptorByIndex(0, &selected, &stream_desc);
+    DWORD streamDescriptorCount;
+    hr = presentationDescriptor->GetStreamDescriptorCount(&streamDescriptorCount);
 
     if (FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot get stream descriptor.");
-        result = -2;        //TODO Err code
-        goto done;
+        DEBUG_PRINT_HR_ERROR("Couldn't get stream descriptor count.", hr);
+        return false;        //TODO Err code
     }
 
-    hr = stream_desc->GetMediaTypeHandler(&media_handler);
+    for (DWORD iStreamDescriptor = 0; iStreamDescriptor < streamDescriptorCount; iStreamDescriptor++) {
 
-    if (FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot get media type handler.");
-        result = -3;        //TODO Err code
-        goto done;
+        BOOL isStreamSelected;
+        CComPtr<IMFStreamDescriptor> streamDescriptor;
+        hr = presentationDescriptor->GetStreamDescriptorByIndex(iStreamDescriptor, &isStreamSelected, &streamDescriptor);
+
+        if (FAILED(hr)) {
+            DEBUG_PRINT_HR_ERROR("Couldn't get stream descriptor.", hr);
+            continue;
+        }
+
+        CComPtr<IMFMediaTypeHandler> mediaTypeHandler;
+        hr = streamDescriptor->GetMediaTypeHandler(&mediaTypeHandler);
+
+        if (FAILED(hr)) {
+            DEBUG_PRINT_HR_ERROR("Couldn't get media type handler.", hr);
+            continue;
+        }
+
+        // check if it's stream for video
+        // TODO(nurupo): handle still images MFMediaType_Image
+        // https://msdn.microsoft.com/en-us/library/windows/desktop/aa367377(v=vs.85).aspx
+        /*GUID majorType;
+        hr = mediaTypeHandler->GetMajorType(&majorType);
+
+        if (FAILED(hr)) {
+            DEBUG_PRINT_HR_ERROR("Couldn't get major type of the stream.", hr);
+            continue;
+        } else if (!IsEqualGUID(majorType, MFMediaType_Video)) {
+            continue;
+        }*/
+
+
+        DWORD mediaTypeCount;
+        hr = mediaTypeHandler->GetMediaTypeCount(&mediaTypeCount);
+
+        if (FAILED(hr)) {
+            DEBUG_PRINT_HR_ERROR("Couldn't get media type count.", hr);
+            continue;
+        }
+
+        // Loop over all the types
+        for (DWORD iMediaType = 0; iMediaType < mediaTypeCount; iMediaType++) {
+
+            CComPtr<IMFMediaType> mediaType;
+            hr = mediaTypeHandler->GetMediaTypeByIndex(iMediaType, &mediaType);
+
+            if (FAILED(hr)) {
+                DEBUG_PRINT_HR_ERROR("Couldn't get media type.", hr);
+                continue;
+            }
+
+            PixelFormat pixelFormat;
+            int width;
+            int height;
+            std::vector<std::pair<UINT32, UINT32>> fps;
+
+            if (!getCapabilityFromMediaType(mediaType.p, pixelFormat, width, height, fps)) {
+                continue;
+            }
+
+            if (enumEntryCallback(presentationDescriptor.p, iStreamDescriptor, isStreamSelected, mediaTypeHandler, mediaType, pixelFormat, width, height, fps)) {
+                return true;
+            }
+        }
     }
 
-    DWORD types_count = 0;
-    hr = media_handler->GetMediaTypeCount(&types_count);
-
-    if (FAILED(hr)) {
-        DEBUG_PRINT("Error: cannot get media type count.");
-        result = -4;        //TODO Err code
-        goto done;
-    }
-
-    // Loop over all the types
-    PROPVARIANT var;
-
-    for (DWORD i = 0; i < types_count; ++i) {
-
-        PixelFormat pixelFormat = PixelFormat::UNKNOWN;
-        int width = 0;
-        int height = 0;
-        float minFps = 0;
-        float maxFps = 0;
-        float currentFps = 0;
-        UINT32 high = 0;
-        UINT32 low =  0;
-
-        hr = media_handler->GetMediaTypeByIndex(i, &type);
-
-        if (FAILED(hr)) {
-            DEBUG_PRINT("Error: cannot get media type by index.");
-            MediaFoundation_Utils::safeRelease(&type);
-            continue;
-        }
-
-        //TYPE
-        PropVariantInit(&var);
-        hr = type->GetItem(MF_MT_SUBTYPE, &var);
-        if (FAILED(hr)) {
-            MediaFoundation_Utils::safeRelease(&type);
-            continue;
-        }
-        if (var.vt == VT_CLSID) {
-            pixelFormat = MediaFoundation_Utils::videoFormatToPixelFormat(*var.puuid);
-        }
-        PropVariantClear(&var);
-
-        //FRAME SIZE
-        PropVariantInit(&var);
-        hr = type->GetItem(MF_MT_FRAME_SIZE, &var);
-        if (FAILED(hr)) {
-            MediaFoundation_Utils::safeRelease(&type);
-            continue;
-        }
-        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-        width = (int)high;
-        height = (int)low;
-        PropVariantClear(&var);
-
-        //MIN FRAME RATE
-        PropVariantInit(&var);
-        hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MIN, &var);
-        if (FAILED(hr)) {
-            MediaFoundation_Utils::safeRelease(&type);
-            continue;
-        }
-        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-        minFps = FPS_FROM_RATIONAL(high, low);
-        PropVariantClear(&var);
-
-        //MAX FRAME RATE
-        PropVariantInit(&var);
-        hr = type->GetItem(MF_MT_FRAME_RATE_RANGE_MAX, &var);
-        if (FAILED(hr)) {
-            MediaFoundation_Utils::safeRelease(&type);
-            continue;
-        }
-        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-        maxFps = FPS_FROM_RATIONAL(high, low);
-        PropVariantClear(&var);
-
-        //CURRENT FRAME RATE
-        PropVariantInit(&var);
-        hr = type->GetItem(MF_MT_FRAME_RATE, &var);
-        if (FAILED(hr)) {
-            MediaFoundation_Utils::safeRelease(&type);
-            continue;
-        }
-        Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &high, &low);
-        currentFps = FPS_FROM_RATIONAL(high, low);
-        PropVariantClear(&var);
-
-        // check that all required fields were set
-        if (pixelFormat == PixelFormat::UNKNOWN || !width || !height || !minFps || !maxFps || !currentFps) {
-            MediaFoundation_Utils::safeRelease(&type);
-            continue;
-        }
-
-        capabilityBuilder.addCapability(pixelFormat, width, height, {minFps, maxFps, currentFps});
-
-        MediaFoundation_Utils::safeRelease(&type);
-    }
-
-    capFormatVector = capabilityBuilder.build();
-
-done:
-    MediaFoundation_Utils::safeRelease(&presentation_desc);
-    MediaFoundation_Utils::safeRelease(&stream_desc);
-    MediaFoundation_Utils::safeRelease(&media_handler);
-
-    return result;
+    return true;
 }
 
 /**
