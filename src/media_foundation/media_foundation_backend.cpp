@@ -4,6 +4,7 @@
     http://www.apache.org/licenses/LICENSE-2.0
   */
 
+#include <atlbase.h>
 #include "media_foundation_backend.h"
 
 #include "../utils.h"
@@ -25,17 +26,15 @@ namespace webcam_capture {
 
 MediaFoundation_Backend::MediaFoundation_Backend(std::shared_ptr<void> &deinitializer) :
     BackendInterface(BackendImplementation::MediaFoundation),
-    mfDeinitializer(deinitializer),
+    deinitializer(deinitializer),
     notificationManager(BackendImplementation::MediaFoundation)
 {
-  // empty
+    // empty
 }
 
 std::unique_ptr<BackendInterface> MediaFoundation_Backend::create()
 {
-    // Initialize COM
     HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-
     if (FAILED(hr)) {
         DEBUG_PRINT_HR_ERROR("Failed to initialize COM.", hr);
 
@@ -49,14 +48,12 @@ std::unique_ptr<BackendInterface> MediaFoundation_Backend::create()
     // including any call that returns S_FALSE, must be balanced by a corresponding call to CoUninitialize." --msdn
     bool deinitializeCom = hr == S_OK || hr == S_FALSE;
 
-    // Initialize MediaFoundation
     hr = MFStartup(MF_VERSION);
 
     // "Before your application quits, call MFShutdown once for every previous call to MFStartup." --msdn
     // so assuming we need to shutdown it even on failures, thus no conditionals like `deinitializeCom`
-
     std::shared_ptr<void> deinitializer = std::shared_ptr<void>(nullptr,
-                                                                std::bind(&MediaFoundation_Backend::DeinitBackend,
+                                                                std::bind(&MediaFoundation_Backend::deinitialize,
                                                                           std::placeholders::_1, deinitializeCom));
 
     if (FAILED(hr)) {
@@ -67,16 +64,13 @@ std::unique_ptr<BackendInterface> MediaFoundation_Backend::create()
     return std::unique_ptr<BackendInterface>(new MediaFoundation_Backend(deinitializer));
 }
 
-void MediaFoundation_Backend::DeinitBackend(void *, bool deinitializeCom)
+void MediaFoundation_Backend::deinitialize(void *, bool deinitializeCom)
 {
-    /* Shutdown MediaFoundation */
     HRESULT hr = MFShutdown();
-
     if (FAILED(hr)) {
         DEBUG_PRINT_HR_ERROR("Failed to shutdown the MediaFoundation.", hr);
     }
 
-    /* Shutdown COM */
     if (deinitializeCom) {
         CoUninitialize();
     }
@@ -86,14 +80,13 @@ void MediaFoundation_Backend::DeinitBackend(void *, bool deinitializeCom)
 
 std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() const
 {
-
     std::vector<CameraInformation> result;
+
+    CComPtr<IMFAttributes> config;
+    IMFActivate **devices = nullptr;
     UINT32 count = 0;
-    IMFAttributes *config = NULL;
-    IMFActivate **devices = NULL;
 
     HRESULT hr = MFCreateAttributes(&config, 1);
-
     if (FAILED(hr)) {
         DEBUG_PRINT_HR_ERROR("Failed to create attribute store.", hr);
         goto done;
@@ -101,7 +94,6 @@ std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() co
 
     // Filter capture devices.
     hr = config->SetGUID(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
-
     if (FAILED(hr)) {
         DEBUG_PRINT_HR_ERROR("Failed to set GUID on an attribute.", hr);
         goto done;
@@ -109,7 +101,6 @@ std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() co
 
     // Enumerate devices
     hr = MFEnumDeviceSources(config, &devices, &count);
-
     if (FAILED(hr)) {
         DEBUG_PRINT_HR_ERROR("Failed to get an enumeration of cameras.", hr);
         goto done;
@@ -120,41 +111,37 @@ std::vector<CameraInformation> MediaFoundation_Backend::getAvailableCameras() co
         goto done;
     }
 
-    for (DWORD i = 0; i < count; ++i) {
-        HRESULT hr1 = S_OK;
-        HRESULT hr2 = S_OK;
-        WCHAR *friendly_name = NULL;
-        WCHAR *symbolic_link = NULL;
-        UINT32 friendly_name_len = 0;
-        UINT32 symbolic_link_len = 0;
+    for (UINT32 i = 0; i < count; i++) {
+        HRESULT hrFriendlyName;
+        HRESULT hrSymbolicLink;
+        WCHAR *friendlyName = nullptr;
+        WCHAR *symbolicLink = nullptr;
+        UINT32 unusedLength;
 
-        hr1 = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME, &friendly_name, &friendly_name_len);
-        hr2 = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
-                                             &symbolic_link, &symbolic_link_len);
+        hrFriendlyName = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_FRIENDLY_NAME, &friendlyName, &unusedLength);
+        hrSymbolicLink = devices[i]->GetAllocatedString(MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_SYMBOLIC_LINK,
+                                             &symbolicLink, &unusedLength);
 
-        if (SUCCEEDED(hr1) && SUCCEEDED(hr2)) {
-            std::string name = MediaFoundation_Utils::string_cast<std::string>(friendly_name);
-            result.push_back({std::make_shared<WinapiShared_UniqueId>(symbolic_link, BackendImplementation::MediaFoundation),
+        if (SUCCEEDED(hrFriendlyName) && SUCCEEDED(hrSymbolicLink)) {
+            std::string name = MediaFoundation_Utils::string_cast<std::string>(friendlyName);
+            result.push_back({std::make_shared<WinapiShared_UniqueId>(symbolicLink, BackendImplementation::MediaFoundation),
                               name});
         }
 
-        if (FAILED(hr1)) {
-            DEBUG_PRINT_HR_ERROR("Failed to get name of a camera.", hr1);
+        if (FAILED(hrFriendlyName)) {
+            DEBUG_PRINT_HR_ERROR("Failed to get name of a camera.", hrFriendlyName);
         }
 
-        if (FAILED(hr2)) {
-            DEBUG_PRINT_HR_ERROR("Failed to get unique id of a camera.", hr2);
+        if (FAILED(hrSymbolicLink)) {
+            DEBUG_PRINT_HR_ERROR("Failed to get unique id of a camera.", hrSymbolicLink);
         }
 
-        CoTaskMemFree(friendly_name);
-        CoTaskMemFree(symbolic_link);
-
+        CoTaskMemFree(friendlyName);
+        CoTaskMemFree(symbolicLink);
     }
 
 done:
-    MediaFoundation_Utils::safeRelease(&config);
-
-    for (DWORD i = 0; i < count; ++i) {
+    for (UINT32 i = 0; i < count; i++) {
         MediaFoundation_Utils::safeRelease(&devices[i]);
     }
 
@@ -165,7 +152,7 @@ done:
 
 std::unique_ptr<webcam_capture::CameraInterface> MediaFoundation_Backend::getCamera(const CameraInformation &information) const
 {
-    return MediaFoundation_Camera::create(mfDeinitializer, information);
+    return MediaFoundation_Camera::create(deinitializer, information);
 }
 
 int MediaFoundation_Backend::setCameraConnectionStateCallback(CameraConnectionStateCallback callback)
@@ -177,6 +164,7 @@ int MediaFoundation_Backend::setCameraConnectionStateCallback(CameraConnectionSt
     }
 
     notificationManager.start(callback);
+
     return 1; //TODO ERR code (success)
 }
 
