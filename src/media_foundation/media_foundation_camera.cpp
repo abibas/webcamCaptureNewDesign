@@ -153,7 +153,7 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
 
     frame.width[0] = width;
     frame.height[0] = height;
-    frame.pixel_format = decodeFormat == PixelFormat::UNKNOWN ? (decompressFormat == PixelFormat::UNKNOWN ? pixelFormat : decompressFormat) : decodeFormat;
+    frame.pixelFormat = decodeFormat == PixelFormat::UNKNOWN ? (decompressFormat == PixelFormat::UNKNOWN ? pixelFormat : decompressFormat) : decodeFormat;
 
     // Kick off the capture stream.
     HRESULT hr = imfSourceReader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);

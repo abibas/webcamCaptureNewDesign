@@ -27,17 +27,6 @@ namespace webcam_capture {
     struct Frame
 #endif
 {
-    /**
-     * @param w Sets the width of the frame.
-     * @param h Sets the height of the frame.
-     * @param fmt Sets the pixel format of the frame.
-     */
-    void setup(int w, int h, PixelFormat fmt);
-
-    /**
-     *  When data is one continuous block of member you can use this, otherwise it points to the same location as plane[0].
-     */
-    uint8_t *pixels;
 
     /**
      * Pointers to the pixel data.
@@ -72,12 +61,12 @@ namespace webcam_capture {
      * The total number of bytes that make up the frame.
      * This doesn't have to be one continuous array when the pixel format is planar.
      */
-    size_t nbytes;
+    size_t bytes;
 
     /**
      * The pixel format of the frame.
      */
-    PixelFormat pixel_format;
+    PixelFormat pixelFormat;
 };
 
 } // namespace webcam_capture

@@ -36,9 +36,9 @@ void VideoForm::FrameCaptureCallback(Frame &frame)
 {
     QImage img;
 
-    if (frame.pixel_format == PixelFormat::YUY2) {
+    if (frame.pixelFormat == PixelFormat::YUY2) {
         img = YUV422toRGBA32(frame);
-    } else if (frame.pixel_format == PixelFormat::RGB24) {
+    } else if (frame.pixelFormat == PixelFormat::RGB24) {
         // display RGB24
         img = QImage(frame.plane[0], frame.width[0], frame.height[0], 3*frame.width[0], QImage::Format_RGB888).rgbSwapped();
 
@@ -81,7 +81,7 @@ QImage VideoForm::YUV422toRGBA32(Frame &frame)
 #define YUV_TO_B(Y, U, V) (CLAMP((Y) + 1.772 * ((U) - 128)))
 #define YUV_TO_QRGB(Y, U, V) (qRgb(YUV_TO_R((Y), (U), (V)), YUV_TO_G((Y), (U), (V)), YUV_TO_B((Y), (U), (V))))
 
-    for (unsigned int i = 0 ; i <= frame.nbytes - 4 ; i += 4) {
+    for (unsigned int i = 0 ; i <= frame.bytes - 4 ; i += 4) {
         int y1 = frame.plane[0][i + 0];
         int u  = frame.plane[0][i + 1];
         int y2 = frame.plane[0][i + 2];

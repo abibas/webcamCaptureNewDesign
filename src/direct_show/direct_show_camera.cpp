@@ -65,7 +65,7 @@ int DirectShow_Camera::start(PixelFormat pixelFormat,
 
     frame.width[0] = width;
     frame.height[0] = height;
-    frame.pixel_format = pixelFormat;
+    frame.pixelFormat = pixelFormat;
 
 
     HRESULT hr;
