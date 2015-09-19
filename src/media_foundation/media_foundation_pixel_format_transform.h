@@ -1,6 +1,7 @@
 #ifndef MEDIA_FOUNDATION_PIXEL_FORMAT_TRANSFORM_H
 #define MEDIA_FOUNDATION_PIXEL_FORMAT_TRANSFORM_H
 
+#include <atlbase.h>
 #include <memory>
 #include <pixel_format.h>
 #include <windows.h>
@@ -42,10 +43,7 @@ public:
     bool convert(IMFSample *inputSample, IMFSample **outputSample);
 
 protected:
-    /**
-     * Takes ownership of the transform -- you should not release the transform on your own, even if the call fails.
-     */
-    static std::unique_ptr<MediaFoundation_PixelFormatTransform> getInstance(IMFTransform *transform, int width, int height, PixelFormat inputPixelFormat, PixelFormat outputPixelFormat, RESULT &result);
+    static std::unique_ptr<MediaFoundation_PixelFormatTransform> getInstance(CComPtr<IMFTransform> &transform, int width, int height, PixelFormat inputPixelFormat, PixelFormat outputPixelFormat, RESULT &result);
     MediaFoundation_PixelFormatTransform(MediaFoundation_PixelFormatTransform &&other);
 
 private:
@@ -56,19 +54,19 @@ private:
         FAILURE
     };
 
-    MediaFoundation_PixelFormatTransform(IMFTransform *transform, DWORD inputStreamId, DWORD outputStreamId, bool weAllocateOutputSample, IMFSample *outputSample, IMFMediaBuffer *outputSampleBuffer);
+    MediaFoundation_PixelFormatTransform(CComPtr<IMFTransform> &transform, DWORD inputStreamId, DWORD outputStreamId, bool weManageAllocation, CComPtr<IMFSample> &outputSample, CComPtr<IMFMediaBuffer> &outputSampleBuffer);
 
     static void getStreamIds(IMFTransform *transform, DWORD &inputStreamId, DWORD &outputStreamId);
     static PRIVATE_RESULT getSubtypeForPixelFormat(IMFTransform *transform, HRESULT (IMFTransform::*getAvailableType)(DWORD, DWORD, IMFMediaType**), PixelFormat pixelFormat, DWORD streamId, GUID &subtype);
     static PRIVATE_RESULT setSubtypeMediaType(IMFTransform *transform, HRESULT (IMFTransform::*setType)(DWORD, IMFMediaType*, DWORD), int width, int height, DWORD streamId, const GUID &subtype);
-    void releaseSample(IMFSample* sample) const;
+    static void releaseSampleBuffers(IMFSample* sample);
 
-    IMFTransform *transform;
+    CComPtr<IMFTransform> transform;
     DWORD inputStreamId;
     DWORD outputStreamId;
     bool weAllocateOutputSample;
-    IMFSample *outputSample;
-    IMFMediaBuffer *outputSampleBuffer;
+    CComPtr<IMFSample> outputSample;
+    CComPtr<IMFMediaBuffer> outputSampleBuffer;
 };
 
 } // namespace webcam_capture

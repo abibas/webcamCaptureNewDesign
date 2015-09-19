@@ -10,7 +10,7 @@ namespace webcam_capture {
 
 std::unique_ptr<MediaFoundation_DecompresserTransform> MediaFoundation_DecompresserTransform::getInstance(int width, int height, PixelFormat inputPixelFormat, PixelFormat outputPixelFormat, RESULT &result)
 {
-    IMFTransform *transform = nullptr;
+    CComPtr<IMFTransform> transform;
 
     GUID inputSubtype;
     bool ok = MediaFoundation_Utils::pixelFormatToVideoFormat(inputPixelFormat, inputSubtype);
@@ -32,6 +32,7 @@ std::unique_ptr<MediaFoundation_DecompresserTransform> MediaFoundation_Decompres
     IMFActivate **activateArr;
     UINT32 activateCount;
 
+    // TODO(nurupo): maybe prioritize hardware decoders first?
     HRESULT hr = MFTEnumEx(MFT_CATEGORY_VIDEO_DECODER, MFT_ENUM_FLAG_ALL, &inputFilter, &outputFilter, &activateArr, &activateCount);
     if (FAILED(hr) || activateCount < 1) {
         DEBUG_PRINT_HR_ERROR("Couldn't find an appropriate transform.", hr);
@@ -62,7 +63,7 @@ std::unique_ptr<MediaFoundation_DecompresserTransform> MediaFoundation_Decompres
     // Activate 1st transform
     IMFActivate *activate = activateArr[0];
     CoTaskMemFree(activateArr);
-    hr = activate->ActivateObject(__uuidof(IMFTransform), (void**)&transform);
+    hr = activate->ActivateObject(IID_PPV_ARGS(&transform));
     if (FAILED(hr)) {
         DEBUG_PRINT_HR_ERROR("Couldn't activate a transform.", hr);
         activate->Release();

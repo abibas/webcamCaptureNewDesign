@@ -8,7 +8,7 @@
 
 namespace webcam_capture {
 
-std::unique_ptr<MediaFoundation_PixelFormatTransform> MediaFoundation_PixelFormatTransform::getInstance(IMFTransform *transform, int width, int height, PixelFormat inputPixelFormat, PixelFormat outputPixelFormat, RESULT &result)
+std::unique_ptr<MediaFoundation_PixelFormatTransform> MediaFoundation_PixelFormatTransform::getInstance(CComPtr<IMFTransform> &transform, int width, int height, PixelFormat inputPixelFormat, PixelFormat outputPixelFormat, RESULT &result)
 {
     DWORD inputStreamId;
     DWORD outputStreamId;
@@ -20,25 +20,21 @@ std::unique_ptr<MediaFoundation_PixelFormatTransform> MediaFoundation_PixelForma
 
     PRIVATE_RESULT res = getSubtypeForPixelFormat(transform, &IMFTransform::GetInputAvailableType, inputPixelFormat, inputStreamId, inputSubtype);
     if (res != PRIVATE_RESULT::OK) {
-        MediaFoundation_Utils::safeRelease(&transform);
         result = res == PRIVATE_RESULT::UNSUPPORTED_PIXEL_FORMAT ? RESULT::UNSUPPORTED_INPUT : RESULT::FAILURE;
         return nullptr;
     }
     res = setSubtypeMediaType(transform, &IMFTransform::SetInputType, width, height, inputStreamId, inputSubtype);
     if (res != PRIVATE_RESULT::OK) {
-        MediaFoundation_Utils::safeRelease(&transform);
         result = res == PRIVATE_RESULT::UNSUPPORTED_PIXEL_FORMAT ? RESULT::UNSUPPORTED_INPUT : RESULT::FAILURE;
         return nullptr;
     }
     res = getSubtypeForPixelFormat(transform, &IMFTransform::GetOutputAvailableType, outputPixelFormat, outputStreamId, outputSubtype);
     if (res != PRIVATE_RESULT::OK) {
-        MediaFoundation_Utils::safeRelease(&transform);
         result = res == PRIVATE_RESULT::UNSUPPORTED_PIXEL_FORMAT ? RESULT::UNSUPPORTED_OUTPUT_FOR_INPUT : RESULT::FAILURE;
         return nullptr;
     }
     res = setSubtypeMediaType(transform, &IMFTransform::SetOutputType, width, height, outputStreamId, outputSubtype);
     if (res != PRIVATE_RESULT::OK) {
-        MediaFoundation_Utils::safeRelease(&transform);
         result = res == PRIVATE_RESULT::UNSUPPORTED_PIXEL_FORMAT ? RESULT::UNSUPPORTED_OUTPUT_FOR_INPUT : RESULT::FAILURE;
         return nullptr;
     }
@@ -47,35 +43,28 @@ std::unique_ptr<MediaFoundation_PixelFormatTransform> MediaFoundation_PixelForma
 
     HRESULT hr = transform->GetOutputStreamInfo(outputStreamId, &osi);
     if (FAILED(hr)) {
-        MediaFoundation_Utils::safeRelease(&transform);
         result = RESULT::FAILURE;
         return nullptr;
     }
 
     bool weAllocateOutputSample = !((osi.dwFlags & MFT_OUTPUT_STREAM_PROVIDES_SAMPLES) || (osi.dwFlags & MFT_OUTPUT_STREAM_CAN_PROVIDE_SAMPLES));
 
-    IMFSample *outputSample = nullptr;
-    IMFMediaBuffer *outputSampleBuffer = nullptr;
+    CComPtr<IMFSample> outputSample;
+    CComPtr<IMFMediaBuffer> outputSampleBuffer;
 
     if (weAllocateOutputSample) {
         hr = MFCreateSample(&outputSample);
         if (FAILED(hr)) {
-            MediaFoundation_Utils::safeRelease(&transform);
             result = RESULT::FAILURE;
             return nullptr;
         }
         hr = MFCreateMemoryBuffer(osi.cbSize, &outputSampleBuffer);
         if (FAILED(hr)) {
-            MediaFoundation_Utils::safeRelease(&transform);
-            MediaFoundation_Utils::safeRelease(&outputSample);
             result = RESULT::FAILURE;
             return nullptr;
         }
         hr = outputSample->AddBuffer(outputSampleBuffer);
         if (FAILED(hr)) {
-            MediaFoundation_Utils::safeRelease(&transform);
-            MediaFoundation_Utils::safeRelease(&outputSample);
-            MediaFoundation_Utils::safeRelease(&outputSampleBuffer);
             result = RESULT::FAILURE;
             return nullptr;
         }
@@ -90,18 +79,12 @@ MediaFoundation_PixelFormatTransform::MediaFoundation_PixelFormatTransform(Media
 {
     if (this != &other) {
         // copy all data
-        this->transform = other.transform;
+        this->transform.Attach(other.transform.Detach());
         this->inputStreamId = other.inputStreamId;
         this->outputStreamId = other.outputStreamId;
         this->weAllocateOutputSample = other.weAllocateOutputSample;
-        this->outputSample = other.outputSample;
-        this->outputSampleBuffer = other.outputSampleBuffer;
-
-        // make other object destroy without freeing data we use
-        other.transform = nullptr;
-        other.weAllocateOutputSample = true;
-        other.outputSample = nullptr;
-        other.outputSampleBuffer = nullptr;
+        this->outputSample.Attach(other.outputSample.Detach());
+        this->outputSampleBuffer.Attach(other.outputSampleBuffer.Detach());
     }
 }
 
@@ -143,7 +126,7 @@ MediaFoundation_PixelFormatTransform::PRIVATE_RESULT MediaFoundation_PixelFormat
     }
 
     for (int i = 0; true; i++) {
-        IMFMediaType *mediaType;
+        CComPtr<IMFMediaType> mediaType;
 
         HRESULT hr = (transform->*getAvailableType)(streamId, i, &mediaType);
 
@@ -157,25 +140,20 @@ MediaFoundation_PixelFormatTransform::PRIVATE_RESULT MediaFoundation_PixelFormat
             return PRIVATE_RESULT::FAILURE;
         }
 
-        PROPVARIANT var;
-        PropVariantInit(&var);
-        hr = mediaType->GetItem(MF_MT_SUBTYPE, &var);
+        GUID testSubtype;
+        hr = mediaType->GetGUID(MF_MT_SUBTYPE, &testSubtype);
         if (SUCCEEDED(hr)) {
-            if (IsEqualGUID(desiredSubtype, *var.puuid)) {
-                subtype = *var.puuid;
-                PropVariantClear(&var);
-                MediaFoundation_Utils::safeRelease(&mediaType);
+            if (IsEqualGUID(desiredSubtype, testSubtype)) {
+                subtype = testSubtype;
                 return PRIVATE_RESULT::OK;
             }
         }
-        PropVariantClear(&var);
-        MediaFoundation_Utils::safeRelease(&mediaType);
     }
 }
 
 MediaFoundation_PixelFormatTransform::PRIVATE_RESULT MediaFoundation_PixelFormatTransform::setSubtypeMediaType(IMFTransform *transform, HRESULT (IMFTransform::*setType)(DWORD, IMFMediaType *, DWORD), int width, int height, DWORD streamId, const GUID &subtype)
 {
-    IMFMediaType *mediaType;
+    CComPtr<IMFMediaType> mediaType;
     HRESULT hr = MFCreateMediaType(&mediaType);
     if (FAILED(hr)) {
         DEBUG_PRINT_HR_ERROR("Failed to create MediaType.", hr);
@@ -214,13 +192,13 @@ if (FAILED(hr)) { \
     return PRIVATE_RESULT::OK;
 }
 
-MediaFoundation_PixelFormatTransform::MediaFoundation_PixelFormatTransform(IMFTransform *transform, DWORD inputStreamId, DWORD outputStreamId, bool weManageAllocation, IMFSample *outputSample, IMFMediaBuffer *outputSampleBuffer) :
+MediaFoundation_PixelFormatTransform::MediaFoundation_PixelFormatTransform(CComPtr<IMFTransform> &transform, DWORD inputStreamId, DWORD outputStreamId, bool weManageAllocation, CComPtr<IMFSample> &outputSample, CComPtr<IMFMediaBuffer> &outputSampleBuffer) :
     transform(transform), inputStreamId(inputStreamId), outputStreamId(outputStreamId), weAllocateOutputSample(weManageAllocation), outputSample(outputSample), outputSampleBuffer(outputSampleBuffer)
 {
     // empty
 }
 
-void MediaFoundation_PixelFormatTransform::releaseSample(IMFSample *sample) const
+void MediaFoundation_PixelFormatTransform::releaseSampleBuffers(IMFSample *sample)
 {
     DWORD count;
     sample->GetBufferCount(&count);
@@ -230,21 +208,13 @@ void MediaFoundation_PixelFormatTransform::releaseSample(IMFSample *sample) cons
         sample->GetBufferByIndex(i, &buffer);
         MediaFoundation_Utils::safeRelease(&buffer);
     }
-
-    MediaFoundation_Utils::safeRelease(&sample);
 }
 
 
 MediaFoundation_PixelFormatTransform::~MediaFoundation_PixelFormatTransform()
 {
-    MediaFoundation_Utils::safeRelease(&transform);
-
-    if (weAllocateOutputSample) {
-        MediaFoundation_Utils::safeRelease(&outputSample);
-        MediaFoundation_Utils::safeRelease(&outputSampleBuffer);
-    } else if (outputSample != nullptr) {
-        // release all possible buffers the sample might have
-        releaseSample(outputSample);
+    if (!weAllocateOutputSample && this->outputSample) {
+        releaseSampleBuffers(this->outputSample);
     }
 }
 
@@ -257,8 +227,8 @@ bool MediaFoundation_PixelFormatTransform::convert(IMFSample *inputSample, IMFSa
     }
 
     // we have to release sample Media Foundation allocates every time we convert.
-    if (!weAllocateOutputSample && this->outputSample != nullptr) {
-        releaseSample(this->outputSample);
+    if (!weAllocateOutputSample && this->outputSample) {
+        releaseSampleBuffers(this->outputSample);
         this->outputSample = nullptr;
     }
 
@@ -284,8 +254,8 @@ bool MediaFoundation_PixelFormatTransform::convert(IMFSample *inputSample, IMFSa
     }
 
     if (!weAllocateOutputSample) {
-        // store Media Foundation's allocated sample to release next time we are called (or in dtor)
-        this->outputSample = odf.pSample;
+        // store Media Foundation's allocated sample to release next time we are called (or when we are destructed)
+        this->outputSample.Attach(odf.pSample);
     }
 
     *outputSample = odf.pSample;

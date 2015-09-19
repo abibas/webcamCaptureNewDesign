@@ -10,9 +10,9 @@ namespace webcam_capture {
 
 std::unique_ptr<MediaFoundation_ColorConverterTransform> MediaFoundation_ColorConverterTransform::getInstance(int width, int height, PixelFormat inputPixelFormat, PixelFormat outputPixelFormat, RESULT &result)
 {
-    IMFTransform *transform = nullptr;
+    CComPtr<IMFTransform> transform;
 
-    HRESULT hr = CoCreateInstance(CLSID_CColorConvertDMO, nullptr, CLSCTX_INPROC_SERVER, IID_IMFTransform, reinterpret_cast<void**>(&transform));
+    HRESULT hr = CoCreateInstance(CLSID_CColorConvertDMO, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&transform));
     if (FAILED(hr)) {
         DEBUG_PRINT_HR_ERROR("Failed to create transform.", hr);
         result = RESULT::FAILURE;
