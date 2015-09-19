@@ -203,13 +203,12 @@ void MediaFoundation_PixelFormatTransform::releaseSampleBuffers(IMFSample *sampl
     DWORD count;
     sample->GetBufferCount(&count);
 
-    for (int i = 0; i < count; i ++) {
+    for (DWORD i = 0; i < count; i ++) {
         IMFMediaBuffer *buffer;
         sample->GetBufferByIndex(i, &buffer);
         MediaFoundation_Utils::safeRelease(&buffer);
     }
 }
-
 
 MediaFoundation_PixelFormatTransform::~MediaFoundation_PixelFormatTransform()
 {

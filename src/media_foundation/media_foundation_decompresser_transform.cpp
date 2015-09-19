@@ -45,7 +45,7 @@ std::unique_ptr<MediaFoundation_DecompresserTransform> MediaFoundation_Decompres
             result = RESULT::UNSUPPORTED_INPUT;
         } else {
             // there is some transform for this input, but not this output
-            for (int i = 0; i < activateCount; i ++) {
+            for (UINT32 i = 0; i < activateCount; i ++) {
                 activateArr[i]->Release();
             }
             result = RESULT::UNSUPPORTED_OUTPUT_FOR_INPUT;
@@ -56,7 +56,7 @@ std::unique_ptr<MediaFoundation_DecompresserTransform> MediaFoundation_Decompres
     }
 
     // release all but 1st transform
-    for (int i = 1; i < activateCount; i ++) {
+    for (UINT32 i = 1; i < activateCount; i ++) {
         activateArr[i]->Release();
     }
 
@@ -91,7 +91,7 @@ MediaFoundation_DecompresserTransform::MediaFoundation_DecompresserTransform(std
 
 MediaFoundation_DecompresserTransform::~MediaFoundation_DecompresserTransform()
 {
-    HRESULT hr = activate->ShutdownObject();
+    activate->ShutdownObject();
 }
 
 

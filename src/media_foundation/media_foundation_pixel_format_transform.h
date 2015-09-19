@@ -15,9 +15,10 @@
  */
 
 class IMFTransform;
-class IMFMediaType;
 class IMFSample;
 class IMFMediaBuffer;
+
+struct IMFMediaType;
 
 namespace webcam_capture {
 
