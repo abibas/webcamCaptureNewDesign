@@ -41,13 +41,9 @@ void VideoForm::FrameCaptureCallback(Frame &frame)
     } else if (frame.pixel_format == PixelFormat::RGB24) {
         // display RGB24
         img = QImage(frame.plane[0], frame.width[0], frame.height[0], 3*frame.width[0], QImage::Format_RGB888).rgbSwapped();
-        QMatrix matrix;
 
-        // comment next 2 lines to remove rotation
-        matrix.translate(img.rect().center().x(), img.rect().center().y());
-        matrix.rotate(180);
-
-        img = img.transformed(matrix);
+        // some RGB images are upside down
+        img = img.mirrored();
     }
 
     this->ui->videoLabel->setPixmap(QPixmap::fromImage(img));
