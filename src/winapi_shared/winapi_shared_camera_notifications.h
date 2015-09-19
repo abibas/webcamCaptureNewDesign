@@ -36,22 +36,19 @@ private:
      * Silently fails, preserving the internal state of the thread being running.
      */
     void MessageLoop();
-
     static LRESULT CALLBACK WindowProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-    void CameraWasRemoved(DEV_BROADCAST_HDR *pHdr);
-    void CameraWasConnected(DEV_BROADCAST_HDR *pHdr);
+    void onCameraConnectionStateChanged(DEV_BROADCAST_HDR *pHdr, CameraConnectionState state);
 
 
     BackendImplementation implementation;
     std::unique_ptr<BackendInterface> backend;
-    std::vector<CameraInformation> devicesVector;
-    HDEVNOTIFY hDevNotify;
+    std::vector<CameraInformation> cameraList;
+    HDEVNOTIFY deviceNotify;
     WNDCLASS windowClass;
     HWND messageWindow;
 
     bool threadIsRunning;
-    CameraConnectionStateCallback notif_cb;    //TODO to make threads synchronization
+    CameraConnectionStateCallback cameraConnectionCallback;
     std::thread messageLoopThread;
 };
 }

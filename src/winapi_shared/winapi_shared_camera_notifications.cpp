@@ -32,7 +32,7 @@ LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UI
                 break;
             }
 
-            pThis->devicesVector = pThis->backend->getAvailableCameras();
+            pThis->cameraList = pThis->backend->getAvailableCameras();
             break;
         }
 
@@ -53,12 +53,10 @@ LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UI
 
             if (wParam == DBT_DEVICEARRIVAL) {
                 DEBUG_PRINT("A webcam device has been inserted and is now available.");
-                pThis->CameraWasConnected(reinterpret_cast<PDEV_BROADCAST_HDR>(lParam));
-            }
-
-            if (wParam == DBT_DEVICEREMOVECOMPLETE) {
+                pThis->onCameraConnectionStateChanged(reinterpret_cast<PDEV_BROADCAST_HDR>(lParam), CameraConnectionState::Connected);
+            } else if (wParam == DBT_DEVICEREMOVECOMPLETE) {
                 DEBUG_PRINT("A webcam device has been removed.");
-                pThis->CameraWasRemoved(reinterpret_cast<PDEV_BROADCAST_HDR>(lParam));
+                pThis->onCameraConnectionStateChanged(reinterpret_cast<PDEV_BROADCAST_HDR>(lParam), CameraConnectionState::Disconnected);
             }
 
             break;
@@ -89,10 +87,10 @@ LRESULT CALLBACK WinapiShared_CameraNotifications::WindowProcedure(HWND hWnd, UI
     return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-WinapiShared_CameraNotifications::WinapiShared_CameraNotifications(BackendImplementation implementation)
-    : implementation(implementation),
+WinapiShared_CameraNotifications::WinapiShared_CameraNotifications(BackendImplementation implementation) :
+      implementation(implementation),
       backend(nullptr),
-      notif_cb(nullptr),
+      cameraConnectionCallback(nullptr),
       threadIsRunning(false)
 {    
 }
@@ -108,7 +106,7 @@ bool WinapiShared_CameraNotifications::start(CameraConnectionStateCallback cb)
         return false;
     }
 
-    notif_cb = cb;
+    cameraConnectionCallback = cb;
     messageLoopThread = std::thread(&WinapiShared_CameraNotifications::MessageLoop, this);
     threadIsRunning = true;
     DEBUG_PRINT("Notifications capturing was started.");
@@ -122,7 +120,6 @@ bool WinapiShared_CameraNotifications::stop()
         return false;
     }
 
-    //TODO executes 2 times - to fix this.
     SendMessage(messageWindow, WM_USER, 0, QUIT_FROM_NOTIFICATIONS_LOOP);
 
     if (messageLoopThread.joinable()) {
@@ -131,7 +128,7 @@ bool WinapiShared_CameraNotifications::stop()
 
     threadIsRunning = false;
 
-    devicesVector.clear();
+    cameraList.clear();
 
     DEBUG_PRINT("Notifications capturing was stopped.");
 
@@ -158,18 +155,18 @@ void WinapiShared_CameraNotifications::MessageLoop()
         goto unregister_window_class;
     }
 
-    DEV_BROADCAST_DEVICEINTERFACE NotificationFilter;
-    ZeroMemory(&NotificationFilter, sizeof(NotificationFilter));
+    DEV_BROADCAST_DEVICEINTERFACE notificationFilter;
+    ZeroMemory(&notificationFilter, sizeof(notificationFilter));
 
-    NotificationFilter.dbcc_size = sizeof(NotificationFilter);
-    NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+    notificationFilter.dbcc_size = sizeof(notificationFilter);
+    notificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
     //can be used KSCATEGORY_CAPTURE. But KSCATEGORY_CAPTURE - gets audio/video messages device arrival and removed (2 messages)
-    NotificationFilter.dbcc_classguid = KSCATEGORY_VIDEO;
+    notificationFilter.dbcc_classguid = KSCATEGORY_VIDEO;
 
 
-    hDevNotify = RegisterDeviceNotificationW(messageWindow, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
+    deviceNotify = RegisterDeviceNotificationW(messageWindow, &notificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE);
 
-    if (!hDevNotify) {
+    if (!deviceNotify) {
         DEBUG_PRINT("Failed to register for device notifications.");
         goto destroy_window;
     }
@@ -181,8 +178,7 @@ void WinapiShared_CameraNotifications::MessageLoop()
         DispatchMessage(&msg);
     }
 
-unregister_notifications:
-    UnregisterDeviceNotification(hDevNotify);
+    UnregisterDeviceNotification(deviceNotify);
 
 destroy_window:
     DestroyWindow(messageWindow);
@@ -191,68 +187,50 @@ unregister_window_class:
     UnregisterClass(windowClass.lpszClassName, NULL);
 
 done:
-    notif_cb = nullptr;
+    cameraConnectionCallback = nullptr;
 
     DEBUG_PRINT("MessageLoop exited.");
 }
 
-void WinapiShared_CameraNotifications::CameraWasRemoved(DEV_BROADCAST_HDR *pHdr)
+void WinapiShared_CameraNotifications::onCameraConnectionStateChanged(DEV_BROADCAST_HDR *pHdr, CameraConnectionState state)
 {
     if (pHdr->dbch_devicetype != DBT_DEVTYP_DEVICEINTERFACE) {
         DEBUG_PRINT("Unexpected device type.");
         return;
     }
 
-    //FIXME(nurupo): use _W version of the struct
-//    if (pHdr->dbch_size != sizeof(DEV_BROADCAST_DEVICEINTERFACE_W)) {
-//        DEBUG_PRINT("Unexpected struct.");
-//        return;
-//    }
+    DEV_BROADCAST_DEVICEINTERFACE *deviceInterface = reinterpret_cast<DEV_BROADCAST_DEVICEINTERFACE *>(pHdr);
+    size_t symbolicLinkLength = strlen(deviceInterface->dbcc_name);
+    std::unique_ptr<WCHAR[]> symbolicLink(new WCHAR[symbolicLinkLength+1]);
+    mbstowcs_s(nullptr, symbolicLink.get(), symbolicLinkLength+1, deviceInterface->dbcc_name, symbolicLinkLength);
 
-    DEV_BROADCAST_DEVICEINTERFACE *pDi = reinterpret_cast<DEV_BROADCAST_DEVICEINTERFACE *>(pHdr);
-    size_t nameLen = strlen(pDi->dbcc_name);
-    std::unique_ptr<WCHAR[]> name(new WCHAR[nameLen]);
-    mbstowcs(name.get(), pDi->dbcc_name, nameLen);
-    WinapiShared_UniqueId uniqId(name.get(), implementation);
+    WinapiShared_UniqueId uniqueId(symbolicLink.get(), implementation);
 
-    for (int i = 0; i < devicesVector.size(); i++) {
-        if (uniqId == *devicesVector.at(i).getUniqueId()) {
-            notif_cb(devicesVector.at(i), CameraConnectionState::Disconnected);
-            devicesVector.erase(devicesVector.begin() + i);
+    switch (state) {
+        case CameraConnectionState::Connected: {
+            std::vector<CameraInformation> camerasBuf = backend->getAvailableCameras();
+            for (auto &&cameraInfo : camerasBuf) {
+                if (*cameraInfo.getUniqueId() == uniqueId) {
+                    cameraConnectionCallback(cameraInfo, CameraConnectionState::Connected);
+                    cameraList.push_back(cameraInfo);
+                    break;
+                }
+            }
             break;
         }
-    }
-}
 
-void WinapiShared_CameraNotifications::CameraWasConnected(DEV_BROADCAST_HDR *pHdr)
-{
-    if (pHdr->dbch_devicetype != DBT_DEVTYP_DEVICEINTERFACE) {
-        DEBUG_PRINT("Unexpected device type.");
-        return;
-    }
-
-    //FIXME(nurupo): use _W version of the struct
-//    if (pHdr->dbch_size != sizeof(DEV_BROADCAST_DEVICEINTERFACE_W)) {
-//        DEBUG_PRINT("Unexpected struct.");
-//        return;
-//    }
-
-    DEV_BROADCAST_DEVICEINTERFACE *pDi = reinterpret_cast<DEV_BROADCAST_DEVICEINTERFACE *>(pHdr);
-    size_t nameLen = strlen(pDi->dbcc_name);
-    std::unique_ptr<WCHAR[]> name(new WCHAR[nameLen]);
-    mbstowcs(name.get(), pDi->dbcc_name, nameLen);
-    WinapiShared_UniqueId uniqId(name.get(), implementation);
-
-    std::vector<CameraInformation> camerasBuf = backend->getAvailableCameras();
-
-    for (auto&& cameraInfo : camerasBuf) {
-        if (*cameraInfo.getUniqueId() == uniqId) {
-            notif_cb(cameraInfo, CameraConnectionState::Connected);
-            devicesVector.push_back(cameraInfo);
+        case CameraConnectionState::Disconnected: {
+            for (int i = 0; i < cameraList.size(); i++) {
+                if (uniqueId == *cameraList[i].getUniqueId()) {
+                    cameraConnectionCallback(cameraList[i], CameraConnectionState::Disconnected);
+                    cameraList[i] = std::move(cameraList.back());
+                    cameraList.pop_back();
+                    break;
+                }
+            }
             break;
         }
     }
 }
 
 } // namespace webcam_capture
-
