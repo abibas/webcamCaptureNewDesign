@@ -77,7 +77,6 @@ private:
 
 public:
     std::shared_ptr<void> mfDeinitializer;
-    Frame frame;
     MediaFoundation_Callback *mfCallback;
     IMFMediaSource *imfMediaSource;
     IMFSourceReader *imfSourceReader;

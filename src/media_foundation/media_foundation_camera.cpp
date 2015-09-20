@@ -134,7 +134,11 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
     }
 
     //Create mfCallback
-    MediaFoundation_Callback::createInstance(this, std::move(decompresser), std::move(colorConvertor), &mfCallback);
+    mfCallback = new MediaFoundation_Callback(width, height, decodeFormat == PixelFormat::UNKNOWN ? (decompressFormat == PixelFormat::UNKNOWN ? pixelFormat : decompressFormat) : decodeFormat, cb, std::move(decompresser), std::move(colorConvertor));
+    if (!mfCallback) {
+        DEBUG_PRINT("Error: Couldn't create callback.");
+        return -14;
+    }
 
     // Create the source reader.
     if (createSourceReader(imfMediaSource, mfCallback, &imfSourceReader) < 0) {
@@ -143,6 +147,8 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
         return -11;      //TODO Err code
     }
 
+    mfCallback->setSourceReader(imfSourceReader);
+
     // Set the source reader format
     if (setReaderFormat(imfSourceReader, width, height, pixelFormat, fps) < 0) {
         DEBUG_PRINT("Error: Can't set the reader format.");
@@ -150,10 +156,6 @@ int MediaFoundation_Camera::start(PixelFormat pixelFormat, int width, int height
         MediaFoundation_Utils::safeRelease(&imfSourceReader);
         return -12;      //TODO Err code
     }
-
-    frame.width[0] = width;
-    frame.height[0] = height;
-    frame.pixelFormat = decodeFormat == PixelFormat::UNKNOWN ? (decompressFormat == PixelFormat::UNKNOWN ? pixelFormat : decompressFormat) : decodeFormat;
 
     // Kick off the capture stream.
     HRESULT hr = imfSourceReader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);

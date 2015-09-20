@@ -10,6 +10,10 @@
 #include "media_foundation_color_converter_transform.h"
 #include "media_foundation_decompresser_transform.h"
 
+#include <camera_interface.h>
+
+#include <frame.h>
+
 #include <atomic>
 #include <condition_variable>
 #include <memory>
@@ -27,7 +31,8 @@ class MediaFoundation_Camera;
 class MediaFoundation_Callback : public IMFSourceReaderCallback
 {
 public:
-    static bool createInstance(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_DecompresserTransform> decompresser, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter, MediaFoundation_Callback **cb);
+    MediaFoundation_Callback(int width, int height, PixelFormat pixelFormat, FrameCallback &frameCallback, std::unique_ptr<MediaFoundation_DecompresserTransform> decompresser, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter);
+    void setSourceReader(IMFSourceReader *sourceReader);
 
     STDMETHODIMP QueryInterface(REFIID iid, void **v);
     STDMETHODIMP_(ULONG) AddRef();
@@ -37,33 +42,26 @@ public:
     STDMETHODIMP OnEvent(DWORD streamIndex, IMFMediaEvent *event);
     STDMETHODIMP OnFlush(DWORD streamIndex);
 
-    HRESULT Wait(DWORD *streamFlags, LONGLONG *timestamp, IMFSample *sample)
-    {
-        return S_OK;
-    }
-    HRESULT Cancel()
-    {
-        return S_OK;
-    }
+    HRESULT Wait(DWORD *streamFlags, LONGLONG *timestamp, IMFSample *sample);
+
+    HRESULT Cancel();
 
     void stop();
 
 private:
-    MediaFoundation_Callback(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_DecompresserTransform> decompresser, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter);
     virtual ~MediaFoundation_Callback();
 
-private:
-    MediaFoundation_Camera *cam;
+    IMFSourceReader *sourceReader;
+    Frame frame;
+    FrameCallback frameCallback;
     std::unique_ptr<MediaFoundation_DecompresserTransform> decompresser;
     std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter;
-    long ref_count;
-    CRITICAL_SECTION crit_sec;
+    long referenceCount;
+    CRITICAL_SECTION criticalSection;
     std::atomic<bool> keepRunning;
     std::atomic<bool> stoppedRunning;
     std::mutex stoppingMutex;
     std::condition_variable stoppingCondition;
-public:
-    IMFTransform *pDecoder = NULL;
 };
 } // namespace webcam_capture
 

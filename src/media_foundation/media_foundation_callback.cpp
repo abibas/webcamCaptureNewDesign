@@ -4,48 +4,43 @@
     http://www.apache.org/licenses/LICENSE-2.0
   */
 
+#include <atlbase.h>
 #include "../utils.h"
 #include "media_foundation_utils.h"
 #include "media_foundation_callback.h"
 #include "media_foundation_camera.h"
 
-#include <assert.h>
 #include <mfidl.h>
 #include <shlwapi.h>
 #include <stdio.h>
 #include <Mfapi.h>
-
-////
 #include <mferror.h>
-/////
+
 namespace webcam_capture {
 
-bool MediaFoundation_Callback::createInstance(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_DecompresserTransform> decompresser, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter, MediaFoundation_Callback **cb)
+MediaFoundation_Callback::MediaFoundation_Callback(int width, int height, PixelFormat pixelFormat, FrameCallback &frameCallback, std::unique_ptr<MediaFoundation_DecompresserTransform> decompresser, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter) :
+    referenceCount(1),
+    sourceReader(nullptr),
+    frameCallback(frameCallback),
+    decompresser(std::move(decompresser)),
+    colorConverter(std::move(colorConverter)),
+    keepRunning(true),
+    stoppedRunning(false)
 {
-    if (cb == NULL) {
-        DEBUG_PRINT("Error: the given MediaFoundation_Capture is invalid; cant create an instance.");
-        return false;
-    }
+    InitializeCriticalSection(&criticalSection);
 
-    MediaFoundation_Callback *media_cb = new MediaFoundation_Callback(cam, std::move(decompresser), std::move(colorConverter));
-
-    if (!media_cb) {
-        DEBUG_PRINT("Error: cannot allocate a MediaFoundation_Callback object - out of memory");
-        return false;
-    }
-
-    *cb = media_cb;
-
-    return true;
-}
-
-MediaFoundation_Callback::MediaFoundation_Callback(MediaFoundation_Camera *cam, std::unique_ptr<MediaFoundation_DecompresserTransform> decompresser, std::unique_ptr<MediaFoundation_ColorConverterTransform> colorConverter) : ref_count(1), cam(cam), decompresser(std::move(decompresser)), colorConverter(std::move(colorConverter)), keepRunning(true), stoppedRunning(false)
-{
-    InitializeCriticalSection(&crit_sec);
+    frame.width[0] = width;
+    frame.height[0] = height;
+    frame.pixelFormat = pixelFormat;
 }
 
 MediaFoundation_Callback::~MediaFoundation_Callback()
 {
+}
+
+void MediaFoundation_Callback::setSourceReader(IMFSourceReader *sourceReader)
+{
+    this->sourceReader = sourceReader;
 }
 
 HRESULT MediaFoundation_Callback::QueryInterface(REFIID iid, void **v)
@@ -56,28 +51,24 @@ HRESULT MediaFoundation_Callback::QueryInterface(REFIID iid, void **v)
 
 ULONG MediaFoundation_Callback::AddRef()
 {
-    return InterlockedIncrement(&ref_count);
+    return InterlockedIncrement(&referenceCount);
 }
 
 ULONG MediaFoundation_Callback::Release()
 {
-    ULONG ucount = InterlockedDecrement(&ref_count);
+    ULONG count = InterlockedDecrement(&referenceCount);
 
-    if (ucount == 0) {
+    if (count == 0) {
         delete this;
     }
 
-    return ucount;
+    return count;
 }
 
 HRESULT MediaFoundation_Callback::OnReadSample(HRESULT hr, DWORD streamIndex, DWORD streamFlags, LONGLONG timestamp,
         IMFSample *sample)
 {
-    assert(cam);
-    assert(cam->imfSourceReader);
-    assert(cam->frameCallback);
-
-    EnterCriticalSection(&crit_sec);
+    EnterCriticalSection(&criticalSection);
 
     if (SUCCEEDED(hr) && sample) {
         IMFSample *finalSample = sample;
@@ -100,53 +91,64 @@ HRESULT MediaFoundation_Callback::OnReadSample(HRESULT hr, DWORD streamIndex, DW
         HRESULT hr = finalSample->GetBufferCount(&count);
 
         for (DWORD i = 0; i < count; ++i) {
-            if (FAILED(hr)){
+            CComPtr<IMFMediaBuffer> buffer;
+
+            hr = finalSample->GetBufferByIndex(i, &buffer);
+            if (FAILED(hr)) {
                 break;
             }
-            IMFMediaBuffer *buffer;
-            hr = finalSample->GetBufferByIndex(i, &buffer);
 
-            if (SUCCEEDED(hr)) {
-                DWORD length = 0;
-                DWORD max_length = 0;
-                BYTE *data = NULL;
-                buffer->Lock(&data, &max_length, &length);
+            DWORD length = 0;
+            DWORD max_length = 0;
+            BYTE *data = nullptr;
+            buffer->Lock(&data, &max_length, &length);
 
-                cam->frame.bytes = (size_t)length;
-                cam->frame.plane[0] = data;
-                cam->frame.plane[1] = data + cam->frame.offset[1];
-                cam->frame.plane[2] = data + cam->frame.offset[2];
-                cam->frameCallback(cam->frame);
+            frame.bytes = static_cast<size_t>(length);
+            frame.plane[0] = data;
+            /* TODO(nurupo): figure out how to deal with planar images
+            frame.plane[1] = data + frame.offset[1];
+            frame.plane[2] = data + frame.offset[2];
+            */
+            frameCallback(frame);
 
-                buffer->Unlock();
-                buffer->Release();
-            }
+            buffer->Unlock();
         }
     }
 
     if (SUCCEEDED(hr)) {
-        if (cam->imfSourceReader && keepRunning) {
-            hr = cam->imfSourceReader->ReadSample(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, NULL, NULL, NULL, NULL);
+        if (keepRunning) {
+            hr = sourceReader->ReadSample(static_cast<DWORD>(MF_SOURCE_READER_FIRST_VIDEO_STREAM), 0, nullptr, nullptr, nullptr, nullptr);
 
             if (FAILED(hr)) {
-                DEBUG_PRINT("Error: while trying to read the next sample.");
+                DEBUG_PRINT_HR_ERROR("Couldn't request next sample to be read.", hr);
             }
-        } else if (!keepRunning) {
+        } else {
             stoppedRunning = true;
             stoppingCondition.notify_one();
         }
     }
 
-    LeaveCriticalSection(&crit_sec);
+    LeaveCriticalSection(&criticalSection);
+
     return S_OK;
 }
 
-HRESULT MediaFoundation_Callback::OnEvent(DWORD, IMFMediaEvent *event)
+HRESULT MediaFoundation_Callback::OnEvent(DWORD /*streamIndex*/, IMFMediaEvent * /*event*/)
 {
     return S_OK;
 }
 
-HRESULT MediaFoundation_Callback::OnFlush(DWORD)
+HRESULT MediaFoundation_Callback::OnFlush(DWORD /*streamIndex*/)
+{
+    return S_OK;
+}
+
+HRESULT MediaFoundation_Callback::Wait(DWORD * /*streamFlags*/, LONGLONG * /*timestamp*/, IMFSample * /*sample*/)
+{
+    return S_OK;
+}
+
+HRESULT MediaFoundation_Callback::Cancel()
 {
     return S_OK;
 }
