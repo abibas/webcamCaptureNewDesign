@@ -1,4 +1,4 @@
-##Installation
+## Installation
 - [Windows](#windows)
   - [Supported Backends](#supported-backends)
   - [Building](#building)
@@ -6,16 +6,16 @@
     - [CMake Options](#cmake-options)
     - [Build Instructions](#build-instructions)
 
-###Windows
+### Windows
 
-####Supported Backends
+#### Supported Backends
 Backend | Supported systems
 ---|---
 Media Foundation | Windows 7 and onwards
 Direct Show | Windows XP and onwards
 
-####Building
-#####Prerequisites
+#### Building
+##### Prerequisites
   - CMake 2.8.11 or newer
   - Windows SDK (7.1A for targeting Windows XP, 8.1 for targeting Windows Vista and newer)
   - Visual C++ Compiler (VC) 2013 or newer
@@ -24,7 +24,7 @@ Direct Show | Windows XP and onwards
 Building with MinGW should be possible, but wasn't attempted.
 We will gladly accept a PR that adds MinGW build instructions.
 
-#####CMake Options
+##### CMake Options
 
 Name | Description | Default
 ---|---|---
@@ -42,7 +42,7 @@ Name | Description | Default
 
 Note that options are cached in CMakeCache.txt.
 
-#####Build Instructions
+##### Build Instructions
 
 We will show you how to build a 64-bit shared version of the library, together with the test application, targeting Windows 8 system. You can easily adjust these instructions for anything you'd like.
 
@@ -66,7 +66,7 @@ You can get a list of all supported platforms by VC 2013 by calling:
 "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" help
 ```
 
-We are targeting Windows 8 in this example, but if you are targeting Windows XP, it's important that you use Windows SDK v7.1A, since Windows SDKs after the 7th one don't support targeting Windows XP. VC 2013 defaults to using Windows SDK 8.1. In order to make it use v7.1A, we need to modify some of the variables set by `vcvarsall.bat` script **after** the script is called. To modify the variabes, execute the following:
+We are targeting Windows 8 in this example, but if you are targeting Windows XP, it's important that you use Windows SDK v7.1A, since Windows SDKs after the 7th one don't support targeting Windows XP. VC 2013 defaults to using Windows SDK 8.1. In order to make it use v7.1A, we need to modify some of the variables set by `vcvarsall.bat` script **after** the script is called. To modify the variables, execute the following:
 
 ```cmd
 set INCLUDE=%ProgramFiles(x86)%\Microsoft SDKs\Windows\v7.1A\Include;%INCLUDE%
@@ -78,7 +78,7 @@ set LIB=%ProgramFiles(x86)%\Microsoft SDKs\Windows\v7.1A\Lib;%LIB%
 set LIB=%ProgramFiles(x86)%\Microsoft SDKs\Windows\v7.1A\Lib\x64;%LIB%
 ```
 
-Now that the compiler-related enviroment variables are set up, we can call CMake:
+Now that the compiler-related environment variables are set up, we can call CMake:
 ```cmd
 cmake -G"NMake Makefiles" -DCMAKE_BUILD_TYPE="Release" -DBUILD_STATIC=OFF -DWINDOWS_TARGET_OS="Windows8" -DWINDOWS_TARGET_ARCH="x64" -DBACKEND_MEDIA_FOUNDATION=ON -DTEST_APP=ON -DTEST_APP_WINDOWS_QT5_PATH="C:/Qt/5.4/msvc2013_64_opengl" -DCMAKE_INSTALL_PREFIX:PATH=prefix ..
 ```
